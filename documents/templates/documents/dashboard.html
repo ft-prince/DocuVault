@@ -1,0 +1,155 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Dashboard - DMS{% endblock %}
+
+{% block content %}
+<div style="margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c;">
+        Welcome, {{ user.get_full_name|default:user.username }}
+    </h1>
+    <p style="font-size: 0.95rem; color: #7c7c7c;">
+        Your document management dashboard
+    </p>
+</div>
+
+<!-- Statistics -->
+<div class="grid grid-4" style="margin-bottom: 3rem;">
+    <div class="card">
+        <h3 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 0.5rem;">
+            {{ stats.total_documents }}
+        </h3>
+        <p style="font-size: 0.95rem; color: #7c7c7c;">
+            My Documents
+        </p>
+    </div>
+    
+    <div class="card">
+        <h3 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 0.5rem;">
+            {{ stats.shared_with_me }}
+        </h3>
+        <p style="font-size: 0.95rem; color: #7c7c7c;">
+            Shared With Me
+        </p>
+    </div>
+    
+    <div class="card">
+        <h3 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 0.5rem;">
+            {{ stats.favorites }}
+        </h3>
+        <p style="font-size: 0.95rem; color: #7c7c7c;">
+            Favorites
+        </p>
+    </div>
+    
+    <div class="card">
+        <h3 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 0.5rem;">
+            {{ stats.unread_notifications }}
+        </h3>
+        <p style="font-size: 0.95rem; color: #7c7c7c;">
+            Notifications
+        </p>
+    </div>
+</div>
+
+<div class="grid grid-2">
+    <!-- My Documents -->
+    <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c;">
+                My Recent Documents
+            </h2>
+            <a href="{% url 'document_create' %}" class="btn-secondary btn btn-small">
+                New Document
+            </a>
+        </div>
+        
+        {% if my_documents %}
+            <div class="card">
+                {% for document in my_documents %}
+                    <div style="padding: 1rem 0; {% if not forloop.last %}border-bottom: 1px solid #e5e5e5;{% endif %}">
+                        <h3 style="font-size: 1rem; font-weight: 500; margin-bottom: 0.25rem;">
+                            <a href="{% url 'document_detail' document.pk %}" style="color: #2c2c2c; text-decoration: none;">
+                                {{ document.title }}
+                            </a>
+                        </h3>
+                        <p style="font-size: 0.875rem; color: #7c7c7c;">
+                            Updated {{ document.updated_at|timesince }} ago
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+            <div style="margin-top: 1rem;">
+                <a href="{% url 'document_list' %}" style="color: #2c2c2c; text-decoration: none; font-size: 0.95rem;">
+                    View all documents →
+                </a>
+            </div>
+        {% else %}
+            <div class="card">
+                <p style="color: #7c7c7c; text-align: center; padding: 2rem 0;">
+                    No documents yet. Create your first document to get started.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Shared Documents -->
+    <div>
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+            Shared With Me
+        </h2>
+        
+        {% if shared_documents %}
+            <div class="card">
+                {% for document in shared_documents %}
+                    <div style="padding: 1rem 0; {% if not forloop.last %}border-bottom: 1px solid #e5e5e5;{% endif %}">
+                        <h3 style="font-size: 1rem; font-weight: 500; margin-bottom: 0.25rem;">
+                            <a href="{% url 'document_detail' document.pk %}" style="color: #2c2c2c; text-decoration: none;">
+                                {{ document.title }}
+                            </a>
+                        </h3>
+                        <p style="font-size: 0.875rem; color: #7c7c7c;">
+                            By {{ document.owner.username }}
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card">
+                <p style="color: #7c7c7c; text-align: center; padding: 2rem 0;">
+                    No shared documents yet.
+                </p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Notifications -->
+{% if unread_notifications %}
+<div style="margin-top: 3rem;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c;">
+            Recent Notifications
+        </h2>
+        <a href="{% url 'notifications_list' %}" style="color: #2c2c2c; text-decoration: none; font-size: 0.95rem;">
+            View all →
+        </a>
+    </div>
+    
+    <div class="card">
+        {% for notification in unread_notifications %}
+            <div style="padding: 1rem 0; {% if not forloop.last %}border-bottom: 1px solid #e5e5e5;{% endif %}">
+                <h3 style="font-size: 1rem; font-weight: 500; margin-bottom: 0.25rem;">
+                    {{ notification.title }}
+                </h3>
+                <p style="font-size: 0.875rem; color: #7c7c7c;">
+                    {{ notification.message }}
+                </p>
+                <p style="font-size: 0.875rem; color: #7c7c7c; margin-top: 0.25rem;">
+                    {{ notification.created_at|timesince }} ago
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

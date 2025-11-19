@@ -1,0 +1,180 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}{{ action }} Document - DMS{% endblock %}
+
+{% block content %}
+<div style="max-width: 800px; margin: 0 auto;">
+    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 2rem;">
+        {{ action }} Document
+    </h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div style="padding: 1rem; background: #fafafa; border: 1px solid #e5e5e5; margin-bottom: 1.5rem;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.title.id_for_label }}">
+                    Title *
+                </label>
+                {{ form.title }}
+                {% if form.title.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.title.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.description.id_for_label }}">
+                    Description
+                </label>
+                {{ form.description }}
+                {% if form.description.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.description.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.file.id_for_label }}">
+                    File {% if action == "Create" %}*{% endif %}
+                </label>
+                {{ form.file }}
+                {% if form.file.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.file.errors }}
+                    </div>
+                {% endif %}
+                {% if form.file.help_text %}
+                    <div class="form-help">
+                        {{ form.file.help_text }}
+                    </div>
+                {% endif %}
+            </div>
+
+            {% if action == "Edit" %}
+                <div class="form-group">
+                    <label class="form-label" for="{{ form.change_note.id_for_label }}">
+                        Change Note
+                    </label>
+                    {{ form.change_note }}
+                    {% if form.change_note.help_text %}
+                        <div class="form-help">
+                            {{ form.change_note.help_text }}
+                        </div>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.category.id_for_label }}">
+                    Category
+                </label>
+                {{ form.category }}
+                {% if form.category.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.category.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.tags.id_for_label }}">
+                    Tags
+                </label>
+                {{ form.tags }}
+                {% if form.tags.help_text %}
+                    <div class="form-help">
+                        {{ form.tags.help_text }}
+                    </div>
+                {% endif %}
+                {% if form.tags.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.tags.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.access_level.id_for_label }}">
+                    Access Level *
+                </label>
+                {{ form.access_level }}
+                {% if form.access_level.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.access_level.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.required_role_level.id_for_label }}">
+                    Required Role Level (for role-based access)
+                </label>
+                {{ form.required_role_level }}
+                {% if form.required_role_level.help_text %}
+                    <div class="form-help">
+                        {{ form.required_role_level.help_text }}
+                    </div>
+                {% endif %}
+                {% if form.required_role_level.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.required_role_level.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.shared_with.id_for_label }}">
+                    Share With Users (for custom access)
+                </label>
+                {{ form.shared_with }}
+                {% if form.shared_with.help_text %}
+                    <div class="form-help">
+                        Hold Ctrl/Cmd to select multiple users
+                    </div>
+                {% endif %}
+                {% if form.shared_with.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.shared_with.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    {{ form.allow_comments }}
+                    <span style="font-size: 0.95rem; color: #2c2c2c;">
+                        Allow comments
+                    </span>
+                </label>
+            </div>
+
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    {{ form.allow_download }}
+                    <span style="font-size: 0.95rem; color: #2c2c2c;">
+                        Allow downloads
+                    </span>
+                </label>
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn">
+                    {{ action }} Document
+                </button>
+                <a href="{% if document %}{% url 'document_detail' document.pk %}{% else %}{% url 'document_list' %}{% endif %}" class="btn-secondary btn">
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

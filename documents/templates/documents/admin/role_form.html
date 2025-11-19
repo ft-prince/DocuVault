@@ -1,0 +1,85 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}{{ action }} Role - DMS Admin{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 2rem;">
+        {{ action }} Role
+    </h1>
+
+    <form method="post" class="card">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div style="padding: 1rem; background: #fafafa; border: 1px solid #e5e5e5; margin-bottom: 1.5rem;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.name.id_for_label }}">
+                Role Name *
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.name.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.description.id_for_label }}">
+                Description
+            </label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.description.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.level.id_for_label }}">
+                Level (1-100) *
+            </label>
+            {{ form.level }}
+            {% if form.level.help_text %}
+                <div class="form-help">
+                    {{ form.level.help_text }}
+                </div>
+            {% endif %}
+            {% if form.level.errors %}
+                <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.level.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                {{ form.is_default }}
+                <span style="font-size: 0.95rem; color: #2c2c2c;">
+                    Default role (cannot be deleted)
+                </span>
+            </label>
+            {% if form.is_default.help_text %}
+                <div class="form-help">
+                    {{ form.is_default.help_text }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn">
+                {{ action }} Role
+            </button>
+            <a href="{% url 'admin_roles_list' %}" class="btn-secondary btn">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

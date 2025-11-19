@@ -1,0 +1,75 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Update User Role - DMS Admin{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 2rem;">
+        Update User Role
+    </h1>
+
+    <div class="card" style="margin-bottom: 2rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+            User Information
+        </h2>
+        <div style="display: grid; gap: 0.75rem; font-size: 0.95rem;">
+            <div>
+                <span style="color: #7c7c7c;">Username:</span>
+                <strong style="margin-left: 0.5rem; color: #2c2c2c;">{{ user.username }}</strong>
+            </div>
+            <div>
+                <span style="color: #7c7c7c;">Email:</span>
+                <strong style="margin-left: 0.5rem; color: #2c2c2c;">{{ user.email }}</strong>
+            </div>
+            <div>
+                <span style="color: #7c7c7c;">Current Type:</span>
+                <strong style="margin-left: 0.5rem; color: #2c2c2c;">{{ user.get_user_type_display }}</strong>
+            </div>
+            <div>
+                <span style="color: #7c7c7c;">Current Role:</span>
+                <strong style="margin-left: 0.5rem; color: #2c2c2c;">
+                    {% if user.role %}{{ user.role.name }}{% else %}No role{% endif %}
+                </strong>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" class="card">
+        {% csrf_token %}
+        
+        <div class="form-group">
+            <label class="form-label" for="user_type">
+                User Type
+            </label>
+            <select name="user_type" id="user_type" class="form-control">
+                <option value="guest" {% if user.user_type == "guest" %}selected{% endif %}>Guest</option>
+                <option value="user" {% if user.user_type == "user" %}selected{% endif %}>Regular User</option>
+                <option value="admin" {% if user.user_type == "admin" %}selected{% endif %}>Admin</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="role_id">
+                Role
+            </label>
+            <select name="role_id" id="role_id" class="form-control">
+                <option value="">No role</option>
+                {% for role in roles %}
+                    <option value="{{ role.id }}" {% if user.role == role %}selected{% endif %}>
+                        {{ role.name }} (Level {{ role.level }})
+                    </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn">
+                Update Role
+            </button>
+            <a href="{% url 'admin_users_list' %}" class="btn-secondary btn">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

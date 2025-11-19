@@ -1,0 +1,55 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Favorites - DMS{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 2rem;">
+    My Favorites
+</h1>
+
+{% if page_obj %}
+    <div class="grid grid-3">
+        {% for favorite in page_obj %}
+            <div class="card">
+                <h3 style="font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem;">
+                    <a href="{% url 'document_detail' favorite.document.pk %}" style="color: #2c2c2c; text-decoration: none;">
+                        {{ favorite.document.title }}
+                    </a>
+                </h3>
+                <p style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.75rem;">
+                    {{ favorite.document.description|truncatewords:15 }}
+                </p>
+                <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem; color: #7c7c7c;">
+                    <span>By {{ favorite.document.owner.username }}</span>
+                    <span>Added {{ favorite.created_at|timesince }} ago</span>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="card">
+        <p style="color: #7c7c7c; text-align: center; padding: 3rem 0;">
+            No favorites yet. Star documents to add them to your favorites.
+        </p>
+    </div>
+{% endif %}
+{% endblock %}

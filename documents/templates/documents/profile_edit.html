@@ -1,0 +1,116 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Edit Profile - DMS{% endblock %}
+
+{% block content %}
+<div style="max-width: 700px; margin: 0 auto;">
+    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 2rem;">
+        Edit Profile
+    </h1>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div style="padding: 1rem; background: #fafafa; border: 1px solid #e5e5e5; margin-bottom: 1.5rem;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="card">
+            <div class="form-group">
+                <label class="form-label" for="{{ form.first_name.id_for_label }}">
+                    First Name
+                </label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.first_name.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.last_name.id_for_label }}">
+                    Last Name
+                </label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.last_name.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.email.id_for_label }}">
+                    Email
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.email.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.phone.id_for_label }}">
+                    Phone
+                </label>
+                {{ form.phone }}
+                {% if form.phone.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.phone.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.department.id_for_label }}">
+                    Department
+                </label>
+                {{ form.department }}
+                {% if form.department.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.department.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.bio.id_for_label }}">
+                    Bio
+                </label>
+                {{ form.bio }}
+                {% if form.bio.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.bio.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.avatar.id_for_label }}">
+                    Avatar
+                </label>
+                {{ form.avatar }}
+                {% if form.avatar.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.avatar.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+                <button type="submit" class="btn">
+                    Save Changes
+                </button>
+                <a href="{% url 'profile' %}" class="btn-secondary btn">
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

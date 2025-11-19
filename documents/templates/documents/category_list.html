@@ -1,0 +1,82 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Categories - DMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c;">
+        Categories
+    </h1>
+    {% if user.is_admin %}
+        <a href="{% url 'category_create' %}" class="btn">
+            Create Category
+        </a>
+    {% endif %}
+</div>
+
+{% if categories %}
+    <div class="grid grid-4">
+        {% for category in categories %}
+            <div class="card" style="{% if category.color %}border-top: 3px solid {{ category.color }};{% endif %}">
+                <div style="margin-bottom: 1rem;">
+                    {% if category.icon %}
+                        <span style="font-size: 2rem; display: block; margin-bottom: 0.5rem;">
+                            {{ category.icon }}
+                        </span>
+                    {% endif %}
+                    <h3 style="font-size: 1.125rem; font-weight: 600; color: #2c2c2c; margin-bottom: 0.5rem;">
+                        {{ category.name }}
+                    </h3>
+                    {% if category.parent %}
+                        <p style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                            Parent: {{ category.parent.name }}
+                        </p>
+                    {% endif %}
+                </div>
+
+                {% if category.description %}
+                    <p style="font-size: 0.875rem; color: #5c5c5c; margin-bottom: 1rem; line-height: 1.5;">
+                        {{ category.description|truncatewords:15 }}
+                    </p>
+                {% endif %}
+
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-size: 0.875rem; color: #7c7c7c;">
+                        {{ category.doc_count }} document{{ category.doc_count|pluralize }}
+                    </span>
+                    <a href="{% url 'document_list' %}?category={{ category.id }}" style="color: #2c2c2c; text-decoration: none; font-size: 0.875rem; font-weight: 500;">
+                        View →
+                    </a>
+                </div>
+
+                {% if category.subcategories.all %}
+                    <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e5e5;">
+                        <p style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                            Subcategories:
+                        </p>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                            {% for subcat in category.subcategories.all %}
+                                <a href="{% url 'document_list' %}?category={{ subcat.id }}" style="padding: 0.25rem 0.5rem; background: #fafafa; border: 1px solid #e5e5e5; font-size: 0.75rem; color: #2c2c2c; text-decoration: none;">
+                                    {{ subcat.name }}
+                                </a>
+                            {% endfor %}
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    </div>
+{% else %}
+    <div class="card">
+        <p style="color: #7c7c7c; text-align: center; padding: 3rem 0;">
+            No categories available yet.
+            {% if user.is_admin %}
+                <br><br>
+                <a href="{% url 'category_create' %}" class="btn">
+                    Create First Category
+                </a>
+            {% endif %}
+        </p>
+    </div>
+{% endif %}
+{% endblock %}

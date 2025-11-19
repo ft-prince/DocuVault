@@ -1,0 +1,29 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Delete Document - DMS{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 4rem auto;">
+    <div class="card">
+        <h1 style="font-size: 1.75rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+            Delete Document
+        </h1>
+        
+        <p style="font-size: 1rem; color: #5c5c5c; margin-bottom: 2rem;">
+            Are you sure you want to delete the document <strong>"{{ document.title }}"</strong>? This action cannot be undone.
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            <div style="display: flex; gap: 1rem;">
+                <button type="submit" class="btn" style="background: #2c2c2c;">
+                    Yes, Delete
+                </button>
+                <a href="{% url 'document_detail' document.pk %}" class="btn-secondary btn">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

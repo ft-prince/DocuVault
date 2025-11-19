@@ -1,0 +1,111 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Register - DMS{% endblock %}
+
+{% block content %}
+<div style="max-width: 450px; margin: 4rem auto;">
+    <div class="card">
+        <h1 style="font-size: 1.75rem; font-weight: 600; margin-bottom: 0.5rem; color: #2c2c2c;">
+            Create Account
+        </h1>
+        <p style="font-size: 0.95rem; color: #7c7c7c; margin-bottom: 2rem;">
+            Join Document Management System
+        </p>
+
+        <form method="post">
+            {% csrf_token %}
+            
+            {% if form.non_field_errors %}
+                <div style="padding: 1rem; background: #fafafa; border: 1px solid #e5e5e5; margin-bottom: 1.5rem;">
+                    {{ form.non_field_errors }}
+                </div>
+            {% endif %}
+            
+            <div class="form-group">
+                <label class="form-label" for="{{ form.username.id_for_label }}">
+                    Username
+                </label>
+                {{ form.username }}
+                {% if form.username.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.username.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.email.id_for_label }}">
+                    Email
+                </label>
+                {{ form.email }}
+                {% if form.email.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.email.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.first_name.id_for_label }}">
+                    First Name
+                </label>
+                {{ form.first_name }}
+                {% if form.first_name.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.first_name.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.last_name.id_for_label }}">
+                    Last Name
+                </label>
+                {{ form.last_name }}
+                {% if form.last_name.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.last_name.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.password1.id_for_label }}">
+                    Password
+                </label>
+                {{ form.password1 }}
+                {% if form.password1.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.password1.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="{{ form.password2.id_for_label }}">
+                    Confirm Password
+                </label>
+                {{ form.password2 }}
+                {% if form.password2.errors %}
+                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                        {{ form.password2.errors }}
+                    </div>
+                {% endif %}
+            </div>
+
+            <button type="submit" class="btn" style="width: 100%;">
+                Create Account
+            </button>
+        </form>
+
+        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.95rem;">
+            <p style="color: #7c7c7c;">
+                Already have an account? 
+                <a href="{% url 'login' %}" style="color: #2c2c2c; text-decoration: none; font-weight: 500;">
+                    Sign in here
+                </a>
+            </p>
+        </div>
+    </div>
+</div>
+{% endblock %}

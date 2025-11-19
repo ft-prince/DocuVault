@@ -1,0 +1,78 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Home - Document Management System{% endblock %}
+
+{% block content %}
+<div style="text-align: center; padding: 3rem 0;">
+    <h1 style="font-size: 2.5rem; font-weight: 600; margin-bottom: 1rem; color: #2c2c2c;">
+        Document Management System
+    </h1>
+    <p style="font-size: 1.125rem; color: #7c7c7c; margin-bottom: 2rem;">
+        Secure, organized, and efficient document management
+    </p>
+    
+    {% if not user.is_authenticated %}
+        <div style="display: flex; gap: 1rem; justify-content: center;">
+            <a href="{% url 'register' %}" class="btn">Get Started</a>
+            <a href="{% url 'login' %}" class="btn-secondary btn">Sign In</a>
+        </div>
+    {% endif %}
+</div>
+
+{% if categories %}
+<div style="margin: 3rem 0;">
+    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; color: #2c2c2c;">
+        Categories
+    </h2>
+    <div class="grid grid-4">
+        {% for category in categories %}
+            <div class="card">
+                <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">
+                    {{ category.name }}
+                </h3>
+                <p style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.75rem;">
+                    {{ category.description|truncatewords:10 }}
+                </p>
+                <p style="font-size: 0.875rem; color: #5c5c5c;">
+                    {{ category.doc_count }} document{{ category.doc_count|pluralize }}
+                </p>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+{% if public_documents %}
+<div style="margin: 3rem 0;">
+    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; color: #2c2c2c;">
+        Public Documents
+    </h2>
+    <div class="grid grid-3">
+        {% for document in public_documents %}
+            <div class="card">
+                <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">
+                    <a href="{% url 'document_detail' document.pk %}" style="color: #2c2c2c; text-decoration: none;">
+                        {{ document.title }}
+                    </a>
+                </h3>
+                <p style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.75rem;">
+                    {{ document.description|truncatewords:15 }}
+                </p>
+                <div style="font-size: 0.875rem; color: #5c5c5c;">
+                    <p>By {{ document.owner.username }}</p>
+                    {% if document.category %}
+                        <p>{{ document.category.name }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+    
+    {% if user.is_authenticated %}
+        <div style="text-align: center; margin-top: 2rem;">
+            <a href="{% url 'document_list' %}" class="btn-secondary btn">View All Documents</a>
+        </div>
+    {% endif %}
+</div>
+{% endif %}
+{% endblock %}

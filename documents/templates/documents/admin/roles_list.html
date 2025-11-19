@@ -1,0 +1,74 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Role Management - DMS Admin{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c;">
+        Role Management
+    </h1>
+    <a href="{% url 'admin_role_create' %}" class="btn">
+        Create Role
+    </a>
+</div>
+
+{% if roles %}
+    <div class="table-wrapper">
+        <table>
+            <thead>
+                <tr>
+                    <th>Role Name</th>
+                    <th>Level</th>
+                    <th>Description</th>
+                    <th>Users</th>
+                    <th>Default</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for role in roles %}
+                    <tr>
+                        <td>
+                            <strong style="color: #2c2c2c;">{{ role.name }}</strong>
+                        </td>
+                        <td>
+                            <span style="padding: 0.25rem 0.75rem; background: #fafafa; border: 1px solid #e5e5e5; font-size: 0.875rem;">
+                                Level {{ role.level }}
+                            </span>
+                        </td>
+                        <td style="max-width: 300px; font-size: 0.95rem; color: #5c5c5c;">
+                            {{ role.description|truncatewords:15 }}
+                        </td>
+                        <td>{{ role.user_count }}</td>
+                        <td>
+                            {% if role.is_default %}
+                                <span style="color: #2c2c2c;">Yes</span>
+                            {% else %}
+                                <span style="color: #7c7c7c;">No</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div style="display: flex; gap: 0.75rem;">
+                                <a href="{% url 'admin_role_edit' role.pk %}" style="color: #2c2c2c; text-decoration: none; font-size: 0.875rem;">
+                                    Edit
+                                </a>
+                                {% if not role.is_default %}
+                                    <a href="{% url 'admin_role_delete' role.pk %}" style="color: #7c7c7c; text-decoration: none; font-size: 0.875rem;">
+                                        Delete
+                                    </a>
+                                {% endif %}
+                            </div>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% else %}
+    <div class="card">
+        <p style="color: #7c7c7c; text-align: center; padding: 3rem 0;">
+            No roles found. Create your first role to get started.
+        </p>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,77 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Notifications - DMS{% endblock %}
+
+{% block content %}
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c;">
+        Notifications
+    </h1>
+    
+    <form method="post">
+        {% csrf_token %}
+        <input type="hidden" name="mark_all_read" value="true">
+        <button type="submit" class="btn-secondary btn btn-small">
+            Mark All as Read
+        </button>
+    </form>
+</div>
+
+{% if page_obj %}
+    {% for notification in page_obj %}
+        <div class="card" style="{% if not notification.is_read %}border-left: 3px solid #2c2c2c;{% endif %}">
+            <div style="display: flex; justify-content: space-between; align-items: start;">
+                <div style="flex: 1;">
+                    <h3 style="font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem; color: #2c2c2c;">
+                        {% if notification.document %}
+                            <a href="{% url 'notification_mark_read' notification.pk %}" style="color: #2c2c2c; text-decoration: none;">
+                                {{ notification.title }}
+                            </a>
+                        {% else %}
+                            {{ notification.title }}
+                        {% endif %}
+                    </h3>
+                    <p style="font-size: 0.95rem; color: #5c5c5c; margin-bottom: 0.5rem;">
+                        {{ notification.message }}
+                    </p>
+                    <div style="font-size: 0.875rem; color: #7c7c7c;">
+                        {% if notification.sender %}
+                            From {{ notification.sender.username }} • 
+                        {% endif %}
+                        {{ notification.created_at|timesince }} ago
+                    </div>
+                </div>
+                
+                {% if not notification.is_read %}
+                    <span style="width: 8px; height: 8px; background: #2c2c2c; border-radius: 50%; margin-left: 1rem;"></span>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+
+    <!-- Pagination -->
+    {% if page_obj.has_other_pages %}
+        <div class="pagination">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">First</a>
+                <a href="?page={{ page_obj.previous_page_number }}">Previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">Next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">Last</a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="card">
+        <p style="color: #7c7c7c; text-align: center; padding: 3rem 0;">
+            No notifications yet.
+        </p>
+    </div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,181 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Advanced Search - DMS{% endblock %}
+
+{% block content %}
+<h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 2rem;">
+    Advanced Search
+</h1>
+
+<!-- Search Form -->
+<div class="card" style="margin-bottom: 2rem;">
+    <form method="get">
+        <div class="grid grid-2">
+            <div class="form-group">
+                <label class="form-label" for="q">
+                    Search Keywords
+                </label>
+                <input 
+                    type="text" 
+                    id="q" 
+                    name="q" 
+                    class="form-control" 
+                    placeholder="Enter keywords..." 
+                    value="{{ query }}"
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="category">
+                    Category
+                </label>
+                <select name="category" id="category" class="form-control">
+                    <option value="">All Categories</option>
+                    {% for category in categories %}
+                        <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
+                            {{ category.name }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="owner">
+                    Owner
+                </label>
+                <select name="owner" id="owner" class="form-control">
+                    <option value="">All Users</option>
+                    {% for user_item in page_obj.object_list|map:'owner'|unique %}
+                        <option value="{{ user_item.id }}" {% if request.GET.owner == user_item.id|stringformat:"s" %}selected{% endif %}>
+                            {{ user_item.username }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="access_level">
+                    Access Level
+                </label>
+                <select name="access_level" id="access_level" class="form-control">
+                    <option value="">All Levels</option>
+                    <option value="public" {% if request.GET.access_level == "public" %}selected{% endif %}>Public</option>
+                    <option value="private" {% if request.GET.access_level == "private" %}selected{% endif %}>Private</option>
+                    <option value="role" {% if request.GET.access_level == "role" %}selected{% endif %}>Role-Based</option>
+                    <option value="custom" {% if request.GET.access_level == "custom" %}selected{% endif %}>Custom</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="date_from">
+                    Created From
+                </label>
+                <input 
+                    type="date" 
+                    id="date_from" 
+                    name="date_from" 
+                    class="form-control" 
+                    value="{{ request.GET.date_from }}"
+                >
+            </div>
+
+            <div class="form-group">
+                <label class="form-label" for="date_to">
+                    Created To
+                </label>
+                <input 
+                    type="date" 
+                    id="date_to" 
+                    name="date_to" 
+                    class="form-control" 
+                    value="{{ request.GET.date_to }}"
+                >
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+            <button type="submit" class="btn">
+                Search
+            </button>
+            <a href="{% url 'advanced_search' %}" class="btn-secondary btn">
+                Clear Filters
+            </a>
+        </div>
+    </form>
+</div>
+
+<!-- Search Results -->
+{% if query or request.GET %}
+    <div style="margin-bottom: 1.5rem;">
+        <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c;">
+            Search Results
+            {% if page_obj %}
+                <span style="color: #7c7c7c; font-weight: 400; font-size: 1rem;">
+                    ({{ page_obj.paginator.count }} document{{ page_obj.paginator.count|pluralize }} found)
+                </span>
+            {% endif %}
+        </h2>
+    </div>
+
+    {% if page_obj %}
+        <div class="grid grid-3">
+            {% for document in page_obj %}
+                <div class="card">
+                    <h3 style="font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem;">
+                        <a href="{% url 'document_detail' document.pk %}" style="color: #2c2c2c; text-decoration: none;">
+                            {{ document.title }}
+                        </a>
+                    </h3>
+                    <p style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.75rem;">
+                        {{ document.description|truncatewords:20 }}
+                    </p>
+                    <div style="display: flex; justify-content: space-between; align-items: center; font-size: 0.875rem;">
+                        <span style="color: #5c5c5c;">
+                            By {{ document.owner.username }}
+                        </span>
+                        {% if document.category %}
+                            <span style="padding: 0.25rem 0.5rem; background: #fafafa; border: 1px solid #e5e5e5; font-size: 0.75rem;">
+                                {{ document.category.name }}
+                            </span>
+                        {% endif %}
+                    </div>
+                    <div style="margin-top: 0.75rem; font-size: 0.875rem; color: #7c7c7c;">
+                        {{ document.created_at|date:"M d, Y" }}
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+            <div class="pagination">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1&{{ request.GET.urlencode }}">First</a>
+                    <a href="?page={{ page_obj.previous_page_number }}&{{ request.GET.urlencode }}">Previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}&{{ request.GET.urlencode }}">Next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}&{{ request.GET.urlencode }}">Last</a>
+                {% endif %}
+            </div>
+        {% endif %}
+    {% else %}
+        <div class="card">
+            <p style="color: #7c7c7c; text-align: center; padding: 3rem 0;">
+                No documents found matching your search criteria.
+            </p>
+        </div>
+    {% endif %}
+{% else %}
+    <div class="card">
+        <p style="color: #7c7c7c; text-align: center; padding: 3rem 0;">
+            Enter search criteria above to find documents.
+        </p>
+    </div>
+{% endif %}
+{% endblock %}

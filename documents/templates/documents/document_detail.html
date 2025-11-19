@@ -1,0 +1,217 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}{{ document.title }} - DMS{% endblock %}
+
+{% block content %}
+<!-- Document Header -->
+<div style="margin-bottom: 2rem;">
+    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+        <div style="flex: 1;">
+            <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 0.5rem;">
+                {{ document.title }}
+            </h1>
+            <div style="display: flex; gap: 1.5rem; font-size: 0.95rem; color: #7c7c7c;">
+                <span>By {{ document.owner.username }}</span>
+                <span>Version {{ document.version }}</span>
+                <span>{{ document.views_count }} views</span>
+                <span>{{ document.downloads_count }} downloads</span>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 0.75rem;">
+            {% if can_edit %}
+                <a href="{% url 'document_edit' document.pk %}" class="btn-secondary btn btn-small">
+                    Edit
+                </a>
+            {% endif %}
+            
+            {% if can_delete %}
+                <a href="{% url 'document_delete' document.pk %}" class="btn-secondary btn btn-small">
+                    Delete
+                </a>
+            {% endif %}
+            
+            {% if document.allow_download %}
+                <a href="{% url 'document_download' document.pk %}" class="btn btn-small">
+                    Download
+                </a>
+            {% endif %}
+            
+            <form method="post" action="{% url 'favorite_toggle' document.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn-secondary btn btn-small">
+                    {% if is_favorited %}★{% else %}☆{% endif %} Favorite
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Document Info -->
+<div class="grid grid-3" style="margin-bottom: 2rem;">
+    <div class="card">
+        <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+            Category
+        </h3>
+        <p style="font-size: 1rem; color: #2c2c2c;">
+            {% if document.category %}
+                {{ document.category.name }}
+            {% else %}
+                Uncategorized
+            {% endif %}
+        </p>
+    </div>
+    
+    <div class="card">
+        <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+            Access Level
+        </h3>
+        <p style="font-size: 1rem; color: #2c2c2c;">
+            {{ document.get_access_level_display }}
+        </p>
+    </div>
+    
+    <div class="card">
+        <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+            Last Updated
+        </h3>
+        <p style="font-size: 1rem; color: #2c2c2c;">
+            {{ document.updated_at|date:"M d, Y" }}
+        </p>
+    </div>
+</div>
+
+<!-- Description -->
+{% if document.description %}
+<div class="card" style="margin-bottom: 2rem;">
+    <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+        Description
+    </h2>
+    <p style="color: #5c5c5c; line-height: 1.7;">
+        {{ document.description }}
+    </p>
+</div>
+{% endif %}
+
+<!-- Tags -->
+{% if document.tags.all %}
+<div style="margin-bottom: 2rem;">
+    <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+        Tags
+    </h2>
+    <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        {% for tag in document.tags.all %}
+            <span style="padding: 0.375rem 1rem; background: #fafafa; border: 1px solid #e5e5e5; font-size: 0.875rem;">
+                {{ tag.name }}
+            </span>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Comments Section -->
+{% if document.allow_comments %}
+<div style="margin-bottom: 2rem;">
+    <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+        Comments ({{ comments.count }})
+    </h2>
+    
+    <!-- Add Comment Form -->
+    <div class="card" style="margin-bottom: 1.5rem;">
+        <form method="post" action="{% url 'comment_create' document.pk %}">
+            {% csrf_token %}
+            <div class="form-group">
+                <textarea 
+                    name="content" 
+                    class="form-control" 
+                    rows="3" 
+                    placeholder="Write a comment..."
+                    required
+                ></textarea>
+            </div>
+            <button type="submit" class="btn btn-small">
+                Post Comment
+            </button>
+        </form>
+    </div>
+    
+    <!-- Comments List -->
+    {% if comments %}
+        {% for comment in comments %}
+            <div class="card" style="margin-bottom: 1rem;">
+                <div style="margin-bottom: 0.75rem;">
+                    <strong style="color: #2c2c2c;">{{ comment.user.username }}</strong>
+                    <span style="color: #7c7c7c; font-size: 0.875rem; margin-left: 0.5rem;">
+                        {{ comment.created_at|timesince }} ago
+                    </span>
+                </div>
+                <p style="color: #5c5c5c; margin-bottom: 0.75rem;">
+                    {{ comment.content }}
+                </p>
+                
+                {% if comment.user == user or user.is_admin %}
+                    <form method="post" action="{% url 'comment_delete' comment.pk %}" style="display: inline;">
+                        {% csrf_token %}
+                        <button type="submit" style="background: none; border: none; color: #7c7c7c; cursor: pointer; font-size: 0.875rem; padding: 0;">
+                            Delete
+                        </button>
+                    </form>
+                {% endif %}
+                
+                <!-- Replies -->
+                {% if comment.replies.all %}
+                    <div style="margin-left: 2rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e5e5;">
+                        {% for reply in comment.replies.all %}
+                            <div style="margin-bottom: 1rem;">
+                                <strong style="color: #2c2c2c;">{{ reply.user.username }}</strong>
+                                <span style="color: #7c7c7c; font-size: 0.875rem; margin-left: 0.5rem;">
+                                    {{ reply.created_at|timesince }} ago
+                                </span>
+                                <p style="color: #5c5c5c; margin-top: 0.5rem;">
+                                    {{ reply.content }}
+                                </p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+    {% else %}
+        <p style="color: #7c7c7c; text-align: center; padding: 2rem 0;">
+            No comments yet. Be the first to comment!
+        </p>
+    {% endif %}
+</div>
+{% endif %}
+
+<!-- Version History -->
+{% if versions %}
+<div>
+    <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+        Version History
+    </h2>
+    <div class="card">
+        {% for version in versions %}
+            <div style="padding: 1rem 0; {% if not forloop.last %}border-bottom: 1px solid #e5e5e5;{% endif %}">
+                <div style="display: flex; justify-content: space-between; align-items: start;">
+                    <div>
+                        <strong style="color: #2c2c2c;">Version {{ version.version_number }}</strong>
+                        <p style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                            Uploaded by {{ version.uploaded_by.username }} • {{ version.created_at|timesince }} ago
+                        </p>
+                        {% if version.change_note %}
+                            <p style="color: #5c5c5c; margin-top: 0.5rem; font-size: 0.95rem;">
+                                {{ version.change_note }}
+                            </p>
+                        {% endif %}
+                    </div>
+                    <span style="color: #7c7c7c; font-size: 0.875rem;">
+                        {{ version.file_size|filesizeformat }}
+                    </span>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

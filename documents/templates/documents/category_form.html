@@ -1,0 +1,105 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}{{ action }} Category - DMS{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 2rem;">
+        Create Category
+    </h1>
+
+    <form method="post" class="card">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div style="padding: 1rem; background: #fafafa; border: 1px solid #e5e5e5; margin-bottom: 1.5rem;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.name.id_for_label }}">
+                Category Name *
+            </label>
+            {{ form.name }}
+            {% if form.name.errors %}
+                <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.name.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.description.id_for_label }}">
+                Description
+            </label>
+            {{ form.description }}
+            {% if form.description.errors %}
+                <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.description.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.parent.id_for_label }}">
+                Parent Category
+            </label>
+            {{ form.parent }}
+            {% if form.parent.help_text %}
+                <div class="form-help">
+                    Select a parent category to create a subcategory
+                </div>
+            {% endif %}
+            {% if form.parent.errors %}
+                <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.parent.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.color.id_for_label }}">
+                Color
+            </label>
+            {{ form.color }}
+            {% if form.color.help_text %}
+                <div class="form-help">
+                    Choose a color to identify this category
+                </div>
+            {% endif %}
+            {% if form.color.errors %}
+                <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.color.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.icon.id_for_label }}">
+                Icon Class
+            </label>
+            {{ form.icon }}
+            {% if form.icon.help_text %}
+                <div class="form-help">
+                    {{ form.icon.help_text }}
+                </div>
+            {% endif %}
+            {% if form.icon.errors %}
+                <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.icon.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn">
+                Create Category
+            </button>
+            <a href="{% url 'category_list' %}" class="btn-secondary btn">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

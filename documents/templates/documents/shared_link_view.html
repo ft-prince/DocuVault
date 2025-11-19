@@ -1,0 +1,146 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}{{ document.title }} - Shared Link{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <!-- Shared Link Banner -->
+    <div style="background: #fafafa; border: 1px solid #e5e5e5; padding: 1rem; margin-bottom: 2rem; text-align: center;">
+        <p style="font-size: 0.95rem; color: #5c5c5c;">
+            📎 You are viewing this document via a shared link
+        </p>
+    </div>
+
+    <!-- Document Header -->
+    <div style="margin-bottom: 2rem;">
+        <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 0.5rem;">
+            {{ document.title }}
+        </h1>
+        <div style="display: flex; gap: 1.5rem; font-size: 0.95rem; color: #7c7c7c;">
+            <span>By {{ document.owner.username }}</span>
+            <span>{{ document.views_count }} views</span>
+            {% if can_download %}
+                <span>{{ document.downloads_count }} downloads</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Download Button -->
+    {% if can_download and document.allow_download %}
+        <div style="margin-bottom: 2rem;">
+            <a href="{% url 'document_download' document.pk %}" class="btn">
+                Download Document
+            </a>
+        </div>
+    {% endif %}
+
+    <!-- Document Info -->
+    <div class="grid grid-3" style="margin-bottom: 2rem;">
+        <div class="card">
+            <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                Category
+            </h3>
+            <p style="font-size: 1rem; color: #2c2c2c;">
+                {% if document.category %}
+                    {{ document.category.name }}
+                {% else %}
+                    Uncategorized
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="card">
+            <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                File Size
+            </h3>
+            <p style="font-size: 1rem; color: #2c2c2c;">
+                {{ document.file_size|filesizeformat }}
+            </p>
+        </div>
+        
+        <div class="card">
+            <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                Last Updated
+            </h3>
+            <p style="font-size: 1rem; color: #2c2c2c;">
+                {{ document.updated_at|date:"M d, Y" }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Description -->
+    {% if document.description %}
+        <div class="card" style="margin-bottom: 2rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+                Description
+            </h2>
+            <p style="color: #5c5c5c; line-height: 1.7;">
+                {{ document.description }}
+            </p>
+        </div>
+    {% endif %}
+
+    <!-- Tags -->
+    {% if document.tags.all %}
+        <div style="margin-bottom: 2rem;">
+            <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+                Tags
+            </h2>
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                {% for tag in document.tags.all %}
+                    <span style="padding: 0.375rem 1rem; background: #fafafa; border: 1px solid #e5e5e5; font-size: 0.875rem;">
+                        {{ tag.name }}
+                    </span>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Link Info -->
+    <div class="card" style="background: #fafafa;">
+        <h3 style="font-size: 1rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+            Shared Link Information
+        </h3>
+        <div style="display: grid; gap: 0.75rem; font-size: 0.95rem;">
+            <div>
+                <span style="color: #7c7c7c;">Shared by:</span>
+                <strong style="margin-left: 0.5rem; color: #2c2c2c;">{{ link.created_by.username }}</strong>
+            </div>
+            <div>
+                <span style="color: #7c7c7c;">Created:</span>
+                <strong style="margin-left: 0.5rem; color: #2c2c2c;">{{ link.created_at|date:"M d, Y" }}</strong>
+            </div>
+            {% if link.expires_at %}
+                <div>
+                    <span style="color: #7c7c7c;">Expires:</span>
+                    <strong style="margin-left: 0.5rem; color: #2c2c2c;">{{ link.expires_at|date:"M d, Y" }}</strong>
+                </div>
+            {% endif %}
+            <div>
+                <span style="color: #7c7c7c;">Access count:</span>
+                <strong style="margin-left: 0.5rem; color: #2c2c2c;">
+                    {{ link.access_count }}{% if link.max_access_count %} / {{ link.max_access_count }}{% endif %}
+                </strong>
+            </div>
+            {% if not can_download %}
+                <div>
+                    <span style="color: #7c7c7c;">Downloads:</span>
+                    <strong style="margin-left: 0.5rem; color: #2c2c2c;">Not allowed</strong>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Footer Message -->
+    <div style="margin-top: 3rem; text-align: center; padding: 2rem; border-top: 1px solid #e5e5e5;">
+        <p style="font-size: 0.95rem; color: #7c7c7c;">
+            Want to create your own secure document sharing system?
+        </p>
+        <p style="font-size: 0.95rem; color: #7c7c7c; margin-top: 0.5rem;">
+            <a href="{% url 'home' %}" style="color: #2c2c2c; text-decoration: none; font-weight: 500;">
+                Learn more about Document Management System →
+            </a>
+        </p>
+    </div>
+</div>
+{% endblock %}

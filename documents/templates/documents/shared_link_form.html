@@ -1,0 +1,108 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Create Shareable Link - DMS{% endblock %}
+
+{% block content %}
+<div style="max-width: 600px; margin: 0 auto;">
+    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+        Create Shareable Link
+    </h1>
+    <p style="font-size: 0.95rem; color: #7c7c7c; margin-bottom: 2rem;">
+        For: <strong>{{ document.title }}</strong>
+    </p>
+
+    <form method="post" class="card">
+        {% csrf_token %}
+        
+        {% if form.non_field_errors %}
+            <div style="padding: 1rem; background: #fafafa; border: 1px solid #e5e5e5; margin-bottom: 1.5rem;">
+                {{ form.non_field_errors }}
+            </div>
+        {% endif %}
+
+        <div style="padding: 1rem; background: #fafafa; border: 1px solid #e5e5e5; margin-bottom: 1.5rem;">
+            <p style="font-size: 0.95rem; color: #2c2c2c; margin-bottom: 0.5rem;">
+                <strong>About Shareable Links</strong>
+            </p>
+            <p style="font-size: 0.875rem; color: #5c5c5c; line-height: 1.6;">
+                Create a temporary link that allows anyone with the link to view this document. 
+                You can optionally set an expiration date, access limit, and password protection.
+            </p>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.password.id_for_label }}">
+                Password Protection (Optional)
+            </label>
+            {{ form.password }}
+            {% if form.password.help_text %}
+                <div class="form-help">
+                    {{ form.password.help_text }}
+                </div>
+            {% endif %}
+            {% if form.password.errors %}
+                <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.password.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.expires_in_days.id_for_label }}">
+                Expires In (Days)
+            </label>
+            {{ form.expires_in_days }}
+            {% if form.expires_in_days.help_text %}
+                <div class="form-help">
+                    {{ form.expires_in_days.help_text }}
+                </div>
+            {% endif %}
+            {% if form.expires_in_days.errors %}
+                <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.expires_in_days.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="{{ form.max_access_count.id_for_label }}">
+                Maximum Access Count
+            </label>
+            {{ form.max_access_count }}
+            {% if form.max_access_count.help_text %}
+                <div class="form-help">
+                    {{ form.max_access_count.help_text }}
+                </div>
+            {% endif %}
+            {% if form.max_access_count.errors %}
+                <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
+                    {{ form.max_access_count.errors }}
+                </div>
+            {% endif %}
+        </div>
+
+        <div class="form-group">
+            <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                {{ form.allow_download }}
+                <span style="font-size: 0.95rem; color: #2c2c2c;">
+                    Allow downloads
+                </span>
+            </label>
+            {% if form.allow_download.help_text %}
+                <div class="form-help" style="margin-left: 1.75rem;">
+                    Allow users to download the document via this link
+                </div>
+            {% endif %}
+        </div>
+
+        <div style="display: flex; gap: 1rem; margin-top: 2rem;">
+            <button type="submit" class="btn">
+                Create Link
+            </button>
+            <a href="{% url 'document_detail' document.pk %}" class="btn-secondary btn">
+                Cancel
+            </a>
+        </div>
+    </form>
+</div>
+{% endblock %}

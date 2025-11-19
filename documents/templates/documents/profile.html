@@ -1,0 +1,144 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Profile - DMS{% endblock %}
+
+{% block content %}
+<div style="max-width: 900px; margin: 0 auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+        <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c;">
+            {% if is_own_profile %}Your Profile{% else %}{{ profile_user.username }}'s Profile{% endif %}
+        </h1>
+        
+        {% if is_own_profile %}
+            <a href="{% url 'profile_edit' %}" class="btn-secondary btn">
+                Edit Profile
+            </a>
+        {% endif %}
+    </div>
+
+    <div class="grid grid-3" style="margin-bottom: 2rem;">
+        <div class="card">
+            <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                Username
+            </h3>
+            <p style="font-size: 1rem; color: #2c2c2c;">
+                {{ profile_user.username }}
+            </p>
+        </div>
+        
+        <div class="card">
+            <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                Full Name
+            </h3>
+            <p style="font-size: 1rem; color: #2c2c2c;">
+                {{ profile_user.get_full_name|default:"Not provided" }}
+            </p>
+        </div>
+        
+        <div class="card">
+            <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                Email
+            </h3>
+            <p style="font-size: 1rem; color: #2c2c2c;">
+                {{ profile_user.email }}
+            </p>
+        </div>
+    </div>
+
+    <div class="grid grid-3" style="margin-bottom: 2rem;">
+        <div class="card">
+            <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                User Type
+            </h3>
+            <p style="font-size: 1rem; color: #2c2c2c;">
+                {{ profile_user.get_user_type_display }}
+            </p>
+        </div>
+        
+        <div class="card">
+            <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                Role
+            </h3>
+            <p style="font-size: 1rem; color: #2c2c2c;">
+                {% if profile_user.role %}
+                    {{ profile_user.role.name }} (Level {{ profile_user.role.level }})
+                {% else %}
+                    No role assigned
+                {% endif %}
+            </p>
+        </div>
+        
+        <div class="card">
+            <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                Member Since
+            </h3>
+            <p style="font-size: 1rem; color: #2c2c2c;">
+                {{ profile_user.created_at|date:"M d, Y" }}
+            </p>
+        </div>
+    </div>
+
+    {% if profile_user.department or profile_user.phone %}
+        <div class="grid grid-2" style="margin-bottom: 2rem;">
+            {% if profile_user.department %}
+                <div class="card">
+                    <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                        Department
+                    </h3>
+                    <p style="font-size: 1rem; color: #2c2c2c;">
+                        {{ profile_user.department }}
+                    </p>
+                </div>
+            {% endif %}
+            
+            {% if profile_user.phone %}
+                <div class="card">
+                    <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
+                        Phone
+                    </h3>
+                    <p style="font-size: 1rem; color: #2c2c2c;">
+                        {{ profile_user.phone }}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    {% if profile_user.bio %}
+        <div class="card" style="margin-bottom: 2rem;">
+            <h3 style="font-size: 1rem; color: #7c7c7c; margin-bottom: 0.75rem;">
+                Bio
+            </h3>
+            <p style="font-size: 1rem; color: #2c2c2c; line-height: 1.7;">
+                {{ profile_user.bio }}
+            </p>
+        </div>
+    {% endif %}
+
+    {% if documents %}
+        <div>
+            <h2 style="font-size: 1.5rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+                Public Documents
+            </h2>
+            
+            <div class="grid grid-3">
+                {% for document in documents %}
+                    <div class="card">
+                        <h3 style="font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem;">
+                            <a href="{% url 'document_detail' document.pk %}" style="color: #2c2c2c; text-decoration: none;">
+                                {{ document.title }}
+                            </a>
+                        </h3>
+                        <p style="font-size: 0.875rem; color: #7c7c7c;">
+                            {{ document.description|truncatewords:10 }}
+                        </p>
+                        <p style="font-size: 0.875rem; color: #7c7c7c; margin-top: 0.5rem;">
+                            {{ document.views_count }} views
+                        </p>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}
