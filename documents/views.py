@@ -909,6 +909,13 @@ def advanced_search_view(request):
             Q(access_level='custom', shared_with=request.user)
         ).distinct()
     
+    # Get unique owners for the dropdown
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    owners = User.objects.filter(
+        owned_documents__is_deleted=False
+    ).distinct().order_by('username')
+    
     paginator = Paginator(documents, 20)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -916,11 +923,10 @@ def advanced_search_view(request):
     context = {
         'page_obj': page_obj,
         'categories': Category.objects.all(),
+        'owners': owners,  # Add this
         'query': query,
     }
     return render(request, 'documents/advanced_search.html', context)
-
-
 # ============================================================
 # ACTIVITY LOG VIEWS
 # ============================================================

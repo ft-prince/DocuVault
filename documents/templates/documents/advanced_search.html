@@ -45,14 +45,13 @@
                 </label>
                 <select name="owner" id="owner" class="form-control">
                     <option value="">All Users</option>
-                    {% for user_item in page_obj.object_list|map:'owner'|unique %}
+                    {% for user_item in owners %}
                         <option value="{{ user_item.id }}" {% if request.GET.owner == user_item.id|stringformat:"s" %}selected{% endif %}>
                             {{ user_item.username }}
                         </option>
                     {% endfor %}
                 </select>
             </div>
-
             <div class="form-group">
                 <label class="form-label" for="access_level">
                     Access Level
