@@ -1,0 +1,28 @@
+# RAG System Additional Requirements
+# Add these to your existing requirements.txt
+
+# LangChain for document processing
+langchain>=0.1.0
+langchain-community>=0.0.20
+
+# Embeddings and transformers
+sentence-transformers>=2.2.0
+transformers>=4.36.0
+accelerate>=0.25.0
+bitsandbytes>=0.41.0
+
+# PDF processing
+pymupdf>=1.23.0
+pypdf>=3.17.0
+
+# Vector database
+chromadb>=0.4.0
+
+# Progress bars and utilities
+tqdm>=4.66.0
+
+# PyTorch (install separately based on your system)
+# For CUDA 11.8: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118
+# For CUDA 12.1: pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
+# For CPU only: pip install torch torchvision torchaudio
+torch>=2.0.0
