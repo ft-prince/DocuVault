@@ -159,7 +159,6 @@ A **complete, production-ready backend** for a comprehensive Document Management
 | **BONUS: Activity logging** | ✅ Added | Complete audit trail |
 | **BONUS: Favorites** | ✅ Added | Bookmark system |
 | **BONUS: Shareable links** | ✅ Added | Temporary links with security |
-| **BONUS: REST API** | ✅ Added | External access |
 | **BONUS: Categories** | ✅ Added | Hierarchical organization |
 | **BONUS: Tags** | ✅ Added | Flexible tagging |
 
