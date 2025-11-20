@@ -399,6 +399,9 @@ def document_delete_view(request, pk):
     return render(request, 'documents/document_confirm_delete.html', {'document': document})
 
 
+import os
+from django.utils.encoding import escape_uri_path
+
 @login_required
 def document_download_view(request, pk):
     """Download a document"""
@@ -427,13 +430,14 @@ def document_download_view(request, pk):
     if not os.path.exists(file_path):
         raise Http404("File not found.")
     
+    # Get the original filename from the file field
+    original_filename = os.path.basename(document.file.name)
+    
     response = FileResponse(open(file_path, 'rb'))
     response['Content-Type'] = document.file_type or 'application/octet-stream'
-    response['Content-Disposition'] = f'attachment; filename="{document.title}"'
+    response['Content-Disposition'] = f'attachment; filename="{escape_uri_path(original_filename)}"'
     
     return response
-
-
 # ============================================================
 # COMMENT VIEWS
 # ============================================================
