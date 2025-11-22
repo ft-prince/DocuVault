@@ -90,13 +90,13 @@ class EmbeddingManager:
             query: Query text string
             
         Returns:
-            NumPy array of embedding
+            NumPy array of embedding (1D array)
         """
         if self.model is None:
             self.load_model()
         
         embedding = self.model.encode(
-            [query],
+            query,  # Single string, not a list
             normalize_embeddings=True,
             convert_to_numpy=True
         )

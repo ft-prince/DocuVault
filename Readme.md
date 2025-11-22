@@ -1,8 +1,17 @@
-# Document Management System (DMS)
+# DocuVault - Document Management System with RAG Chatbot
 
-A comprehensive Django-based Document Management System with role-based access control, version tracking, collaboration features, and advanced document management capabilities.
+A comprehensive Django-based Document Management System with role-based access control, version tracking, collaboration features, and an AI-powered RAG (Retrieval-Augmented Generation) chatbot for intelligent document querying.
 
 ## 🚀 Features
+
+### 🤖 AI-Powered RAG Chatbot (NEW)
+- **Intelligent Document Search**: Ask questions about your documents in natural language
+- **Context-Aware Responses**: Uses Qwen2.5-7B LLM for accurate answers
+- **Source Citations**: Shows which documents were used to generate answers
+- **Conversation Memory**: Maintains chat history for contextual follow-ups
+- **Document Indexing**: Automatic vectorization using Qwen3-Embedding-0.6B
+- **GPU Acceleration**: CUDA support for fast inference
+- **Permission-Aware**: Only searches documents you have access to
 
 ### User Management & Authentication
 - **Guest Users**: View public documents and create accounts
@@ -59,24 +68,41 @@ A comprehensive Django-based Document Management System with role-based access c
 ## 📁 Project Structure
 
 ```
-dms_project/
-├── documents/
+DocuVault/
+├── config/                 # Django project settings
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── documents/              # Main Django app
 │   ├── models.py           # Database models
 │   ├── views.py            # View functions
+│   ├── rag_views.py        # RAG chatbot views
 │   ├── urls.py             # URL routing
 │   ├── forms.py            # Form definitions
-│   ├── admin.py            # Admin interface configuration
-│   ├── migrations/         # Database migrations
-│   └── templates/          # HTML templates
-│       └── documents/
-│           ├── auth/       # Authentication templates
-│           ├── admin/      # Admin templates
-│           └── ...         # Other templates
+│   ├── admin.py            # Admin interface
+│   ├── rag/                # RAG system modules
+│   │   ├── config.py       # RAG configuration
+│   │   ├── conversation.py # Main chatbot class
+│   │   ├── embeddings.py   # Embedding generation
+│   │   ├── vector_store.py # ChromaDB operations
+│   │   ├── llm_manager.py  # LLM loading/inference
+│   │   ├── retriever.py    # Query processing
+│   │   └── document_processor.py # Document chunking
+│   ├── templates/          # HTML templates
+│   │   └── documents/
+│   │       ├── chatbot.html
+│   │       ├── auth/
+│   │       └── ...
+│   └── migrations/         # Database migrations
 ├── media/                  # User uploaded files
 │   ├── documents/          # Document files
 │   ├── avatars/            # User avatars
-│   └── document_versions/  # Version files
-└── static/                 # Static files (CSS, JS, images)
+│   └── rag/                # RAG data
+│       └── chroma_db/      # Vector database
+├── static/                 # Static files (CSS, JS)
+├── fix_dependencies.py     # Automated installer
+├── test_rag.py             # RAG testing script
+└── manage.py               # Django management
 ```
 
 ## 🗄️ Database Models
@@ -115,6 +141,11 @@ dms_project/
 9. **Favorite** - User bookmarks
 10. **ActivityLog** - Complete audit trail
 11. **Notification** - User notifications
+
+### RAG System Models
+12. **ChatSession** - User chatbot sessions
+13. **ChatMessage** - Individual chat messages with sources
+14. **DocumentEmbedding** - Document indexing status and metadata
 
 ## 🔐 Permission System
 
@@ -210,37 +241,83 @@ dms_project/
 
 ## 🔧 Installation & Setup
 
-1. **Install Django and dependencies**:
+### Prerequisites
+- Python 3.10+
+- CUDA-capable GPU (optional, for RAG chatbot acceleration)
+- 8GB+ RAM (16GB recommended for RAG features)
+
+### Quick Setup
+
+1. **Clone the repository**:
 ```bash
-pip install django pillow
+git clone https://github.com/ft-prince/DocuVault.git
+cd DocuVault
 ```
 
-2. **Create migrations**:
+2. **Create virtual environment**:
 ```bash
-python manage.py makemigrations documents
+python -m venv venv
+# Windows
+venv\Scripts\activate
+# Linux/Mac
+source venv/bin/activate
+```
+
+3. **Install dependencies** (Automated):
+```bash
+python fix_dependencies.py
+```
+
+Or manually:
+```bash
+pip install -r requirements.txt
+pip install -r requirements_rag.txt
+```
+
+4. **Run migrations**:
+```bash
 python manage.py migrate
 ```
 
-3. **Create superuser**:
+5. **Create superuser**:
 ```bash
 python manage.py createsuperuser
 ```
 
-4. **Create default roles** (in Django shell):
-```python
-from documents.models import Role
-
-# Create basic roles
-Role.objects.create(name='Viewer', level=10, is_default=True, description='Can view basic documents')
-Role.objects.create(name='Editor', level=30, description='Can create and edit documents')
-Role.objects.create(name='Manager', level=50, description='Can manage team documents')
-Role.objects.create(name='Admin', level=100, is_default=True, description='Full access')
-```
-
-5. **Run the development server**:
+6. **Run the development server**:
 ```bash
 python manage.py runserver
 ```
+
+7. **Access the application**:
+- Main site: http://127.0.0.1:8000/
+- Admin panel: http://127.0.0.1:8000/admin/
+- RAG Chatbot: http://127.0.0.1:8000/chatbot/
+
+### Windows Automated Setup
+For Windows users, use the provided scripts:
+```bash
+# PowerShell
+.\setup_windows.ps1
+
+# Command Prompt
+setup_windows.bat
+```
+
+## 🤖 RAG Chatbot Setup
+
+The RAG chatbot uses the following models:
+- **LLM**: Qwen/Qwen2.5-7B (8-bit quantized, ~7GB)
+- **Embeddings**: Qwen/Qwen3-Embedding-0.6B (~2GB)
+- **Vector DB**: ChromaDB (persistent storage)
+
+### First-time Usage
+1. Upload documents through the document management interface
+2. Index documents by clicking the "Index for RAG" button on each document
+3. Navigate to the chatbot page
+4. Ask questions about your indexed documents
+
+**Note**: First run will download models (~9GB total). Ensure stable internet connection.
 
 ## 📝 Usage Examples
 
@@ -310,20 +387,37 @@ ActivityLog.objects.create(
 - Activity logging for audit trails
 - Soft delete to prevent accidental data loss
 
+## 🛠️ Technology Stack
+
+- **Backend**: Django 4.2.26
+- **Database**: SQLite (default) / PostgreSQL (production)
+- **AI/ML**: 
+  - LangChain 0.1.20
+  - Transformers (HuggingFace)
+  - Sentence-Transformers
+  - PyTorch with CUDA support
+- **Vector Database**: ChromaDB
+- **Frontend**: HTML, CSS, JavaScript (vanilla)
+
+## 📦 Project Files
+
+- `fix_dependencies.py` - Automated dependency installer
+- `test_rag.py` - RAG system testing script
+- `setup_windows.bat` - Windows CMD setup script
+- `setup_windows.ps1` - Windows PowerShell setup script
+- `requirements.txt` - Core Django dependencies
+- `requirements_rag.txt` - RAG/AI dependencies
+
 ## 🚦 Future Enhancements
 
-- [ ] Full-text search using Elasticsearch
+- [ ] Multi-language support for RAG chatbot
+- [ ] Document summarization
+- [ ] Batch document indexing improvements
 - [ ] Real-time collaboration using WebSockets
-- [ ] OCR for scanned documents
-- [ ] Advanced file preview (PDF, Office docs)
 - [ ] Email notifications
-- [ ] Document templates
-- [ ] Workflow automation
 - [ ] API endpoints (REST/GraphQL)
-- [ ] Mobile app integration
 - [ ] Cloud storage integration (AWS S3, Google Drive)
 - [ ] Advanced analytics and reporting
-- [ ] Document encryption at rest
 - [ ] Two-factor authentication
 
 ## 📄 License
