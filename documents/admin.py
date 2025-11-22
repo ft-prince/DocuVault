@@ -3,7 +3,8 @@ from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from django.utils.html import format_html
 from .models import (
     User, Role, Document, Category, Tag, DocumentVersion,
-    DocumentComment, SharedLink, Favorite, ActivityLog, Notification
+    DocumentComment, SharedLink, Favorite, ActivityLog, Notification,
+    ChatSession, ChatMessage, DocumentEmbedding
 )
 
 
@@ -216,3 +217,69 @@ class NotificationAdmin(admin.ModelAdmin):
         updated = queryset.update(is_read=False)
         self.message_user(request, f'{updated} notifications marked as unread.')
     mark_as_unread.short_description = 'Mark selected notifications as unread'
+
+
+# ============================================================
+# RAG CHATBOT ADMIN
+# ============================================================
+
+class ChatMessageInline(admin.TabularInline):
+    """Inline for chat messages"""
+    model = ChatMessage
+    extra = 0
+    readonly_fields = ('message_type', 'content', 'created_at', 'retrieval_time', 'generation_time')
+    can_delete = False
+    max_num = 0  # Don't allow adding through inline
+
+
+@admin.register(ChatSession)
+class ChatSessionAdmin(admin.ModelAdmin):
+    """Chat session admin"""
+    list_display = ('user', 'title', 'message_count', 'is_active', 'created_at', 'updated_at')
+    list_filter = ('is_active', 'created_at', 'updated_at')
+    search_fields = ('user__username', 'title')
+    ordering = ('-updated_at',)
+    readonly_fields = ('created_at', 'updated_at', 'message_count')
+    filter_horizontal = ('documents',)
+    inlines = [ChatMessageInline]
+    
+    def message_count(self, obj):
+        return obj.get_message_count()
+    message_count.short_description = 'Messages'
+
+
+@admin.register(ChatMessage)
+class ChatMessageAdmin(admin.ModelAdmin):
+    """Chat message admin"""
+    list_display = ('session', 'message_type', 'content_preview', 'created_at', 'retrieval_time', 'generation_time')
+    list_filter = ('message_type', 'created_at')
+    search_fields = ('session__user__username', 'content')
+    ordering = ('-created_at',)
+    readonly_fields = ('created_at', 'sources', 'retrieval_time', 'generation_time')
+    
+    def content_preview(self, obj):
+        preview = obj.content[:100] + '...' if len(obj.content) > 100 else obj.content
+        return preview
+    content_preview.short_description = 'Content'
+
+
+@admin.register(DocumentEmbedding)
+class DocumentEmbeddingAdmin(admin.ModelAdmin):
+    """Document embedding admin"""
+    list_display = ('document', 'is_indexed', 'index_status', 'chunk_count', 'embedding_model', 'last_indexed_at', 'retry_count')
+    list_filter = ('is_indexed', 'index_status', 'created_at', 'updated_at')
+    search_fields = ('document__title', 'embedding_model', 'error_message')
+    ordering = ('-updated_at',)
+    readonly_fields = ('created_at', 'updated_at', 'indexed_at', 'last_indexed_at')
+    
+    actions = ['retry_indexing', 'reset_status']
+    
+    def retry_indexing(self, request, queryset):
+        updated = queryset.update(index_status='pending', error_message='')
+        self.message_user(request, f'{updated} documents queued for re-indexing.')
+    retry_indexing.short_description = 'Retry indexing for selected documents'
+    
+    def reset_status(self, request, queryset):
+        updated = queryset.update(index_status='pending', is_indexed=False, retry_count=0, error_message='')
+        self.message_user(request, f'{updated} documents reset to pending status.')
+    reset_status.short_description = 'Reset status to pending'

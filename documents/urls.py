@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import rag_views
 
 urlpatterns = [
     # ============================================================
@@ -85,4 +86,24 @@ urlpatterns = [
     # ACTIVITY LOG URLS
     # ============================================================
     path('activity/', views.activity_log_view, name='activity_log'),
+    
+    # ============================================================
+    # RAG CHATBOT URLS
+    # ============================================================
+    path('chatbot/', rag_views.chatbot_view, name='chatbot'),
+    path('chatbot/query/', rag_views.chatbot_query_api, name='chatbot_query'),
+    path('chatbot/history/', rag_views.chat_history_view, name='chat_history'),
+    path('chatbot/session/<int:pk>/', rag_views.chat_session_detail_view, name='chat_session_detail'),
+    path('chatbot/clear/', rag_views.clear_chat_view, name='clear_chat'),
+    
+    # ============================================================
+    # DOCUMENT INDEXING URLS
+    # ============================================================
+    path('documents/<int:pk>/index/', rag_views.document_index_view, name='document_index'),
+    path('documents/bulk-index/', rag_views.bulk_index_documents_view, name='bulk_index_documents'),
+    
+    # ============================================================
+    # RAG SYSTEM INFO URLS
+    # ============================================================
+    path('rag/info/', rag_views.rag_system_info_view, name='rag_system_info'),
 ]
