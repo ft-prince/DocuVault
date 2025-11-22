@@ -70,8 +70,8 @@ def chatbot_view(request):
     user_documents = Document.objects.filter(
         Q(access_level='public') |
         Q(owner=request.user) |
-        Q(access_level='role', role_required__level__lte=request.user.get_role_level()) |
-        Q(shared_users=request.user)
+        Q(access_level='role', required_role_level__lte=request.user.get_role_level()) |
+        Q(shared_with=request.user)
     ).filter(
         is_deleted=False
     )
@@ -135,8 +135,8 @@ def chatbot_query_api(request):
         accessible_docs = Document.objects.filter(
             Q(access_level='public') |
             Q(owner=request.user) |
-            Q(access_level='role', role_required__level__lte=request.user.get_role_level()) |
-            Q(shared_users=request.user)
+            Q(access_level='role', required_role_level__lte=request.user.get_role_level()) |
+            Q(shared_with=request.user)
         ).filter(
             is_deleted=False,
             embedding__is_indexed=True
@@ -169,12 +169,8 @@ def chatbot_query_api(request):
             generation_time=retrieval_time
         )
         
-        # Log activity
-        ActivityLog.objects.create(
-            user=request.user,
-            action='chatbot_query',
-            details=f"Query: {question[:100]}"
-        )
+        # Note: ActivityLog requires a document field, so we skip logging for general chatbot queries
+        # Or we could log to the first document in sources if available
         
         return JsonResponse({
             'success': True,
@@ -304,9 +300,9 @@ def document_index_view(request, pk):
         # Log activity
         ActivityLog.objects.create(
             user=request.user,
-            action='document_indexed',
+            action='edit',
             document=document,
-            details=f"Indexed document: {document.title}"
+            description=f"Indexed document for RAG: {document.title}"
         )
         
         messages.success(request, f'Document "{document.title}" indexed successfully!')
@@ -343,8 +339,8 @@ def bulk_index_documents_view(request):
             accessible_docs = documents.filter(
                 Q(owner=request.user) |
                 Q(access_level='public') |
-                Q(access_level='role', role_required__level__lte=request.user.get_role_level()) |
-                Q(shared_users=request.user)
+                Q(access_level='role', required_role_level__lte=request.user.get_role_level()) |
+                Q(shared_with=request.user)
             )
             
             indexed_count = 0
@@ -381,12 +377,8 @@ def bulk_index_documents_view(request):
             
             messages.success(request, f'Indexed {indexed_count} documents. Failed: {failed_count}')
             
-            # Log activity
-            ActivityLog.objects.create(
-                user=request.user,
-                action='bulk_index',
-                details=f"Bulk indexed {indexed_count} documents"
-            )
+            # Note: ActivityLog requires a document field, so we don't log bulk operations
+            # Individual document indexing is logged separately above
             
             return redirect('document_list')
     else:
@@ -396,8 +388,8 @@ def bulk_index_documents_view(request):
     user_documents = Document.objects.filter(
         Q(owner=request.user) |
         Q(access_level='public') |
-        Q(access_level='role', role_required__level__lte=request.user.get_role_level()) |
-        Q(shared_users=request.user)
+        Q(access_level='role', required_role_level__lte=request.user.get_role_level()) |
+        Q(shared_with=request.user)
     ).filter(is_deleted=False)
     
     context = {
