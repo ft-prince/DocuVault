@@ -11,8 +11,9 @@ class RAGConfig:
     
     # Model configurations
     EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-0.6B"
-    LLM_MODEL = "Qwen/Qwen2.5-7B"
-    
+    LLM_MODEL = "Qwen/Qwen3-0.6B"
+    #Qwen/Qwen2.5-7B - replacing this with a smaller model may help with resource constraints
+
     # Text chunking parameters
     CHUNK_SIZE = 512
     CHUNK_OVERLAP = 100
