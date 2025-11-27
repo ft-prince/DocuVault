@@ -37,6 +37,13 @@
                 </a>
             {% endif %}
             
+            <form method="post" action="{% url 'document_index' document.pk %}" style="display: inline;">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-small" style="background: #28a745; color: white;">
+                    <i class="fas fa-robot"></i> Index for AI
+                </button>
+            </form>
+            
             <form method="post" action="{% url 'favorite_toggle' document.pk %}" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn-secondary btn btn-small">

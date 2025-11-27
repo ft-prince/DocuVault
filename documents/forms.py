@@ -421,3 +421,31 @@ class BulkUploadForm(forms.Form):
             'placeholder': 'Tags (comma-separated)'
         })
     )
+
+
+# ============================================================
+# RAG CHATBOT FORMS
+# ============================================================
+
+class ChatQueryForm(forms.Form):
+    """Form for chatbot queries"""
+    query = forms.CharField(
+        max_length=1000,
+        widget=forms.Textarea(attrs={
+            'class': 'form-control',
+            'placeholder': 'Ask a question about your documents...',
+            'rows': 3
+        })
+    )
+
+
+class DocumentIndexForm(forms.Form):
+    """Form for bulk document indexing"""
+    force_reindex = forms.BooleanField(
+        required=False,
+        initial=False,
+        label='Force re-index already indexed documents',
+        widget=forms.CheckboxInput(attrs={
+            'class': 'form-check-input'
+        })
+    )
