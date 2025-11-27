@@ -345,3 +345,111 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"Notification for {self.recipient.username}: {self.title}"
+
+
+# ============================================================
+# RAG CHATBOT MODELS
+# ============================================================
+
+class ChatSession(models.Model):
+    """Chat session for RAG chatbot"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='chat_sessions')
+    title = models.CharField(max_length=255, default='New Conversation')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    is_active = models.BooleanField(default=True)
+    
+    # Optional: Associate with specific documents
+    documents = models.ManyToManyField(Document, blank=True, related_name='chat_sessions')
+    
+    class Meta:
+        ordering = ['-updated_at']
+    
+    def __str__(self):
+        return f"{self.user.username} - {self.title} ({self.created_at.strftime('%Y-%m-%d')})"
+    
+    def get_message_count(self):
+        return self.messages.count()
+
+
+class ChatMessage(models.Model):
+    """Individual message in a chat session"""
+    MESSAGE_TYPE_CHOICES = [
+        ('human', 'Human'),
+        ('ai', 'AI'),
+        ('system', 'System'),
+    ]
+    
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='messages')
+    message_type = models.CharField(max_length=10, choices=MESSAGE_TYPE_CHOICES)
+    content = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    # Store sources for AI responses
+    sources = models.JSONField(null=True, blank=True, help_text="Retrieved document sources")
+    
+    # Performance metrics
+    retrieval_time = models.FloatField(null=True, blank=True, help_text="Time taken to retrieve documents (seconds)")
+    generation_time = models.FloatField(null=True, blank=True, help_text="Time taken to generate response (seconds)")
+    
+    class Meta:
+        ordering = ['created_at']
+    
+    def __str__(self):
+        preview = self.content[:50] + '...' if len(self.content) > 50 else self.content
+        return f"{self.message_type}: {preview}"
+
+
+class DocumentEmbedding(models.Model):
+    """Track embedding status for documents"""
+    INDEX_STATUS_CHOICES = [
+        ('pending', 'Pending'),
+        ('processing', 'Processing'),
+        ('completed', 'Completed'),
+        ('failed', 'Failed'),
+    ]
+    
+    document = models.OneToOneField(Document, on_delete=models.CASCADE, related_name='embedding')
+    is_indexed = models.BooleanField(default=False)
+    index_status = models.CharField(max_length=20, choices=INDEX_STATUS_CHOICES, default='pending')
+    
+    # Embedding metadata
+    chunk_count = models.IntegerField(default=0, help_text="Number of chunks created")
+    embedding_model = models.CharField(max_length=100, blank=True, help_text="Model used for embeddings")
+    
+    # Timestamps
+    indexed_at = models.DateTimeField(null=True, blank=True)
+    last_indexed_at = models.DateTimeField(null=True, blank=True)
+    
+    # Error tracking
+    error_message = models.TextField(blank=True)
+    retry_count = models.IntegerField(default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        ordering = ['-updated_at']
+    
+    def __str__(self):
+        return f"{self.document.title} - {self.index_status}"
+    
+    def mark_processing(self):
+        self.index_status = 'processing'
+        self.save(update_fields=['index_status', 'updated_at'])
+    
+    def mark_completed(self, chunk_count, embedding_model):
+        self.is_indexed = True
+        self.index_status = 'completed'
+        self.chunk_count = chunk_count
+        self.embedding_model = embedding_model
+        self.indexed_at = timezone.now()
+        self.last_indexed_at = timezone.now()
+        self.error_message = ''
+        self.save()
+    
+    def mark_failed(self, error_message):
+        self.index_status = 'failed'
+        self.error_message = error_message
+        self.retry_count += 1
+        self.save()
