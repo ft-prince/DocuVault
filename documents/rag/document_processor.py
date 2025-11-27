@@ -6,8 +6,8 @@ Handles PDF loading, text extraction, and chunking
 import fitz  # PyMuPDF
 from typing import List, Dict
 from tqdm.auto import tqdm
-from langchain.schema import Document
-from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_core.documents import Document
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_community.document_loaders import DirectoryLoader, PyPDFLoader
 
 from .config import RAGConfig
