@@ -66,6 +66,9 @@ The system integrates a sophisticated RAG pipeline to provide intelligent docume
 
 ## 🏗️ System Architecture
 
+### DMS Architecture Diagram
+![DMS Architecture Diagram](image-2.png)
+
 ### Project Structure
 ```
 DocuVault/
@@ -120,17 +123,19 @@ documents/rag/
 - **Vector Database**: ChromaDB (Persistent storage)
 
 ### RAG Components & Models
-The RAG system is built on high-performance open-source models:
+The RAG system is built on high-performance open source models and cloud-based inference:
 
 1.  **Large Language Model (LLM)**:
-    -   **Model**: `Qwen/Qwen2.5-7B`
-    -   **Optimization**: 8-bit quantized for efficient memory usage (~7GB).
-    -   **Role**: Generates natural language answers based on retrieved context.
+    -   **Model**: `llama-3.1-8b-instant` (via Groq)
+    -   **Provider**: Groq API
+    -   **Role**: Generates natural language answers based on retrieved context with ultra-low latency.
+    -   **Note**: Requires a `GROQ_API_KEY` environment variable.
 
 2.  **Embeddings**:
-    -   **Model**: `Qwen/Qwen3-Embedding-0.6B`
-    -   **Size**: ~2GB
+    -   **Model**: `all-MiniLM-L6-v2`
+    -   **Library**: Sentence-Transformers
     -   **Role**: Converts text into semantic vector representations for similarity search.
+    -   **Performance**: Fast and efficient model optimized for semantic search tasks.
 
 3.  **Vector Store**:
     -   **Technology**: ChromaDB
@@ -143,12 +148,16 @@ The RAG system is built on high-performance open-source models:
     -   **Max New Tokens**: 512
 
 ### RAG Workflow
+
+### RAG Flowchart
+![RAG Flowchart](image.png)
+
 1.  **Ingestion**: PDFs are loaded via `DocumentProcessor`.
 2.  **Chunking**: Text is split into overlapping chunks (512 chars).
-3.  **Embedding**: `EmbeddingManager` converts chunks to vectors.
+3.  **Embedding**: `EmbeddingManager` converts chunks to vectors using `all-MiniLM-L6-v2`.
 4.  **Storage**: Vectors are stored in `VectorStore` (ChromaDB).
 5.  **Retrieval**: User query is embedded; `Retriever` fetches relevant chunks.
-6.  **Generation**: `LLMManager` receives the query + context and generates an answer.
+6.  **Generation**: `LLMManager` sends the query + context to Groq's `llama-3.1-8b-instant` for response generation.
 7.  **Memory**: `RAGChatbot` manages conversation history for context.
 
 ---
@@ -211,8 +220,8 @@ The RAG system is built on high-performance open-source models:
 ### Prerequisites
 -   **Python**: 3.10+
 -   **RAM**: 8GB+ (16GB recommended for RAG).
--   **GPU**: CUDA-capable GPU (Optional, but recommended for RAG speed).
--   **Storage**: ~20GB free space (for models).
+-   **Groq API Key**: Required for the chatbot functionality.
+-   **Storage**: ~5GB free space (mostly for dependencies and vector DB).
 
 ### Quick Start
 1.  **Clone Repository**:
@@ -223,11 +232,15 @@ The RAG system is built on high-performance open-source models:
 
 2.  **Environment Setup**:
     ```bash
-    python -m venv venv
+    pip install uv
+
+    uv venv
     # Windows
     venv\Scripts\activate
     # Linux/Mac
     source venv/bin/activate
+
+    uv sync
     ```
 
 3.  **Install Dependencies**:
@@ -238,19 +251,28 @@ The RAG system is built on high-performance open-source models:
     # OR Manual
     pip install -r requirements.txt
     pip install -r requirements_rag.txt
+
+    # OR just use uv
+    uv sync
     ```
 
-4.  **Database Migration**:
+4.  **Set Environment Variables**:
+    Create a `.env` file in the project root and add your Groq API key:
+    ```
+    GROQ_API_KEY=your_api_key_here
+    ```
+
+5.  **Database Migration**:
     ```bash
     python manage.py migrate
     ```
 
-5.  **Create Admin**:
+6.  **Create Admin**:
     ```bash
     python manage.py createsuperuser
     ```
 
-6.  **Run Server**:
+7.  **Run Server**:
     ```bash
     python manage.py runserver
     ```
@@ -264,10 +286,8 @@ Use the provided scripts for a one-click setup:
 -   CMD: `setup_windows.bat`
 
 ### RAG Model Setup
-On the first run of the chatbot or indexing, the system will automatically download the required models (~9GB). Ensure a stable internet connection.
--   **Storage Location**:
-    -   Windows: `C:\Users\<username>\.cache\huggingface\`
-    -   Linux/Mac: `~/.cache/huggingface/`
+The system uses `all-MiniLM-L6-v2` for embeddings, which will be downloaded automatically on the first run (~80MB). The LLM is accessed via the Groq API, so no large local model download is required.
+
 
 ---
 
@@ -338,7 +358,22 @@ Modify `documents/rag/config.py` to tune performance:
 
 ---
 
-## 📄 License
+## � Project Implementation Timeline
+
+The project development is structured into distinct phases to ensure a robust and scalable delivery.
+
+| Phase | Description | Date | Key Deliverables | Phase Status |
+| :--- | :--- | :--- | :--- | :--- |
+| **Phase 1** | **Planning & Architecture** | Oct 01 - Oct 14, 2025 | • ✅ Requirement Analysis<br>• ✅ Database Schema Design<br>• ✅ Technology Stack Selection<br>• ✅ UI/UX Wireframes | ✅ Completed |
+| **Phase 2** | **Core DMS Development** | Oct 15 - Nov 11, 2025 | • ✅ User Authentication & RBAC<br>• ✅ Document CRUD Operations<br>• ✅ File Upload & Storage System<br>• ✅ Basic Search Functionality | ✅ Completed |
+| **Phase 3** | **RAG System Integration** | Nov 12 - Nov 30, 2025 | • ✅ PDF Processing & Chunking Pipeline<br>• ✅ Vector Database (ChromaDB) Setup<br>• ✅ LLM Integration (Groq)<br>• ✅ Chatbot Interface Implementation | ✅ Completed |
+| **Phase 4** | **Advanced Features & UI** | Dec 01 - Dec 14, 2025 | • 🔄 Advanced Search & Filtering<br>• 🔄 Collaboration Tools (Comments, Sharing)<br>• ⏳ Dashboard & Analytics<br>• 🔄 Frontend Styling & Responsiveness | 🔄 In Progress |
+| **Phase 5** | **Testing & Optimization** | Dec 15 - Dec 21, 2025 | • ⏳ Unit & Integration Testing<br>• ⏳ Performance Tuning (RAG Latency)<br>• ⏳ Security Audits<br>• ⏳ User Acceptance Testing (UAT) | ⏳ Pending |
+| **Phase 6** | **Deployment & Handover** | Dec 22 - Dec 28, 2025 | • ⏳ Production Environment Setup<br>• ⏳ CI/CD Pipeline Configuration<br>• ⏳ Final Documentation<br>• ⏳ Project Handover | ⏳ Pending |
+
+---
+
+## �📄 License
 This project is open source and available for educational and commercial use.
 
 ## 👥 Contributing
