@@ -34,33 +34,45 @@ def test_rag_system():
     chatbot.initialize(reset=True)
     
     # Check if we have documents to index
-    pdf_dir = os.path.join(os.path.dirname(__file__), 'media', 'documents')
+    # Check both media/documents and media root
+    media_root = os.path.join(os.path.dirname(__file__), 'media')
+    pdf_dir = os.path.join(media_root, 'documents')
     
+    documents = []
+    processor = DocumentProcessor(config=config)
+
+    # 1. Check media/documents
     if os.path.exists(pdf_dir):
-        print(f"\nLooking for PDF documents in: {pdf_dir}")
-        
-        # Load documents
-        processor = DocumentProcessor(config=config)
-        
-        # Try to load PDFs from directory
+        print(f"\nChecking {pdf_dir}...")
         try:
-            documents = processor.load_documents_from_directory(pdf_dir)
-            
-            if documents:
-                print(f"\nFound {len(documents)} document pages")
-                
-                # Index documents
-                print("\nIndexing documents...")
-                chatbot.index_documents(documents)
-            else:
-                print("\n⚠️ No PDF documents found. Please add PDFs to test.")
-                print("Continuing with empty index for demo purposes...")
+            docs = processor.load_documents_from_directory(pdf_dir)
+            documents.extend(docs)
         except Exception as e:
-            print(f"\n⚠️ Error loading documents: {e}")
-            print("Continuing without indexing...")
+            print(f"Error loading from {pdf_dir}: {e}")
+    
+    # 2. Check media root (where user might have put the file)
+    if os.path.exists(media_root):
+        print(f"\nChecking {media_root}...")
+        # Load individual PDFs from media root
+        try:
+            for file in os.listdir(media_root):
+                if file.lower().endswith('.pdf'):
+                    path = os.path.join(media_root, file)
+                    print(f"Found PDF in media root: {file}")
+                    docs = processor.load_single_document(path)
+                    documents.extend(docs)
+        except Exception as e:
+            print(f"Error loading from {media_root}: {e}")
+
+    if documents:
+        print(f"\n✅ Found {len(documents)} total document pages")
+        
+        # Index documents
+        print("\nIndexing documents...")
+        chatbot.index_documents(documents)
     else:
-        print(f"\n⚠️ Document directory not found: {pdf_dir}")
-        print("Continuing without indexing...")
+        print("\n⚠️ No PDF documents found in media or media/documents.")
+        print("Continuing with empty index for demo purposes...")
     
     # Test queries
     print("\n" + "="*70)

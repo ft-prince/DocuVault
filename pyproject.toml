@@ -35,4 +35,8 @@ dependencies = [
     "langchain>=1.1.0",
     "langchain-huggingface>=1.1.0",
     "hf-xet>=1.2.0",
+    "langchain-openai>=1.1.0",
+    "dotenv>=0.9.9",
+    "langchain-ollama>=1.0.0",
+    "langchain-groq>=1.1.0",
 ]

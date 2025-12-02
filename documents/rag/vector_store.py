@@ -162,6 +162,9 @@ class VectorStore:
         # Convert distances to similarities
         similarities = [1 - dist for dist in distances]
         
+        print(f"DEBUG: Top {len(similarities)} raw similarities: {[round(s, 3) for s in similarities]}")
+        print(f"DEBUG: Threshold is {threshold}")
+
         # Filter by threshold
         relevant_results = [
             (doc, meta, sim)
