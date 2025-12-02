@@ -1,14 +1,14 @@
-# DocuVault - Document Management System with RAG Chatbot
+## DocuVault - Document Management System with RAG Chatbot
 
-## 📖 Project Overview
+### 📖 Project Overview
 
 **DocuVault** is a comprehensive Django-based Document Management System (DMS) designed for secure, efficient, and intelligent document handling. It features role-based access control, version tracking, robust collaboration tools, and a state-of-the-art **AI-powered RAG (Retrieval-Augmented Generation) chatbot** that allows users to query their documents in natural language.
 
 ---
 
-## 🚀 Features
+### 🚀 Features
 
-### 🤖 AI-Powered RAG Chatbot
+#### 🤖 AI-Powered RAG Chatbot
 The system integrates a sophisticated RAG pipeline to provide intelligent document interaction:
 - **Intelligent Document Search**: Ask questions about your documents in natural language.
 - **Context-Aware Responses**: Utilizes the **Qwen2.5-7B** Large Language Model (LLM) for high-quality, accurate answers.
@@ -19,7 +19,7 @@ The system integrates a sophisticated RAG pipeline to provide intelligent docume
 - **Permission-Aware**: Respects document access levels; users can only query documents they are authorized to view.
 - **Hallucination Prevention**: Strictly adheres to the provided context to minimize false information.
 
-### 👥 User Management & Authentication
+#### 👥 User Management & Authentication
 - **Guest Users**: Limited access to view public documents and register accounts.
 - **Regular Users**: Full document management capabilities for their own files.
 - **Admin Users**: Complete system administration and oversight.
@@ -27,7 +27,7 @@ The system integrates a sophisticated RAG pipeline to provide intelligent docume
 - **Secure Authentication**: Robust login and registration system.
 - **User Profiles**: Rich profiles with avatars, bios, and activity history.
 
-### 📄 Document Management
+#### 📄 Document Management
 - **Upload & Storage**: Securely upload and store documents with support for various file types.
 - **Access Control Levels**:
   - **Public**: Accessible to all users.
@@ -41,21 +41,21 @@ The system integrates a sophisticated RAG pipeline to provide intelligent docume
 - **Document Locking**: Prevents concurrent edits to ensure data integrity.
 - **Soft Delete**: Safety mechanism to recover accidentally deleted documents.
 
-### 🔍 Search & Discovery
+#### 🔍 Search & Discovery
 - **Advanced Search**: Full-text search capabilities with powerful filters.
 - **Organization**:
   - **Categories**: Hierarchical system with color-coding and icons.
   - **Tags**: Flexible tagging for cross-category organization.
 - **Filtering & Sorting**: Filter by owner, date, access level; sort by views, title, date, etc.
 
-### 🤝 Collaboration
+#### 🤝 Collaboration
 - **Comments & Replies**: Threaded discussions directly on documents.
 - **Sharing**:
   - Direct sharing with specific users.
   - **Shareable Links**: Generate temporary, secure links with password protection, expiration dates, and access limits.
 - **Notifications**: Real-time alerts for shares, comments, mentions, and permission changes.
 
-### 🛠️ Additional Tools
+#### 🛠️ Additional Tools
 - **Favorites/Bookmarks**: Quick access to frequently used documents.
 - **Activity Logging**: Detailed audit trail of all user actions.
 - **Dashboard**: Personalized overview of recent activity and stats.
@@ -64,12 +64,12 @@ The system integrates a sophisticated RAG pipeline to provide intelligent docume
 
 ---
 
-## 🏗️ System Architecture
+### 🏗️ System Architecture
 
-### DMS Architecture Diagram
+#### DMS Architecture Diagram
 ![DMS Architecture Diagram](image-2.png)
 
-### Project Structure
+#### Project Structure
 ```
 DocuVault/
 ├── config/                 # Django project settings (settings, urls, wsgi)
@@ -93,7 +93,7 @@ DocuVault/
 └── manage.py               # Django management
 ```
 
-### RAG Module Architecture
+#### RAG Module Architecture
 The RAG system is modular and self-contained within `documents/rag/`:
 ```
 documents/rag/
@@ -109,9 +109,9 @@ documents/rag/
 
 ---
 
-## 🔧 Technical Details
+### 🔧 Technical Details
 
-### Technology Stack
+#### Technology Stack
 - **Backend**: Django 4.2.26
 - **Database**: SQLite (default) / PostgreSQL (production ready)
 - **Frontend**: HTML, Vanilla CSS, JavaScript
@@ -122,7 +122,7 @@ documents/rag/
   - **PyTorch** (with CUDA support)
 - **Vector Database**: ChromaDB (Persistent storage)
 
-### RAG Components & Models
+#### RAG Components & Models
 The RAG system is built on high-performance open source models and cloud-based inference:
 
 1.  **Large Language Model (LLM)**:
@@ -147,9 +147,9 @@ The RAG system is built on high-performance open source models and cloud-based i
     -   **Similarity Threshold**: 0.15
     -   **Max New Tokens**: 512
 
-### RAG Workflow
+#### RAG Workflow
 
-### RAG Flowchart
+#### RAG Flowchart
 ![RAG Flowchart](image.png)
 
 1.  **Ingestion**: PDFs are loaded via `DocumentProcessor`.
@@ -162,16 +162,16 @@ The RAG system is built on high-performance open source models and cloud-based i
 
 ---
 
-## 🗄️ Database Models
+### 🗄️ Database Models
 
-### Core Models
+#### Core Models
 1.  **User** (Extended AbstractUser): Custom user model with role, bio, avatar, and department.
 2.  **Role**: Hierarchical roles (levels 1-100) for RBAC.
 3.  **Document**: Central model for files, including access levels, versioning, and counters.
 4.  **Category**: Hierarchical organization with colors and icons.
 5.  **Tag**: Many-to-many tagging system.
 
-### Supporting Models
+#### Supporting Models
 6.  **DocumentVersion**: Tracks history of document changes.
 7.  **DocumentComment**: Threaded comments on documents.
 8.  **SharedLink**: Manages temporary, secure sharing links.
@@ -179,22 +179,22 @@ The RAG system is built on high-performance open source models and cloud-based i
 10. **ActivityLog**: Comprehensive audit trail.
 11. **Notification**: User alerts system.
 
-### RAG System Models
+#### RAG System Models
 12. **ChatSession**: Manages user chatbot sessions.
 13. **ChatMessage**: Stores individual messages and their source citations.
 14. **DocumentEmbedding**: Tracks indexing status and metadata for RAG.
 
 ---
 
-## 🔐 Permission & Security
+### 🔐 Permission & Security
 
-### Access Levels
+#### Access Levels
 -   **Public**: Open to all.
 -   **Private**: Owner only.
 -   **Role-Based**: Restricted by role hierarchy (e.g., Level 30+).
 -   **Custom**: Explicitly granted to specific users.
 
-### Security Features
+#### Security Features
 -   **Authentication**: Django's secure password hashing and session management.
 -   **CSRF Protection**: Enabled on all forms.
 -   **Input Validation**: Strict file upload validation (size/type) and XSS protection.
@@ -203,7 +203,7 @@ The RAG system is built on high-performance open source models and cloud-based i
 
 ---
 
-## 🛣️ URL Structure
+### 🛣️ URL Structure
 
 -   **Auth**: `/register/`, `/login/`, `/logout/`
 -   **Core**: `/` (Home), `/dashboard/`
@@ -215,15 +215,15 @@ The RAG system is built on high-performance open source models and cloud-based i
 
 ---
 
-## 🔧 Installation & Setup
+### 🔧 Installation & Setup
 
-### Prerequisites
+#### Prerequisites
 -   **Python**: 3.10+
 -   **RAM**: 8GB+ (16GB recommended for RAG).
 -   **Groq API Key**: Required for the chatbot functionality.
 -   **Storage**: ~5GB free space (mostly for dependencies and vector DB).
 
-### Quick Start
+#### Quick Start
 1.  **Clone Repository**:
     ```bash
     git clone https://github.com/ft-prince/DocuVault.git
@@ -280,20 +280,20 @@ The RAG system is built on high-performance open source models and cloud-based i
     -   Admin: http://127.0.0.1:8000/admin/
     -   Chatbot: http://127.0.0.1:8000/chatbot/
 
-### Windows Automated Setup
+#### Windows Automated Setup
 Use the provided scripts for a one-click setup:
 -   PowerShell: `.\setup_windows.ps1`
 -   CMD: `setup_windows.bat`
 
-### RAG Model Setup
+#### RAG Model Setup
 The system uses `all-MiniLM-L6-v2` for embeddings, which will be downloaded automatically on the first run (~80MB). The LLM is accessed via the Groq API, so no large local model download is required.
 
 
 ---
 
-## 📝 Usage Examples
+### 📝 Usage Examples
 
-### RAG Chatbot
+#### RAG Chatbot
 ```python
 from documents.rag import RAGChatbot, RAGConfig
 from documents.rag.document_processor import DocumentProcessor
@@ -313,7 +313,7 @@ answer, sources = chatbot.query("What is the project timeline?")
 print(answer)
 ```
 
-### Document Management (Code)
+#### Document Management (Code)
 ```python
 # Create a restricted document
 doc = Document.objects.create(
@@ -331,7 +331,7 @@ if doc.can_view(user):
 
 ---
 
-## ⚙️ Configuration Options (RAG)
+#### ⚙️ Configuration Options (RAG)
 
 Modify `documents/rag/config.py` to tune performance:
 
@@ -346,7 +346,7 @@ Modify `documents/rag/config.py` to tune performance:
 
 ---
 
-## 🚦 Future Enhancements
+### 🚦 Future Enhancements
 
 -   [ ] **Multi-language Support**: Expand RAG capabilities to non-English documents.
 -   [ ] **Document Summarization**: Auto-generate summaries upon upload.
@@ -358,7 +358,7 @@ Modify `documents/rag/config.py` to tune performance:
 
 ---
 
-## � Project Implementation Timeline
+### � Project Implementation Timeline
 
 The project development is structured into distinct phases to ensure a robust and scalable delivery.
 
@@ -373,8 +373,8 @@ The project development is structured into distinct phases to ensure a robust an
 
 ---
 
-## �📄 License
+### �📄 License
 This project is open source and available for educational and commercial use.
 
-## 👥 Contributing
+### 👥 Contributing
 Contributions are welcome! Please submit a Pull Request.
