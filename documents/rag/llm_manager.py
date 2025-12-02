@@ -124,11 +124,11 @@ class LLMManager:
         # We can pass these to the invoke method to override pipeline defaults
         invocation_params = {}
         if max_new_tokens:
-            invocation_params["max_new_tokens"] = max_new_tokens
+            invocation_params["max_tokens"] = max_new_tokens
         if temperature:
             invocation_params["temperature"] = temperature
-        if not do_sample:
-            invocation_params["do_sample"] = False
+        # if not do_sample:
+        #     invocation_params["do_sample"] = False
 
         # Invoke the modern Chat Model
         response = self.llm.invoke(langchain_messages, **invocation_params)
@@ -174,9 +174,8 @@ class LLMManager:
 
         # Config for this specific strict task
         strict_params = {
-            "max_new_tokens": self.config.REWRITE_MAX_TOKENS,
+            "max_tokens": self.config.REWRITE_MAX_TOKENS,
             "temperature": self.config.REWRITE_TEMPERATURE,
-            "do_sample": False
         }
 
         # Invoke
@@ -195,14 +194,14 @@ class LLMManager:
 
     def get_model_info(self) -> Dict:
         """Get information about loaded model"""
-        if self.model is None:
+        if self.model is None and self.llm is None:
             return {"loaded": False}
         
         return {
             "loaded": True,
             "model_name": self.config.LLM_MODEL,
-            "device": str(self.model.device),
-            "memory_footprint_gb": self.model.get_memory_footprint() / 1e9,
+            "device": str(self.model.device) if self.model else "cloud",
+            "memory_footprint_gb": (self.model.get_memory_footprint() / 1e9) if self.model else 0,
             "quantization": "8-bit" if self.config.USE_8BIT_QUANTIZATION else "None",
-            "backend": "LangChain ChatHuggingFace"
+            "backend": "LangChain ChatGroq"
         }
