@@ -6,9 +6,15 @@ Handles loading and inference with quantized models using LangChain wrappers.
 import torch
 from typing import List, Dict, Optional
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, pipeline
+import os
+from dotenv import load_dotenv
+load_dotenv()
 
 # Modern LangChain Imports
 from langchain_huggingface import ChatHuggingFace, HuggingFacePipeline
+from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
+from langchain_groq import ChatGroq
 from langchain_core.messages import HumanMessage, AIMessage, SystemMessage, BaseMessage
 
 from .config import RAGConfig
@@ -20,7 +26,7 @@ class LLMManager:
         self.config = config or RAGConfig()
         self.model = None
         self.tokenizer = None
-        self.llm: Optional[ChatHuggingFace] = None  # The LangChain Runnable
+        self.llm: Optional[ChatOpenAI] = None  # The LangChain Runnable
         self.device = 'cuda' if torch.cuda.is_available() else 'cpu'
     
     def load_model(self):
@@ -32,57 +38,65 @@ class LLMManager:
         print(f"Loading LLM: {self.config.LLM_MODEL}")
         print("This may take a few minutes...")
         
-        # 1. Configure Quantization (Kept from your original logic)
-        bnb_config = BitsAndBytesConfig(
-            load_in_8bit=self.config.USE_8BIT_QUANTIZATION,
-            llm_int8_threshold=self.config.LLM_INT8_THRESHOLD,
-            llm_int8_enable_fp32_cpu_offload=False
-        )
+        # # 1. Configure Quantization (Kept from your original logic)
+        # bnb_config = BitsAndBytesConfig(
+        #     load_in_8bit=self.config.USE_8BIT_QUANTIZATION,
+        #     llm_int8_threshold=self.config.LLM_INT8_THRESHOLD,
+        #     llm_int8_enable_fp32_cpu_offload=False
+        # )
         
-        # 2. Load Tokenizer & Model
-        self.tokenizer = AutoTokenizer.from_pretrained(
-            self.config.LLM_MODEL,
-            trust_remote_code=True
-        )
+        # # 2. Load Tokenizer & Model
+        # self.tokenizer = AutoTokenizer.from_pretrained(
+        #     self.config.LLM_MODEL,
+        #     trust_remote_code=True
+        # )
         
-        self.model = AutoModelForCausalLM.from_pretrained(
-            self.config.LLM_MODEL,
-            quantization_config=bnb_config if self.config.USE_8BIT_QUANTIZATION else None,
-            device_map="auto",
-            trust_remote_code=True,
-            torch_dtype=torch.float16
-        )
+        # self.model = AutoModelForCausalLM.from_pretrained(
+        #     self.config.LLM_MODEL,
+        #     quantization_config=bnb_config if self.config.USE_8BIT_QUANTIZATION else None,
+        #     device_map="auto",
+        #     trust_remote_code=True,
+        #     torch_dtype=torch.float16
+        # )
         
-        # Fix padding token if missing
-        if self.tokenizer.pad_token is None:
-            self.tokenizer.pad_token = self.tokenizer.eos_token
-            self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
+        # # Fix padding token if missing
+        # if self.tokenizer.pad_token is None:
+        #     self.tokenizer.pad_token = self.tokenizer.eos_token
+        #     self.tokenizer.pad_token_id = self.tokenizer.eos_token_id
         
-        # 3. Create HuggingFace Pipeline
-        # We wrap the specific model/tokenizer in a standard pipeline
-        text_generation_pipeline = pipeline(
-            "text-generation",
-            model=self.model,
-            tokenizer=self.tokenizer,
-            max_new_tokens=self.config.MAX_NEW_TOKENS,
-            temperature=self.config.TEMPERATURE,
-            top_p=self.config.TOP_P,
-            repetition_penalty=self.config.REPETITION_PENALTY,
-            return_full_text=False,
-            # Pass stop tokens here so pipeline handles them automatically
-            eos_token_id=[self.tokenizer.eos_token_id] + getattr(self.config, 'STOP_TOKEN_IDS', []),
-            do_sample=True
-        )
+        # # 3. Create HuggingFace Pipeline
+        # # We wrap the specific model/tokenizer in a standard pipeline
+        # text_generation_pipeline = pipeline(
+        #     "text-generation",
+        #     model=self.model,
+        #     tokenizer=self.tokenizer,
+        #     max_new_tokens=self.config.MAX_NEW_TOKENS,
+        #     temperature=self.config.TEMPERATURE,
+        #     top_p=self.config.TOP_P,
+        #     repetition_penalty=self.config.REPETITION_PENALTY,
+        #     return_full_text=False,
+        #     # Pass stop tokens here so pipeline handles them automatically
+        #     eos_token_id=[self.tokenizer.eos_token_id] + getattr(self.config, 'STOP_TOKEN_IDS', []),
+        #     do_sample=True
+        # )
 
         # 4. Wrap in LangChain Classes
         # HuggingFacePipeline turns the HF pipeline into a standard LangChain LLM
-        hf_llm = HuggingFacePipeline(pipeline=text_generation_pipeline)
+        #hf_llm = HuggingFacePipeline(pipeline=text_generation_pipeline)
         
         # ChatHuggingFace applies the correct chat template automatically
-        self.llm = ChatHuggingFace(llm=hf_llm)
         
-        memory_footprint = self.model.get_memory_footprint() / 1e9
-        print(f"✅ Model loaded & wrapped! Memory footprint: {memory_footprint:.2f} GB")
+        #self.llm = ChatHuggingFace(llm=hf_llm)
+        
+        self.llm = ChatGroq(
+            model=self.config.LLM_MODEL,
+            temperature=self.config.TEMPERATURE,
+            max_tokens=self.config.MAX_NEW_TOKENS,
+            # api_key=os.getenv("GROQ_API_KEY") # Optional if set in env
+        )
+        print(f"✅ Model loaded")
+        #memory_footprint = self.model.get_memory_footprint() / 1e9
+        #print(f"✅ Model loaded & wrapped! Memory footprint: {memory_footprint:.2f} GB")
     
     def generate(self, messages: List[Dict[str, str]], max_new_tokens: int = None,
                  temperature: float = None, do_sample: bool = True) -> str:

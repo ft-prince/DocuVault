@@ -16,6 +16,138 @@ from .embeddings import EmbeddingManager
 from .vector_store import VectorStore
 from .llm_manager import LLMManager
 from .retriever import Retriever
+from .document_processor import DocumentProcessor
+
+# --- 1. Define Graph State (The new "Memory" container) ---
+class GraphState(TypedDict):
+    """
+    Represents the state of our graph.
+    
+    Attributes:
+        messages: The chat history. 'add_messages' ensures updates are appended, not overwritten.
+        context: The formatted context string retrieved from documents.
+        retrieved_docs: List of documents retrieved (for source citation).
+        question: The original user question.
+    """
+    messages: Annotated[List[BaseMessage], add_messages]
+    context: str
+    retrieved_docs: List[Dict]
+    question: str
+
+
+class RAGChatbot:
+    """Main RAG chatbot using LangGraph for conversation state and workflow."""
+    
+    def __init__(self, config: RAGConfig = None):
+        self.config = config or RAGConfig()
+        
+        # Initialize components
+        self.embedding_manager = EmbeddingManager(config=self.config)
+        self.vector_store = VectorStore(config=self.config)
+        self.llm_manager = LLMManager(config=self.config)
+        self.retriever = Retriever(
+            embedding_manager=self.embedding_manager,
+            vector_store=self.vector_store,
+            llm_manager=self.llm_manager,
+            config=self.config
+        )
+        
+        # Build the graph internally
+        self._build_graph()
+        self._initialized = False
+
+    def _build_graph(self):
+        """Builds the StateGraph defining the RAG workflow."""
+        workflow = StateGraph(GraphState)
+
+        # Add Nodes
+        workflow.add_node("rewrite", self._rewrite_node)
+        workflow.add_node("retrieve", self._retrieve_node)
+        workflow.add_node("generate", self._generate_node)
+
+        # Define Edges
+        workflow.add_edge(START, "rewrite")
+        workflow.add_edge("rewrite", "retrieve")
+        workflow.add_edge("retrieve", "generate")
+        workflow.add_edge("generate", END)
+
+        # Initialize Memory (Persistence)
+        self.checkpointer = MemorySaver()
+        
+        # Compile the graph
+        self.app = workflow.compile(checkpointer=self.checkpointer)
+
+    # --- 2. Node Definitions for the Graph ---
+
+    def _rewrite_node(self, state: GraphState) -> Dict:
+        """Node for query rewriting logic."""
+        messages = state["messages"]
+        question = messages[-1].content
+        
+        # Check if history exists (excluding the current HumanMessage)
+        chat_history = messages[:-1]
+        
+        # We assume the Retriever has access to the LLMManager's rewrite method
+        retrieval_question = question
+        
+        # Logic to rewrite: Check history length
+        if len(chat_history) > 0:
+            # Note: We assume self.retriever.rewrite_query calls the LLMManager internally.
+            # We must pass BaseMessage objects as history now, as LLMManager's generate
+            # method in the previous step handles the conversion from BaseMessage -> Dict.
+            retrieval_question = self.retriever.rewrite_query(question, chat_history)
+
+        return {
+            "question": question, # Original question
+            "retrieval_question": retrieval_question # Updated for retrieval
+        }
+
+    def _retrieve_node(self, state: GraphState) -> Dict:
+        """Node to retrieve documents."""
+        # Retrieve the question potentially modified by the rewrite node
+        retrieval_question = state.get("retrieval_question", state["question"])
+        
+        # Retrieve relevant documents
+        retrieved_docs, retrieved_metadata, similarities = self.retriever.retrieve(
+            query=retrieval_question,
+            n_results=getattr(self.config, 'RETRIEVAL_K', 4) 
+        )
+
+        # Check for empty results (Handling the original "if not retrieved_docs" logic)
+        if not retrieved_docs:
+            # If no docs found, pass a special message to the generate node
+            return {
+                "context": "",
+                "retrieved_docs": [],
+            }
+
+        formatted_context = self.retriever.format_context(retrieved_docs, retrieved_metadata)
+        
+        # Prepare source data for final output
+        docs_with_meta = self.retriever.prepare_sources(
+            retrieved_docs,
+            retrieved_metadata,
+            similarities
+        )
+"""
+Conversation management with LangGraph for RAG chatbot
+"""
+
+import uuid
+from typing import List, Dict, Tuple, Annotated, Optional
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage, SystemMessage
+from langgraph.graph import StateGraph, START, END
+from langgraph.graph.message import add_messages
+from langgraph.checkpoint.memory import MemorySaver
+from typing_extensions import TypedDict # Use typing_extensions for TypedDict compatibility
+
+# Assumed custom imports (kept as is)
+from .config import RAGConfig
+from .embeddings import EmbeddingManager
+from .vector_store import VectorStore
+from .llm_manager import LLMManager
+from .retriever import Retriever
+from .document_processor import DocumentProcessor
 
 # --- 1. Define Graph State (The new "Memory" container) ---
 class GraphState(TypedDict):
@@ -179,10 +311,36 @@ class RAGChatbot:
 
     def index_documents(self, documents: List, chunk_size: int = None,
                          chunk_overlap: int = None):
-        """Indexes documents (Implementation kept for brevity)."""
+        """Indexes documents."""
         if not self._initialized:
             raise RuntimeError("Chatbot not initialized. Call initialize() first.")
-        # ... (rest of the indexing logic) ...
+        
+        print(f"Indexing {len(documents)} documents...")
+        
+        # Initialize processor
+        processor = DocumentProcessor(config=self.config)
+        
+        # Split documents
+        chunks = processor.split_documents(documents)
+        
+        if not chunks:
+            print("⚠️ No chunks created from documents.")
+            return
+
+        # Prepare for embedding
+        texts, metadatas = processor.prepare_chunks_for_embedding(chunks)
+        
+        # Generate embeddings
+        embeddings = self.embedding_manager.generate_embeddings(texts)
+        
+        # Add to vector store
+        self.vector_store.add_documents(
+            embeddings=embeddings.tolist(), # Convert to list for ChromaDB
+            texts=texts,
+            metadatas=metadatas
+        )
+        
+        print(f"✅ Successfully indexed {len(chunks)} chunks.")
 
     def query(self, question: str, thread_id: str = "default_session") -> Tuple[str, List[Dict]]:
         """

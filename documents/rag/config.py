@@ -10,8 +10,9 @@ class RAGConfig:
     """Configuration class for RAG system"""
     
     # Model configurations
-    EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-0.6B"
-    LLM_MODEL = "Qwen/Qwen3-0.6B"
+    #EMBEDDING_MODEL = "Qwen/Qwen3-Embedding-0.6B"
+    EMBEDDING_MODEL = "all-MiniLM-L6-v2"
+    LLM_MODEL = "llama-3.1-8b-instant"
     #Qwen/Qwen2.5-7B - replacing this with a smaller model may help with resource constraints
 
     # Text chunking parameters
