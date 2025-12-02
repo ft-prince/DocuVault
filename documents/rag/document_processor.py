@@ -61,6 +61,9 @@ class DocumentProcessor:
         
         for page_number, page in tqdm(enumerate(doc), desc=f"Reading {source_name}"):
             text = page.get_text()
+            if not text.strip():
+                print(f"⚠️ Warning: Page {page_number} in {source_name} seems empty or image-based.")
+            
             text = self.text_formatter(text)
             
             pages_and_texts.append({
