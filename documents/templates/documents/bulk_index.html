@@ -1,0 +1,101 @@
+{% extends 'documents/base.html' %}
+{% load static %}
+
+{% block title %}Bulk Index Documents - DocuVault{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-layer-group"></i> Bulk Index Documents</h2>
+        <a href="{% url 'document_list' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Documents
+        </a>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> Select documents to index into the RAG system. Only PDF documents can
+                be indexed.
+            </div>
+
+            <form method="post">
+                {% csrf_token %}
+
+                <div class="mb-4">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="force_reindex" id="forceReindex">
+                        <label class="form-check-label" for="forceReindex">
+                            Force Re-index (process documents even if already indexed)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th style="width: 40px;">
+                                    <input type="checkbox" id="selectAll" class="form-check-input">
+                                </th>
+                                <th>Document</th>
+                                <th>Status</th>
+                                <th>Last Indexed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for doc in documents %}
+                            <tr>
+                                <td>
+                                    <input type="checkbox" name="document_ids" value="{{ doc.id }}"
+                                        class="form-check-input doc-checkbox">
+                                </td>
+                                <td>
+                                    <i class="fas fa-file-pdf text-danger"></i> {{ doc.title }}
+                                </td>
+                                <td>
+                                    {% with embedding=doc.get_embedding %}
+                                    {% if embedding and embedding.is_indexed %}
+                                    <span class="badge bg-success">Indexed</span>
+                                    {% else %}
+                                    <span class="badge bg-secondary">Not Indexed</span>
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                                <td>
+                                    {% with embedding=doc.get_embedding %}
+                                    {% if embedding and embedding.indexed_at %}
+                                    {{ embedding.indexed_at|date:"M d, Y H:i" }}
+                                    {% else %}
+                                    -
+                                    {% endif %}
+                                    {% endwith %}
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-4">No documents available for indexing.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+
+                    <div class="mt-4">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-cogs"></i> Start Indexing
+                        </button>
+                    </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.getElementById('selectAll').addEventListener('change', function () {
+        const checkboxes = document.querySelectorAll('.doc-checkbox');
+        checkboxes.forEach(cb => cb.checked = this.checked);
+    });
+</script>
+{% endblock %}

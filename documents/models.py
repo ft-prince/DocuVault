@@ -194,6 +194,13 @@ class Document(models.Model):
         self.downloads_count += 1
         self.save(update_fields=['downloads_count'])
 
+    def get_embedding(self):
+        """Safely get embedding or None"""
+        try:
+            return self.embedding
+        except Exception:
+            return None
+
 
 class DocumentVersion(models.Model):
     """Track document version history"""
