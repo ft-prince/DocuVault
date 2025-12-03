@@ -16,8 +16,8 @@ class RAGConfig:
     #Qwen/Qwen2.5-7B - replacing this with a smaller model may help with resource constraints
 
     # Text chunking parameters
-    CHUNK_SIZE = 512
-    CHUNK_OVERLAP = 100
+    CHUNK_SIZE = 256
+    CHUNK_OVERLAP = 60
     
     # Retrieval parameters
     N_RESULTS = 6  # Number of chunks to retrieve

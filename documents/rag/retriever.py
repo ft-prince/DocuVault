@@ -31,16 +31,14 @@ class Retriever:
         self.llm_manager = llm_manager
         self.config = config or RAGConfig()
     
-    def retrieve(self, query: str, n_results: int = None,
-                similarity_threshold: float = None,
+    def retrieve(self, query: str, n_results: int = 4,
                 metadata_filter: Dict = None) -> Tuple[List[str], List[Dict], List[float]]:
         """
         Retrieve relevant documents for a query
         
         Args:
             query: Query text
-            n_results: Number of results to retrieve
-            similarity_threshold: Minimum similarity score
+            n_results: Number of results to retrieve (default: 4)
             metadata_filter: Optional metadata filter for ChromaDB
             
         Returns:
@@ -52,16 +50,13 @@ class Retriever:
         # Query vector store
         results = self.vector_store.query(
             query_embedding=query_embedding,
-            n_results=n_results or self.config.N_RESULTS,
+            n_results=n_results,
             where=metadata_filter
         )
         
-        # Filter by similarity threshold
+        # Process results (convert distances to similarities)
         filtered_docs, filtered_metadata, filtered_similarities = \
-            self.vector_store.filter_by_similarity(
-                results,
-                threshold=similarity_threshold or self.config.SIMILARITY_THRESHOLD
-            )
+            self.vector_store.process_results(results)
         
         return filtered_docs, filtered_metadata, filtered_similarities
     
