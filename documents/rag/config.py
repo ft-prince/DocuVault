@@ -21,7 +21,7 @@ class RAGConfig:
     
     # Retrieval parameters
     N_RESULTS = 6  # Number of chunks to retrieve
-    SIMILARITY_THRESHOLD = 0.15  # Minimum similarity score
+    SIMILARITY_THRESHOLD = 0.05  # Minimum similarity score
     
     # LLM generation parameters
     MAX_NEW_TOKENS = 512

@@ -1,0 +1,96 @@
+{% extends 'documents/base.html' %}
+{% load static %}
+
+{% block title %}RAG System Info - DocuVault{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-server"></i> RAG System Information</h2>
+        <a href="{% url 'chatbot' %}" class="btn btn-outline-secondary">
+            <i class="fas fa-arrow-left"></i> Back to Chatbot
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- System Stats -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Indexing Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Indexed Documents
+                            <span class="badge bg-success rounded-pill">{{ total_indexed }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Pending
+                            <span class="badge bg-secondary rounded-pill">{{ pending }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Processing
+                            <span class="badge bg-primary rounded-pill">{{ processing }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Failed
+                            <span class="badge bg-danger rounded-pill">{{ failed }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chat Stats -->
+        <div class="col-md-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0"><i class="fas fa-comments"></i> Chat Statistics</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Sessions
+                            <span class="badge bg-info rounded-pill">{{ total_sessions }}</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Total Messages
+                            <span class="badge bg-info rounded-pill">{{ total_messages }}</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Info -->
+        <div class="col-md-12">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0"><i class="fas fa-cogs"></i> Configuration</h5>
+                </div>
+                <div class="card-body">
+                    {% if system_info.error %}
+                    <div class="alert alert-danger">
+                        Error retrieving system info: {{ system_info.error }}
+                    </div>
+                    {% else %}
+                    <div class="table-responsive">
+                        <table class="table table-striped">
+                            <tbody>
+                                {% for key, value in system_info.items %}
+                                <tr>
+                                    <th style="width: 30%">{{ key }}</th>
+                                    <td>{{ value }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

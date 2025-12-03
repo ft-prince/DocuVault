@@ -148,7 +148,7 @@ def chatbot_query_api(request):
         # Query the chatbot
         answer, sources = chatbot.query(
             question=question,
-            use_rewrite=True
+            thread_id=str(chat_session.id)
         )
         
         # Filter sources to only include accessible documents
