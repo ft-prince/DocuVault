@@ -141,20 +141,19 @@ class VectorStore:
         
         return self.collection.count()
     
-    def filter_by_similarity(self, results: Dict, threshold: float = None) -> Tuple[List, List, List]:
+    def process_results(self, results: Dict) -> Tuple[List, List, List]:
         """
-        Filter query results by similarity threshold
+        Process query results from vector store
         
         Args:
             results: Query results from vector store
-            threshold: Minimum similarity score. If None, uses config default.
             
         Returns:
-            Tuple of (filtered_docs, filtered_metadata, filtered_similarities)
+            Tuple of (docs, metadata, similarities)
         """
-        if threshold is None:
-            threshold = self.config.SIMILARITY_THRESHOLD
-        
+        if not results['documents'] or not results['documents'][0]:
+            return [], [], []
+            
         retrieved_docs = results['documents'][0]
         retrieved_metadata = results['metadatas'][0]
         distances = results['distances'][0]
@@ -163,23 +162,8 @@ class VectorStore:
         similarities = [1 - dist for dist in distances]
         
         print(f"DEBUG: Top {len(similarities)} raw similarities: {[round(s, 3) for s in similarities]}")
-        print(f"DEBUG: Threshold is {threshold}")
-
-        # Filter by threshold
-        relevant_results = [
-            (doc, meta, sim)
-            for doc, meta, sim in zip(retrieved_docs, retrieved_metadata, similarities)
-            if sim >= threshold
-        ]
         
-        if not relevant_results:
-            return [], [], []
-        
-        filtered_docs = [item[0] for item in relevant_results]
-        filtered_metadata = [item[1] for item in relevant_results]
-        filtered_similarities = [item[2] for item in relevant_results]
-        
-        return filtered_docs, filtered_metadata, filtered_similarities
+        return retrieved_docs, retrieved_metadata, similarities
     
     def reset_collection(self):
         """Delete and recreate the collection"""

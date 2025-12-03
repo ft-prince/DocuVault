@@ -156,6 +156,23 @@ def chatbot_query_api(request):
             source for source in sources
             if any(doc in source.get('source', '') for doc in accessible_docs)
         ]
+
+        # Logging for debugging/monitoring 
+        print(f"\n{'='*70}")
+        print(f"👤 User Query: {question}")
+        print(f"🤖 Assistant Answer: {answer}")
+        
+        if filtered_sources:
+            print("\n📚 Sources Retrieved:")
+            for i, source in enumerate(filtered_sources, 1):
+                similarity = source.get('similarity', 0)
+                quality = "🟢" if similarity > 0.3 else "🟡" if similarity > 0.15 else "🔴"
+                print(f"{i}. {quality} {source.get('source')} (Page {source.get('page')}) - Relevance: {similarity:.3f}")
+                print(f"   Preview: {source.get('text_preview')}...")
+        else:
+            #print("\n⚠️ No relevant sources found (or all filtered by permissions)")
+            pass
+        print(f"{'='*70}\n")
         
         retrieval_time = time.time() - start_time
         
