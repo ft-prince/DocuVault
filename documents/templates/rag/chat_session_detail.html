@@ -1,0 +1,208 @@
+{% extends 'documents/base.html' %}
+{% load static %}
+
+{% block title %}{{ chat_session.title }} - DocuVault{% endblock %}
+
+{% block extra_css %}
+<style>
+    .session-header {
+        background: #ffffff;
+        border: 1px solid #e5e5e5;
+        padding: 1.25rem 1.5rem;
+        margin-bottom: 1.5rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .session-info {
+        flex: 1;
+    }
+    
+    .session-title {
+        font-size: 1.125rem;
+        font-weight: 600;
+        color: #2c2c2c;
+        margin-bottom: 0.375rem;
+    }
+    
+    .session-meta {
+        font-size: 0.8125rem;
+        color: #7c7c7c;
+        display: flex;
+        gap: 1.5rem;
+    }
+    
+    .session-actions {
+        display: flex;
+        gap: 0.75rem;
+    }
+    
+    .messages-container {
+        background: #ffffff;
+        border: 1px solid #e5e5e5;
+        min-height: 500px;
+    }
+    
+    .message {
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #f5f5f5;
+        display: grid;
+        grid-template-columns: 40px 1fr;
+        gap: 1rem;
+    }
+    
+    .message:last-child {
+        border-bottom: none;
+    }
+    
+    .message.human {
+        background: #fafafa;
+    }
+    
+    .message-icon {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #e5e5e5;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.875rem;
+    }
+    
+    .message.human .message-icon {
+        background: #2c2c2c;
+        color: #ffffff;
+    }
+    
+    .message.ai .message-icon {
+        background: #f5f5f5;
+        border: 1px solid #e5e5e5;
+    }
+    
+    .message-body {
+        min-width: 0;
+    }
+    
+    .message-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        margin-bottom: 0.5rem;
+    }
+    
+    .message-author {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #2c2c2c;
+    }
+    
+    .message-time {
+        font-size: 0.75rem;
+        color: #9c9c9c;
+    }
+    
+    .message-text {
+        font-size: 0.95rem;
+        line-height: 1.6;
+        color: #2c2c2c;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+    
+    .message-sources {
+        margin-top: 0.875rem;
+        padding-top: 0.875rem;
+        border-top: 1px solid #f5f5f5;
+    }
+    
+    .sources-title {
+        font-size: 0.8125rem;
+        font-weight: 600;
+        color: #5c5c5c;
+        margin-bottom: 0.5rem;
+    }
+    
+    .source-item {
+        font-size: 0.8125rem;
+        color: #7c7c7c;
+        padding: 0.25rem 0;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+    }
+    
+    .relevance-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        flex-shrink: 0;
+    }
+    
+    .relevance-high { background: #2c2c2c; }
+    .relevance-medium { background: #7c7c7c; }
+    .relevance-low { background: #d5d5d5; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="session-header">
+    <div class="session-info">
+        <div class="session-title">{{ chat_session.title }}</div>
+        <div class="session-meta">
+            <span>📅 {{ chat_session.created_at|date:"M d, Y H:i" }}</span>
+            <span>💬 {{ messages|length }} messages</span>
+        </div>
+    </div>
+    <div class="session-actions">
+        <a href="{% url 'chat_history' %}" class="btn-secondary btn-small">
+            Back to History
+        </a>
+        <a href="{% url 'chatbot' %}" class="btn btn-small">
+            New Chat
+        </a>
+    </div>
+</div>
+
+<div class="messages-container">
+    {% for msg in messages %}
+        <div class="message {{ msg.message_type }}">
+            <div class="message-icon">
+                {% if msg.message_type == 'human' %}
+                    <span>👤</span>
+                {% else %}
+                    <span>🤖</span>
+                {% endif %}
+            </div>
+            <div class="message-body">
+                <div class="message-header">
+                    <span class="message-author">
+                        {% if msg.message_type == 'human' %}You{% else %}AI Assistant{% endif %}
+                    </span>
+                    <span class="message-time">{{ msg.timestamp|date:"H:i" }}</span>
+                </div>
+                <div class="message-text">{{ msg.content }}</div>
+                
+                {% if msg.sources %}
+                    <div class="message-sources">
+                        <div class="sources-title">📚 Sources</div>
+                        {% for source in msg.sources %}
+                            <div class="source-item">
+                                {% if source.similarity > 0.3 %}
+                                    <span class="relevance-dot relevance-high"></span>
+                                {% elif source.similarity > 0.15 %}
+                                    <span class="relevance-dot relevance-medium"></span>
+                                {% else %}
+                                    <span class="relevance-dot relevance-low"></span>
+                                {% endif %}
+                                <span>{{ source.source }} (Page {{ source.page }})</span>
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}
