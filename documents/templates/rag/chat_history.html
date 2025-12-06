@@ -1,0 +1,145 @@
+{% extends 'documents/base.html' %}
+{% load static %}
+
+{% block title %}Chat History - DocuVault{% endblock %}
+
+{% block extra_css %}
+<style>
+    .history-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 1.5rem;
+    }
+    
+    .history-list {
+        display: flex;
+        flex-direction: column;
+        gap: 0;
+    }
+    
+    .history-item {
+        background: #ffffff;
+        border: 1px solid #e5e5e5;
+        border-bottom: none;
+        padding: 1.25rem 1.5rem;
+        text-decoration: none;
+        color: #2c2c2c;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        transition: background 0.2s;
+    }
+    
+    .history-item:first-child {
+        border-top-left-radius: 0;
+        border-top-right-radius: 0;
+    }
+    
+    .history-item:last-child {
+        border-bottom: 1px solid #e5e5e5;
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+    
+    .history-item:hover {
+        background: #fafafa;
+    }
+    
+    .history-content {
+        flex: 1;
+    }
+    
+    .history-title {
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #2c2c2c;
+        margin-bottom: 0.375rem;
+    }
+    
+    .history-meta {
+        font-size: 0.8125rem;
+        color: #7c7c7c;
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+    
+    .history-badge {
+        background: #f5f5f5;
+        color: #5c5c5c;
+        padding: 0.25rem 0.625rem;
+        border-radius: 2px;
+        font-size: 0.8125rem;
+        font-weight: 500;
+    }
+    
+    .empty-state {
+        background: #ffffff;
+        border: 1px solid #e5e5e5;
+        padding: 4rem 2rem;
+        text-align: center;
+    }
+    
+    .empty-icon {
+        font-size: 3rem;
+        color: #d5d5d5;
+        margin-bottom: 1rem;
+    }
+    
+    .empty-text {
+        color: #7c7c7c;
+        font-size: 0.95rem;
+        margin-bottom: 1.5rem;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="history-header">
+    <h2 style="font-size: 1.5rem; font-weight: 600; color: #2c2c2c;">Chat History</h2>
+    <a href="{% url 'chatbot' %}" class="btn">
+        New Chat
+    </a>
+</div>
+
+{% if chat_sessions %}
+    <div class="history-list">
+        {% for session in chat_sessions %}
+            <a href="{% url 'chat_session_detail' session.id %}" class="history-item">
+                <div class="history-content">
+                    <div class="history-title">{{ session.title }}</div>
+                    <div class="history-meta">
+                        <span>📅 {{ session.updated_at|date:"M d, Y" }}</span>
+                        <span>🕐 {{ session.updated_at|date:"H:i" }}</span>
+                    </div>
+                </div>
+                <div class="history-badge">
+                    {{ session.messages.count }} messages
+                </div>
+            </a>
+        {% endfor %}
+    </div>
+    
+    <!-- Pagination if you have it -->
+    {% if chat_sessions.has_other_pages %}
+        <div class="pagination mt-3">
+            {% if chat_sessions.has_previous %}
+                <a href="?page={{ chat_sessions.previous_page_number }}">Previous</a>
+            {% endif %}
+            
+            <span class="current">Page {{ chat_sessions.number }} of {{ chat_sessions.paginator.num_pages }}</span>
+            
+            {% if chat_sessions.has_next %}
+                <a href="?page={{ chat_sessions.next_page_number }}">Next</a>
+            {% endif %}
+        </div>
+    {% endif %}
+{% else %}
+    <div class="empty-state">
+        <div class="empty-icon">💬</div>
+        <div class="empty-text">No chat history found</div>
+        <a href="{% url 'chatbot' %}" class="btn">Start Your First Conversation</a>
+    </div>
+{% endif %}
+{% endblock %}
