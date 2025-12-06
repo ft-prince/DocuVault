@@ -102,6 +102,7 @@ class UserProfileForm(forms.ModelForm):
         }
 
 
+
 class DocumentForm(forms.ModelForm):
     """Document creation and edit form"""
     tags = forms.CharField(
@@ -169,6 +170,11 @@ class DocumentForm(forms.ModelForm):
         self.user = kwargs.pop('user', None)
         super().__init__(*args, **kwargs)
         
+        # Make file field not required when editing
+        if self.instance and self.instance.pk:
+            self.fields['file'].required = False
+            self.fields['file'].help_text = 'Leave blank to keep the current file'
+        
         # Filter shared_with to exclude current user
         if self.user:
             self.fields['shared_with'].queryset = User.objects.exclude(id=self.user.id)
@@ -180,10 +186,17 @@ class DocumentForm(forms.ModelForm):
 
     def clean_file(self):
         file = self.cleaned_data.get('file')
+        
+        # CRITICAL FIX: If editing and no new file provided, keep the existing file
+        if self.instance and self.instance.pk and not file:
+            return self.instance.file
+        
+        # Validate new file if provided
         if file:
             # Limit file size to 100MB
             if file.size > 100 * 1024 * 1024:
                 raise ValidationError("File size cannot exceed 100MB.")
+        
         return file
 
     def clean_tags(self):
@@ -214,8 +227,6 @@ class DocumentForm(forms.ModelForm):
             self.save_m2m()
         
         return instance
-
-
 class CategoryForm(forms.ModelForm):
     """Category creation and edit form"""
     class Meta:

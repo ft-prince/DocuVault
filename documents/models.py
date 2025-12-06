@@ -98,6 +98,13 @@ def document_upload_path(instance, filename):
     return os.path.join('documents', str(instance.owner.id), filename)
 
 
+def document_version_upload_path(instance, filename):
+    """Generate upload path for document versions"""
+    ext = filename.split('.')[-1]
+    filename = f"{uuid.uuid4()}.{ext}"
+    return os.path.join('document_versions', str(instance.document.owner.id), filename)
+
+
 class Document(models.Model):
     """Main document model"""
     ACCESS_LEVEL_CHOICES = [
@@ -206,7 +213,7 @@ class DocumentVersion(models.Model):
     """Track document version history"""
     document = models.ForeignKey(Document, on_delete=models.CASCADE, related_name='versions')
     version_number = models.IntegerField()
-    file = models.FileField(upload_to='document_versions/')
+    file = models.FileField(upload_to=document_version_upload_path)
     file_size = models.BigIntegerField(default=0)
     
     uploaded_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

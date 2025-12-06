@@ -335,7 +335,7 @@
     </header>
 
     <!-- Messages -->
-    {% comment %} {% if messages %}
+    {% if messages %}
         <div class="container">
             <div class="messages">
                 {% for message in messages %}
@@ -345,7 +345,7 @@
                 {% endfor %}
             </div>
         </div>
-    {% endif %} {% endcomment %}
+    {% endif %}
 
     <!-- Main Content -->
     <main class="container">
