@@ -185,21 +185,20 @@ class EnhancedRetriever:
                 # Table formatting
                 table_content = doc.replace('[TABLE]', '').replace('[/TABLE]', '').strip()
                 formatted = f"""
-[Source {idx}: {source}, Page {page}]
-📊 TABLE DATA:
+From {source} (page {page}) - Table:
 {table_content}
 """
             elif '[IMAGE DESCRIPTION:' in doc:
                 # Image description formatting
                 img_content = doc.replace('[IMAGE DESCRIPTION:', '').replace(']', '').strip()
                 formatted = f"""
-[Source {idx}: {source}, Page {page}]
-🖼️ IMAGE: {img_content}
+From {source} (page {page}) - Image showing:
+{img_content}
 """
             else:
                 # Regular text formatting
                 formatted = f"""
-[Source {idx}: {source}, Page {page}]
+From {source} (page {page}):
 {doc}
 """
             
