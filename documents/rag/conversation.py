@@ -255,12 +255,12 @@ class RAGChatbot:
         messages.extend(history_to_include)
         
         # Add current query with context
-        user_message = f"""Context from documents:
+        user_message = f"""Here's what I found in the documents:
 {context}
 
-Question: {original_question}
+Now, the user is asking: {original_question}
 
-Please provide a clear and accurate answer based ONLY on the context above. Cite sources using [Source X, Page Y] format."""
+Please answer their question naturally, like you're helping a colleague."""
         
         messages.append({"role": "user", "content": user_message})
         
