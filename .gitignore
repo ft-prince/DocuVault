@@ -2,3 +2,8 @@ env
 venv
 .env
 .venv
+
+env2
+final
+.env2
+.final

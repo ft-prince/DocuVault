@@ -1,0 +1,10 @@
+Django>=4.2
+camelot>=12.6
+langchain>=1.1
+requests>=2.32
+numpy>=2.3
+PyMuPDF>=1.26
+openai>=2.8
+pdfminer.six>=20251107
+python-dotenv>=1.2
+pytesseract>=0.3.13
