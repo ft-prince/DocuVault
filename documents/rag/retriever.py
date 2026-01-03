@@ -176,31 +176,20 @@ class EnhancedRetriever:
         context_parts = []
         
         for idx, (doc, meta) in enumerate(zip(documents, metadatas), 1):
-            source = meta.get('source', 'Unknown')
-            page = meta.get('page', 0) + 1
             chunk_type = meta.get('chunk_type', 'text')
             
-            # Format based on content type
+            # Format based on content type - remove all source/page references
             if '[TABLE]' in doc:
-                # Table formatting
+                # Table formatting - just the content
                 table_content = doc.replace('[TABLE]', '').replace('[/TABLE]', '').strip()
-                formatted = f"""
-From {source} (page {page}) - Table:
-{table_content}
-"""
+                formatted = f"{table_content}"
             elif '[IMAGE DESCRIPTION:' in doc:
-                # Image description formatting
+                # Image description formatting - just the content
                 img_content = doc.replace('[IMAGE DESCRIPTION:', '').replace(']', '').strip()
-                formatted = f"""
-From {source} (page {page}) - Image showing:
-{img_content}
-"""
+                formatted = f"{img_content}"
             else:
-                # Regular text formatting
-                formatted = f"""
-From {source} (page {page}):
-{doc}
-"""
+                # Regular text formatting - just the content
+                formatted = f"{doc}"
             
             context_parts.append(formatted.strip())
         
