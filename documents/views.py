@@ -318,37 +318,51 @@ def document_create_view(request):
 def document_edit_view(request, pk):
     """Edit a document"""
     document = get_object_or_404(Document, pk=pk, is_deleted=False)
-    
+
     # Check permissions
     if not document.can_edit(request.user):
         raise PermissionDenied("You don't have permission to edit this document.")
-    
+
     if request.method == 'POST':
         form = DocumentForm(request.POST, request.FILES, instance=document, user=request.user)
         if form.is_valid():
+            # Capture values BEFORE form mutates the instance
             old_file = document.file
+            old_file_size = document.file_size
+            old_version_number = document.version
+
             document = form.save(commit=False)
-            
-            # If new file uploaded, create new version
+
             if 'file' in request.FILES and request.FILES['file']:
                 uploaded_file = request.FILES['file']
+
+                # Increment version first
+                new_version_number = old_version_number + 1
                 document.file_size = uploaded_file.size
                 document.file_type = uploaded_file.content_type
-                document.version += 1
-                
-                # Create new version
-                DocumentVersion.objects.create(
+                document.version = new_version_number
+
+                # Save document FIRST so owner FK is resolvable in upload path
+                document.save()
+                form.save_m2m()
+
+                # Archive the OLD file as a version snapshot
+                # Use get_or_create to safely handle duplicate version numbers
+                # from any previous failed attempts
+                DocumentVersion.objects.get_or_create(
                     document=document,
-                    version_number=document.version,
-                    file=document.file,
-                    file_size=document.file_size,
-                    uploaded_by=request.user,
-                    change_note=request.POST.get('change_note', 'Updated document')
+                    version_number=old_version_number,
+                    defaults={
+                        'file': old_file,
+                        'file_size': old_file_size,
+                        'uploaded_by': request.user,
+                        'change_note': request.POST.get('change_note', '') or f'Version {old_version_number}',
+                    }
                 )
-            
-            document.save()
-            form.save_m2m()
-            
+            else:
+                document.save()
+                form.save_m2m()
+
             # Log activity
             ActivityLog.objects.create(
                 user=request.user,
@@ -357,12 +371,12 @@ def document_edit_view(request, pk):
                 description=f"Edited document: {document.title}",
                 ip_address=request.META.get('REMOTE_ADDR')
             )
-            
+
             messages.success(request, 'Document updated successfully!')
             return redirect('document_detail', pk=document.pk)
     else:
         form = DocumentForm(instance=document, user=request.user)
-    
+
     return render(request, 'documents/document_form.html', {
         'form': form,
         'document': document,

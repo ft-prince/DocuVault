@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:renataiot.com)",
+      "Bash(python -c \"import weasyprint; print\\(''weasyprint ok''\\)\")",
+      "Bash(python -m pip show weasyprint)",
+      "Bash(python -c \"import pdfkit; print\\(''pdfkit ok''\\)\")",
+      "Bash(wkhtmltopdf --version)",
+      "Bash(python -c \"from reportlab.lib.pagesizes import A4; print\\(''reportlab ok''\\)\")",
+      "Bash(pip --version)",
+      "Bash(pip install reportlab --quiet)",
+      "Bash(python generate_reference_doc.py)",
+      "Bash(python -c \":*)",
+      "Bash(pip install python-docx --quiet)",
+      "Bash(python -c \"import subprocess; subprocess.Popen\\([''start'','''',r''D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\\\\DocuVault_Client_Reference_Guide.pdf''],shell=True\\)\")",
+      "Bash(python -c \"import docx; print\\(''python-docx ok''\\)\")",
+      "Bash(python generate_reference_docx.py)"
+    ]
+  }
+}
