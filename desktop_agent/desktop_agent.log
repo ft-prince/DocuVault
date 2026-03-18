@@ -1,0 +1,444 @@
+2026-03-18 12:05:34 [INFO] Starting DocuVault Desktop Agentâ€¦
+2026-03-18 12:05:37 [INFO] Authenticated as admin
+2026-03-18 12:05:37 [INFO] Watching: D:\AI_Model_Renata\Document-management\Group\watch
+2026-03-18 12:05:37 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 12:06:38 [INFO] Syncing: D:\AI_Model_Renata\Document-management\Group\watch\Smarter_Surveillance_Starts_with_Smarter_AI_v1.pdf
+2026-03-18 12:06:38 [INFO]   âœ“ created: 'Smarter_Surveillance_Starts_with_Smarter_AI_v1' â†’ v1 (id=71)
+2026-03-18 12:06:42 [INFO] Syncing: D:\AI_Model_Renata\Document-management\Group\watch\Smarter_Surveillance_Starts_with_Smarter_AI.pdf
+2026-03-18 12:06:42 [INFO]   âœ“ updated: 'Smarter_Surveillance_Starts_with_Smarter_AI_v1' â†’ v2 (id=71)
+2026-03-18 12:07:08 [INFO] Syncing: D:\AI_Model_Renata\Document-management\Group\watch\demo.pdf
+2026-03-18 12:07:08 [INFO]   âœ“ updated: 'Smarter_Surveillance_Starts_with_Smarter_AI_v1' â†’ v3 (id=71)
+2026-03-18 12:07:55 [INFO] Syncing: D:\AI_Model_Renata\Document-management\Group\watch\DocuVault_Client_Reference_Guide_v2.pdf
+2026-03-18 12:07:55 [INFO]   âœ“ updated: 'Smarter_Surveillance_Starts_with_Smarter_AI_v1' â†’ v4 (id=71)
+2026-03-18 12:58:25 [INFO] Starting DocuVault Desktop Agentâ€¦
+2026-03-18 12:58:27 [INFO] Authenticated as admin
+2026-03-18 12:58:27 [INFO] Watching: D:\AI_Model_Renata\Document-management\Group\watch
+2026-03-18 12:58:27 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 12:59:31 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:00:35 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:01:40 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:02:44 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:03:48 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:04:52 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:05:56 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:07:00 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:08:04 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:09:08 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:10:12 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:11:16 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:12:20 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:13:24 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:14:28 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:15:33 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:16:37 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:17:41 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:18:45 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:19:49 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:20:53 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:21:57 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:23:01 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:24:05 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:25:09 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:26:13 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:27:18 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:28:22 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:29:26 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:30:30 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:31:34 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:32:38 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:33:42 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:34:46 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:35:50 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:36:54 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:37:58 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:39:02 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:40:06 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:41:10 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:42:15 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 13:43:19 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:18:43 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:19:47 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:20:51 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:21:55 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:22:59 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:24:03 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:25:07 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:26:12 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:27:16 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:28:20 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:29:24 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:30:28 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:31:32 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:32:36 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:33:40 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:34:44 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:35:48 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:36:52 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:37:57 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:39:01 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:40:05 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:41:09 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:42:13 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 15:43:26 [INFO] Starting DocuVault Desktop Agentâ€¦
+2026-03-18 15:43:29 [INFO] Authenticated as admin
+2026-03-18 15:43:29 [INFO] Watching: D:\AI_Model_Renata\Document-management\Group\watch
+2026-03-18 15:43:29 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 15:45:38 [INFO] Starting DocuVault Desktop Agent…
+2026-03-18 15:45:40 [INFO] Authenticated as admin
+2026-03-18 15:45:40 [INFO] Watching: D:\AI_Model_Renata\Document-management\Group\kiosk
+2026-03-18 15:45:40 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 15:45:40 [INFO] Running in headless mode. Press Ctrl-C to stop.
+2026-03-18 15:46:03 [INFO] Syncing: D:\AI_Model_Renata\Document-management\Group\kiosk\Smarter_Surveillance_Starts_with_Smarter_AI_v1.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 381, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 269, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 created: 'Smarter_Surveillance_Starts_with_Smarter_AI_v1' \u2192 v1 (id=72)"
+Arguments: ()
+2026-03-18 15:46:40 [INFO] Syncing: D:\AI_Model_Renata\Document-management\Group\kiosk\Smarter_Surveillance_Starts_with_Smarter_AI_v1.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 381, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 269, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: 'Smarter_Surveillance_Starts_with_Smarter_AI_v1' \u2192 v2 (id=72)"
+Arguments: ()
+2026-03-18 15:47:20 [INFO] Syncing: D:\AI_Model_Renata\Document-management\Group\kiosk\Smarter_Surveillance_Starts_with_Smarter_AI_v1.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 381, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 269, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: 'Smarter_Surveillance_Starts_with_Smarter_AI_v1' \u2192 v3 (id=72)"
+Arguments: ()
+2026-03-18 18:33:18 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:34:22 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:35:26 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:36:30 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:37:34 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:38:38 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:39:42 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:40:46 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:41:51 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:42:55 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:43:59 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:45:03 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:46:07 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:47:11 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:48:15 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 18:49:19 [WARNING] Heartbeat failed — server may be offline.
+led â€” server may be offline.
+2026-03-18 18:41:51 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 18:42:55 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 18:43:59 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 18:45:03 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 18:46:07 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 18:47:11 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 18:48:15 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 18:49:19 [WARNING] Heartbeat failed â€” server may be offline.
+2026-03-18 19:28:49 [INFO] Starting DocuVault Desktop Agent…
+2026-03-18 19:28:49 [INFO] Authenticated as admin
+2026-03-18 19:28:49 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 19:28:49 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 19:28:49 [INFO] Running in headless mode. Press Ctrl-C to stop.
+2026-03-18 19:29:51 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 19:32:59 [INFO] Starting DocuVault Desktop Agent…
+2026-03-18 19:32:59 [INFO] Authenticated as admin
+2026-03-18 19:32:59 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 19:32:59 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 19:32:59 [INFO] Running in headless mode. Press Ctrl-C to stop.
+2026-03-18 19:33:12 [INFO] Starting DocuVault Desktop Agent…
+2026-03-18 19:33:12 [INFO] Authenticated as admin
+2026-03-18 19:33:12 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 19:33:12 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 19:33:12 [INFO] Running in headless mode. Press Ctrl-C to stop.
+2026-03-18 19:34:08 [INFO] Starting DocuVault Desktop Agent…
+2026-03-18 19:34:08 [INFO] Authenticated as admin
+2026-03-18 19:34:08 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 19:34:08 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 19:34:08 [INFO] Running in headless mode. Press Ctrl-C to stop.
+2026-03-18 19:34:15 [INFO] Starting DocuVault Desktop Agent…
+2026-03-18 19:34:15 [INFO] Authenticated as admin
+2026-03-18 19:34:15 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 19:34:15 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 19:34:15 [INFO] Running in headless mode. Press Ctrl-C to stop.
+2026-03-18 19:35:17 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 19:36:19 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 19:37:21 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 19:38:23 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 19:38:46 [INFO] Starting DocuVault Desktop Agent…
+2026-03-18 19:38:46 [INFO] Authenticated as admin
+2026-03-18 19:38:46 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 19:38:46 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 19:38:46 [INFO] Running in headless mode. Press Ctrl-C to stop.
+2026-03-18 19:39:42 [INFO] Starting DocuVault Desktop Agent…
+2026-03-18 19:39:42 [INFO] Authenticated as admin
+2026-03-18 19:39:42 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 19:39:42 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 19:39:42 [INFO] Running in headless mode. Press Ctrl-C to stop.
+2026-03-18 19:40:51 [INFO] Starting DocuVault Desktop Agent…
+2026-03-18 19:40:51 [INFO] Authenticated as admin
+2026-03-18 19:40:51 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 19:40:51 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 19:40:51 [INFO] Running in headless mode. Press Ctrl-C to stop.
+2026-03-18 20:03:42 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 20:03:43 [INFO] Authenticated as admin
+2026-03-18 20:03:43 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 20:03:43 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 20:03:59 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 20:04:00 [INFO] Authenticated as admin
+2026-03-18 20:04:00 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 20:04:00 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 20:04:53 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 20:04:53 [INFO] Authenticated as admin
+2026-03-18 20:04:53 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 20:04:53 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 20:05:05 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 20:05:05 [INFO] Authenticated as admin
+2026-03-18 20:05:05 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 20:05:05 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 20:06:07 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:07:09 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:08:11 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:09:14 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:10:16 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:11:18 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:19:14 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 20:19:15 [INFO] Authenticated as admin
+2026-03-18 20:19:15 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 20:19:15 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 20:20:09 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 20:20:09 [INFO] Authenticated as admin
+2026-03-18 20:20:09 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 20:20:09 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 20:20:26 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 20:20:26 [INFO] Authenticated as admin
+2026-03-18 20:20:26 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 20:20:26 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 20:20:41 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 20:20:41 [INFO] Authenticated as admin
+2026-03-18 20:20:41 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 20:20:41 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 20:26:43 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:27:45 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:28:47 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:29:14 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 20:29:14 [INFO] Authenticated as admin
+2026-03-18 20:29:14 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 20:29:14 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 20:30:59 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/new\DocuVault reference guide v2.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 399, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 287, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: 'DocuVault reference guide v2' \u2192 v3 (id=74)"
+Arguments: ()
+2026-03-18 20:32:41 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 20:32:41 [INFO] Authenticated as admin
+2026-03-18 20:32:41 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/kiosk
+2026-03-18 20:32:41 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 20:32:41 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 20:40:43 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:41:45 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:42:47 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:43:50 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:44:52 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:45:54 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:46:56 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:47:58 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:49:00 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:50:02 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:51:04 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:52:06 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:53:08 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:54:10 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:55:12 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:56:14 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:57:16 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:58:18 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 20:59:20 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:02:13 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 22:02:13 [INFO] Authenticated as admin
+2026-03-18 22:02:13 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/kiosk
+2026-03-18 22:02:13 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 22:02:13 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 22:02:27 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 22:02:27 [INFO] Authenticated as admin
+2026-03-18 22:02:27 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/kiosk
+2026-03-18 22:02:27 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 22:02:27 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 22:03:04 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 22:03:04 [INFO] Authenticated as admin
+2026-03-18 22:03:04 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/kiosk
+2026-03-18 22:03:04 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/new
+2026-03-18 22:03:04 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 22:09:06 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:10:08 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:11:10 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:12:12 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:13:14 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:14:16 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:15:18 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:16:20 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:17:22 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:18:24 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:19:26 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:20:28 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:21:30 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:22:33 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:23:35 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:24:37 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:25:39 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:26:41 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:27:43 [WARNING] Heartbeat failed — server may be offline.
+2026-03-18 22:52:02 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-03-18 22:52:02 [INFO] Authenticated as admin
+2026-03-18 22:52:02 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/docsss
+2026-03-18 22:52:02 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/demo with desktop agent
+2026-03-18 22:52:02 [INFO] DocuVault Desktop Agent is running.
+2026-03-18 22:52:41 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/demo with desktop agent\DocuVault reference guide v2 - Copy.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 409, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 297, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 created: 'DocuVault reference guide v2 - Copy' \u2192 v1 (id=75)"
+Arguments: ()
+2026-03-18 22:53:54 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/demo with desktop agent\DocuVault reference guide v2 - Copy.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 409, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 297, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: 'DocuVault reference guide v2 - Copy' \u2192 v2 (id=75)"
+Arguments: ()
+2026-03-18 22:53:58 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/demo with desktop agent\DocuVault reference guide v2 - Copy.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 409, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 297, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: 'DocuVault reference guide v2 - Copy' \u2192 v3 (id=75)"
+Arguments: ()
+2026-03-18 22:59:31 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/demo with desktop agent\DocuVault reference guide v2 - Copy - Copy.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 409, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 297, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 created: 'DocuVault reference guide v2 - Copy - Copy' \u2192 v1 (id=76)"
+Arguments: ()

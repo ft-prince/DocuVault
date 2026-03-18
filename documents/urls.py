@@ -1,6 +1,7 @@
 from django.urls import path
 from . import views
 from . import rag_views
+from . import agent_api
 
 urlpatterns = [
     # ============================================================
@@ -15,6 +16,25 @@ urlpatterns = [
     # ============================================================
     path('', views.home_view, name='home'),
     path('dashboard/', views.dashboard_view, name='dashboard'),
+
+    # ============================================================
+    # WORKSPACE (agent-style folder + document UI)
+    # ============================================================
+    path('workspace/',                      views.workspace_view,             name='workspace'),
+    path('workspace/agent/',               views.workspace_agent_view,        name='workspace_agent'),
+    path('workspace/agent/config/save/',   views.agent_config_save_view,      name='agent_config_save'),
+    path('workspace/agent/process/start/', views.agent_process_start_view,    name='agent_process_start'),
+    path('workspace/agent/process/stop/',  views.agent_process_stop_view,     name='agent_process_stop'),
+    path('workspace/agent/process/status/',views.agent_process_status_view,   name='agent_process_status'),
+    path('workspace/agent/download/',      views.agent_download_view,          name='agent_download'),
+    path('workspace/agent/build/',         views.agent_build_exe_view,         name='agent_build_exe'),
+    path('workspace/agent/build/log/',     views.agent_build_log_view,         name='agent_build_log'),
+
+    # Folder CRUD (AJAX / JSON)
+    path('api/folders/create/',              views.folder_create_api,    name='folder_create'),
+    path('api/folders/<int:pk>/rename/',     views.folder_rename_api,    name='folder_rename'),
+    path('api/folders/<int:pk>/delete/',     views.folder_delete_api,    name='folder_delete'),
+    path('api/documents/<int:pk>/move/',     views.document_move_api,    name='document_move'),
     
     # ============================================================
     # DOCUMENT URLS
@@ -25,6 +45,8 @@ urlpatterns = [
     path('documents/<int:pk>/edit/', views.document_edit_view, name='document_edit'),
     path('documents/<int:pk>/delete/', views.document_delete_view, name='document_delete'),
     path('documents/<int:pk>/download/', views.document_download_view, name='document_download'),
+    path('documents/<int:doc_pk>/versions/<int:version_pk>/download/', views.version_download_view, name='version_download'),
+    path('documents/<int:doc_pk>/versions/<int:version_pk>/restore/', views.version_restore_view,  name='version_restore'),
     
     # ============================================================
     # COMMENT URLS
@@ -106,4 +128,14 @@ urlpatterns = [
     # RAG SYSTEM INFO URLS
     # ============================================================
     path('rag/info/', rag_views.rag_system_info_view, name='rag_system_info'),
+
+    # ============================================================
+    # DESKTOP AGENT API URLS  (no CSRF; token-authenticated)
+    # ============================================================
+    path('agent/auth/',         agent_api.agent_auth_view,        name='agent_auth'),
+    path('agent/upload/',       agent_api.agent_upload_view,      name='agent_upload'),
+    path('agent/events/',       agent_api.agent_events_view,      name='agent_events'),
+    path('agent/heartbeat/',    agent_api.agent_heartbeat_view,   name='agent_heartbeat'),
+    path('agent/token/reset/',  agent_api.agent_token_reset_view, name='agent_token_reset'),
+    path('agent/status/',       agent_api.agent_status_view,      name='agent_status'),
 ]

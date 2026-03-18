@@ -311,9 +311,11 @@
             
             <nav class="nav">
                 {% if user.is_authenticated %}
+                    <a href="{% url 'workspace' %}"
+                       style="{% if request.resolver_match.url_name == 'workspace' %}font-weight:700{% endif %}">🗂 Workspace</a>
                     <a href="{% url 'dashboard' %}">Dashboard</a>
                     <a href="{% url 'document_list' %}">Documents</a>
-                    <a href="{% url 'chatbot' %}"><i class="fas fa-robot"></i> AI Assistant</a>
+                    <a href="{% url 'chatbot' %}">AI Assistant</a>
                     <a href="{% url 'favorites_list' %}">Favorites</a>
                     <a href="{% url 'notifications_list' %}">Notifications</a>
                     
@@ -335,17 +337,23 @@
     </header>
 
     <!-- Messages -->
-    {% comment %} {% if messages %}
-        <div class="container">
-            <div class="messages">
-                {% for message in messages %}
-                    <div class="message {{ message.tags }}">
-                        {{ message }}
-                    </div>
-                {% endfor %}
-            </div>
+    {% if messages %}
+    <div style="position:fixed;top:70px;right:1.5rem;z-index:9000;display:flex;flex-direction:column;gap:.5rem;max-width:380px">
+        {% for message in messages %}
+        <div style="padding:.75rem 1.1rem;border-radius:8px;font-size:.875rem;font-weight:500;
+                    box-shadow:0 4px 12px rgba(0,0,0,.12);display:flex;align-items:center;gap:.65rem;
+                    {% if message.tags == 'success' %}background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;
+                    {% elif message.tags == 'error' %}background:#fef2f2;border:1px solid #fecaca;color:#dc2626;
+                    {% elif message.tags == 'warning' %}background:#fffbeb;border:1px solid #fde68a;color:#b45309;
+                    {% else %}background:#eff6ff;border:1px solid #bfdbfe;color:#1d4ed8;{% endif %}"
+             id="msg-{{ forloop.counter }}" onclick="this.remove()">
+            {% if message.tags == 'success' %}✓{% elif message.tags == 'error' %}✕{% elif message.tags == 'warning' %}⚠{% else %}ℹ{% endif %}
+            {{ message }}
         </div>
-    {% endif %} {% endcomment %}
+        <script>setTimeout(function(){var e=document.getElementById('msg-{{ forloop.counter }}');if(e)e.remove();},5000);</script>
+        {% endfor %}
+    </div>
+    {% endif %}
 
     <!-- Main Content -->
     <main class="container">

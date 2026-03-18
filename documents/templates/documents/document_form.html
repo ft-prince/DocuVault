@@ -8,8 +8,15 @@
         {{ action }} Document
     </h1>
 
+    {% if pre_folder %}
+    <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:1.25rem;font-size:.875rem;color:#374151;background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:.6rem 1rem">
+        📁 Saving to folder: <strong>{{ pre_folder.get_path }}</strong>
+    </div>
+    {% endif %}
+
     <form method="post" enctype="multipart/form-data">
         {% csrf_token %}
+        {% if pre_folder %}<input type="hidden" name="_folder_id" value="{{ pre_folder.id }}">{% endif %}
         
         {% if form.non_field_errors %}
             <div style="padding: 1rem; background: #fafafa; border: 1px solid #e5e5e5; margin-bottom: 1.5rem;">

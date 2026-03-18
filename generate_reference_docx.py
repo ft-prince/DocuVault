@@ -452,6 +452,22 @@ def add_flow_diagram(doc, steps, colors_hex, label):
     add_caption(doc, label)
 
 
+# ── Centered image helper ─────────────────────────────────────────────────────
+
+def add_image_centered(doc, img_path, width_cm, caption_text=''):
+    """Insert an image centered on the page with optional caption."""
+    if not os.path.exists(img_path):
+        return
+    p = doc.add_paragraph()
+    p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+    p.paragraph_format.space_before = Pt(6)
+    p.paragraph_format.space_after  = Pt(4)
+    run = p.add_run()
+    run.add_picture(img_path, width=Cm(width_cm))
+    if caption_text:
+        add_caption(doc, caption_text)
+
+
 # ── Arch diagram (text table) ─────────────────────────────────────────────────
 
 def add_arch_table(doc):
@@ -723,7 +739,16 @@ def build_toc(doc):
             ('4.3', 'How the AI Answers Questions'),
         ]),
         ('5.', 'Technical Reference', []),
-        ('6.', 'Support & Contact', []),
+        ('6.', 'Add-On Features & Integrations', [
+            ('6.1', 'Annual Maintenance Contract (AMC)'),
+            ('6.2', 'Email System Integration'),
+            ('6.3', 'LAN Drive Sync (Google Drive-Style)'),
+            ('6.4', 'Auto-Indexing on Upload'),
+            ('6.5', 'Desktop Agent — Web to Desktop'),
+            ('6.6', 'Offline Operation — No Internet Required'),
+        ]),
+        ('7.', 'Client Q&A Summary', []),
+        ('8.', 'Support & Contact', []),
     ]
 
     for num, title, subs in toc_items:
@@ -775,12 +800,14 @@ def build_overview(doc):
     add_spacer(doc, 8)
     add_table(doc, [
         ['Item',               'Details'],
-        ['Platform',           'DocuVault v2.0 — web-based, no installation required'],
+        ['Platform',           'DocuVault v2.0 — web-based (browser) + optional desktop agent'],
         ['Supported Files',    'PDF, Word, text files, images, and more'],
         ['Max File Size',      '100 MB per upload'],
         ['AI Knowledge Modes', 'Hybrid (default)  ·  Strict (documents only)  ·  Indicated'],
         ['Access Control',     'Public  ·  Private  ·  Role-Based  ·  Custom (per user)'],
-        ['Supported Devices',  'Any modern web browser on desktop, tablet, or mobile'],
+        ['Web Access',         'Any modern web browser on desktop, tablet, or mobile'],
+        ['Desktop Access',     'Optional background desktop agent — auto-connects files, runs in system tray'],
+        ['Internet Required',  'No — fully offline after one-time model download. No API key, no cloud dependency.'],
     ], [5.0, 11.6])
     doc.add_page_break()
 
@@ -965,7 +992,8 @@ def build_architecture(doc):
     add_spacer(doc, 6)
     add_body(doc,
         'This section gives a plain-English view of how DocuVault is structured — '
-        'how it stores your documents, how the AI learns from them, and how it answers your questions.')
+        'how it stores your documents, how the AI learns from them, and how it answers your questions. '
+        'Every component described here runs on your own hardware with no internet connection required.')
     add_spacer(doc, 8)
 
     # 4.1
@@ -984,11 +1012,11 @@ def build_architecture(doc):
     add_flow_diagram(doc,
         [('Your Browser', 'Any device'),
          ('DocuVault\nPlatform', 'Application'),
-         ('Document\nStorage', 'Files & Data'),
-         ('AI Search\nEngine', 'Find content'),
-         ('AI Answer\nModel', 'Write response')],
+         ('Document\nStorage', 'Local files'),
+         ('AI Search\nEngine', 'Local index'),
+         ('Ollama\n(Local AI)', 'No internet')],
         [H2_HEX, ACC_HEX, '1D4ED8', '059669', H1_HEX],
-        'Figure 1: How the main components of DocuVault connect.')
+        'Figure 1: All components run on your local server — no internet required during operation.')
     add_spacer(doc, 6)
 
     # 4.2
@@ -1083,24 +1111,31 @@ def build_technical(doc):
         ['Category',          'Technology'],
         ['Web Framework',     'Django 5.x  (Python 3.10+)'],
         ['Database',          'SQLite (development) / PostgreSQL (production)'],
-        ['AI Language Model', 'Groq API — llama-3.1-8b-instant'],
-        ['AI Search Engine',  'ChromaDB vector database with all-MiniLM-L6-v2 embeddings'],
+        ['AI Language Model', 'Ollama (local inference) — llama3.1:8b or compatible model\n'
+                              'Downloaded once, runs fully offline. No API key required.'],
+        ['AI Search Engine',  'ChromaDB vector database — stored locally, no cloud dependency'],
+        ['Embedding Model',   'all-MiniLM-L6-v2 — runs on-device via sentence-transformers'],
         ['Document Reading',  'pdfplumber, PyMuPDF, Camelot (tables), Tesseract (OCR for scanned pages)'],
-        ['AI Framework',      'LangChain, HuggingFace, PyTorch'],
+        ['AI Framework',      'LangChain + Ollama backend, HuggingFace (local), PyTorch'],
         ['Max File Upload',   '100 MB per file'],
         ['Search Method',     'Hybrid — 70% semantic similarity + 30% keyword matching'],
+        ['Internet Required', 'No — entire stack runs offline on local hardware after setup'],
     ], [5.0, 11.6])
     add_spacer(doc, 10)
 
     add_h2(doc, 'AI Configuration')
     add_table(doc, [
         ['Setting',                    'Value'],
+        ['LLM runtime',                'Ollama — local model server, starts automatically with DocuVault'],
+        ['Default model',              'llama3.1:8b  (downloaded once, ~4.7 GB, then fully offline)'],
+        ['API key required',           'None — no Groq, OpenAI, or any cloud API key needed'],
         ['Document chunk size',        '512 characters (256 in lightweight mode)'],
         ['Overlap between chunks',     '100 characters'],
         ['Results per query',          '8 chunks (6 in lightweight mode)'],
         ['Conversation memory',        'Up to 8 turns per session'],
         ['Max response length',        '512 tokens (~380 words)'],
         ['Response consistency',       'Low variability — temperature 0.2 for reliable, repeatable answers'],
+        ['Internet during inference',  'Not required — model runs entirely on local CPU/GPU'],
     ], [6.0, 10.6])
     add_spacer(doc, 10)
 
@@ -1128,10 +1163,382 @@ def build_technical(doc):
     doc.add_page_break()
 
 
-# ── 6. Support ────────────────────────────────────────────────────────────────
+# ── 6. Add-On Features & Integrations ────────────────────────────────────────
+
+IMG1 = r'D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\clarif_image1.png'
+IMG2 = r'D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\clarif_image2.png'
+
+
+def build_addons(doc):
+    add_h1(doc, '6.  Add-On Features & Integrations')
+    add_spacer(doc, 6)
+    add_body(doc,
+        'DocuVault is built to grow with your organisation. The features described in this section '
+        'are available as add-ons or integrations that can be configured and enabled on top of the '
+        'standard platform — either during initial deployment or at any later stage.')
+    add_spacer(doc, 8)
+
+    # 6.1 AMC
+    add_h2(doc, '6.1  Annual Maintenance Contract (AMC)')
+    add_body(doc,
+        'An AMC can be offered to customers to maintain and upgrade the AI components of '
+        'DocuVault over time. This ensures the system stays current with the latest AI '
+        'models and security standards without any disruption to your data.')
+    add_spacer(doc, 4)
+
+    add_h3(doc, 'What the AMC covers')
+    amc_bullets = [
+        'LLM model upgrades (e.g. upgrading from one AI model to a newer, more capable version)',
+        'Performance optimisations and retrieval improvements',
+        'Security patches and infrastructure monitoring',
+        'UI improvements and new feature rollouts',
+    ]
+    for b in amc_bullets:
+        add_bullet(doc, b)
+    add_spacer(doc, 6)
+
+    add_h3(doc, 'Important: No retraining needed for LLM upgrades')
+    add_body(doc,
+        'DocuVault does NOT train the AI on your documents. It uses a method called '
+        'Retrieval-Augmented Generation (RAG). This means:')
+    add_bullet(doc, 'LLM upgrades do NOT require your documents to be reprocessed.')
+    add_bullet(doc, 'Your existing indexed documents continue working normally after an upgrade.')
+    add_bullet(doc,
+        'Re-indexing is only needed if the embedding model itself changes '
+        '(e.g. switching to a different embedding provider). In that case, '
+        'embeddings are recomputed automatically and can be handled under the AMC.')
+    add_spacer(doc, 10)
+
+    # 6.2 Email Integration
+    add_h2(doc, '6.2  Email System Integration')
+    add_body(doc,
+        'DocuVault can integrate with your organisation\'s email system. '
+        'Emails and their attachments are ingested and indexed so they become '
+        'searchable through the AI assistant — just like any other document.')
+    add_spacer(doc, 4)
+
+    add_h3(doc, 'Supported email systems')
+    email_systems = [
+        'Microsoft Outlook / Exchange',
+        'Microsoft 365',
+        'Gmail',
+        'IMAP servers',
+        'On-premise enterprise mail servers',
+    ]
+    for e in email_systems:
+        add_bullet(doc, e)
+    add_spacer(doc, 6)
+
+    add_h3(doc, 'What gets indexed')
+    add_table(doc, [
+        ['Email Content',   'What is indexed'],
+        ['Email body',      'The full text of the email message.'],
+        ['Attachments',     'PDF, Word, Excel, and PowerPoint files attached to emails.'],
+        ['Metadata',        'Sender, receiver, subject line, and timestamp.'],
+    ], [4.0, 12.6])
+    add_spacer(doc, 6)
+
+    add_h3(doc, 'Security & access control')
+    add_body(doc,
+        'Role-based access ensures that emails are only retrievable by users '
+        'who are authorised to see them.')
+    add_bullet(doc, 'HR emails → accessible to HR users only')
+    add_bullet(doc, 'Finance emails → accessible to Finance users only')
+    add_spacer(doc, 4)
+    add_body(doc,
+        'Once integrated, users can ask the AI assistant questions like: '
+        '"Show discussions about vendor contracts with ABC company." '
+        'The system retrieves matching content from documents, attachments, '
+        'and email conversations together.')
+    add_spacer(doc, 8)
+
+    add_h3(doc, 'Email integration flow')
+    add_image_centered(doc, IMG2, 9,
+        'Figure 4: How emails flow from your mail server into DocuVault and become searchable via the AI assistant.')
+    add_spacer(doc, 10)
+
+    # 6.3 LAN Drive Sync
+    add_h2(doc, '6.3  LAN Drive Sync (Google Drive-Style)')
+    add_body(doc,
+        'Instead of manually uploading files through the web interface, users can save '
+        'documents into a synchronised folder on their computer. A background sync agent '
+        'watches the folder and automatically sends new or updated files to DocuVault.')
+    add_spacer(doc, 4)
+
+    add_h3(doc, 'How it works')
+    add_flow_diagram(doc,
+        [('User PC\n(Sync Folder)', ''),
+         ('Sync\nAgent', 'Background'),
+         ('DocuVault\nServer', ''),
+         ('Version\nControl', ''),
+         ('AI\nIndexing', '')],
+        [H2_HEX, ACC_HEX, '1D4ED8', '059669', H1_HEX],
+        'Figure 5: LAN sync pipeline — from a user\'s folder to DocuVault version control and AI indexing.')
+    add_spacer(doc, 6)
+
+    add_h3(doc, 'Features')
+    lan_features = [
+        'Automatic document synchronisation — no manual uploads required.',
+        'Version tracking — every save creates a new version with timestamp and user.',
+        'Rollback — restore any previous version from DocuVault.',
+        'Instant AI indexing — new documents are indexed automatically as they sync.',
+        'Enterprise-ready — supports multiple PCs on the same LAN.',
+    ]
+    for f in lan_features:
+        add_bullet(doc, f)
+    add_spacer(doc, 6)
+
+    add_h3(doc, 'Implementation options')
+    add_table(doc, [
+        ['Option',                          'Description'],
+        ['Desktop sync agent (recommended)','A lightweight background app installed on each user\'s PC.'],
+        ['Network shared drive monitoring', 'Monitors a shared network folder without any client install.'],
+        ['Drive-style desktop client',      'A full Google Drive-like interface with sync status indicators.'],
+    ], [5.5, 11.1])
+    add_spacer(doc, 10)
+
+    # 6.4 Auto-Indexing
+    add_h2(doc, '6.4  Auto-Indexing on Upload')
+    add_body(doc,
+        'By default, documents must be manually triggered for AI indexing after upload. '
+        'The system can be configured to index documents automatically the moment they are '
+        'uploaded, so they are immediately available to the AI assistant without any extra step.')
+    add_spacer(doc, 4)
+
+    add_h3(doc, 'How indexing works (not AI training)')
+    add_body(doc,
+        'A common question from clients is whether uploading documents "trains" the AI. '
+        'The answer is no. DocuVault uses indexing, not training. The distinction is important:')
+    add_table(doc, [
+        ['',          'AI Training',                                      'DocuVault Indexing'],
+        ['What it is','Modifying the AI model\'s internal weights.',      'Reading and storing document content in a searchable format.'],
+        ['Time',      'Hours to days.',                                   'Seconds to minutes per document.'],
+        ['Effect',    'Permanently changes the AI model.',                'Adds document to the search index only.'],
+        ['Required?', 'Never required in DocuVault.',                     'Required once per document (or on re-upload).'],
+    ], [3.5, 7.0, 6.1])
+    add_spacer(doc, 6)
+
+    add_h3(doc, 'Indexing pipeline diagram')
+    add_image_centered(doc, IMG1, 14,
+        'Figure 6: Left — Document processing pipeline (upload to vector database). '
+        'Right — Query handling (user question to AI answer).')
+    add_spacer(doc, 6)
+
+    add_info_box(doc,
+        'How to enable auto-indexing',
+        'Auto-indexing can be enabled by your system administrator in the platform configuration. '
+        'Once enabled, every document uploaded will be automatically indexed in the background '
+        'without any action required from the user.',
+        'EFF6FF')
+    add_spacer(doc, 14)
+
+    # ── 6.5 Desktop Agent ─────────────────────────────────────────────────────
+    add_h2(doc, '6.5  Desktop Agent — Web to Desktop')
+    add_body(doc,
+        'By default, DocuVault runs entirely in a web browser — no installation needed. '
+        'However, for teams who work heavily with local files, a lightweight '
+        'Desktop Agent can be installed alongside the web platform. '
+        'The agent runs quietly in the background, bridges your computer\'s file system '
+        'directly to DocuVault, and makes accessing the platform feel like a native desktop app.')
+    add_spacer(doc, 6)
+
+    add_h3(doc, 'What the Desktop Agent does')
+    add_table(doc, [
+        ['Capability',                    'Description'],
+        ['System tray icon',              'The agent sits in your Windows/macOS system tray. One click opens DocuVault instantly — no browser URL to remember.'],
+        ['Automatic file watching',       'Select one or more folders on your computer. Any file saved there is automatically detected and synced to DocuVault.'],
+        ['Background sync',               'Files are uploaded and indexed in the background without interrupting your work.'],
+        ['Auto-connect on startup',       'The agent starts with your computer and reconnects to the DocuVault server automatically — no manual login each day.'],
+        ['Local file shortcuts',          'Right-click any file in Windows Explorer / macOS Finder and choose "Send to DocuVault" directly.'],
+        ['Offline queue',                 'If the server is temporarily unreachable, the agent queues pending files and syncs them automatically once the connection is restored.'],
+        ['Notification alerts',           'Desktop pop-up notifications for completed uploads, indexing status, shared documents, and AI query replies.'],
+        ['Session persistence',           'Stay logged in across sessions — the agent maintains your authentication token securely.'],
+    ], [5.0, 11.6])
+    add_spacer(doc, 8)
+
+    add_h3(doc, 'Web vs Desktop — side by side')
+    add_table(doc, [
+        ['',                        'Web Browser (Standard)',                    'Desktop Agent (Add-On)'],
+        ['Installation',            'None — open any browser',                  'One-time lightweight install (~20 MB)'],
+        ['File access',             'Manual upload via browser',                 'Automatic — watches selected folders'],
+        ['Startup',                 'Open browser and navigate to URL',          'Starts with computer, always ready'],
+        ['Notifications',           'In-browser only',                           'Native desktop pop-ups'],
+        ['Right-click upload',      'Not available',                             'Right-click any file to send to DocuVault'],
+        ['Offline handling',        'Not available',                             'Queues files and syncs when back online'],
+        ['Best for',                'Occasional users, mobile, tablet access',   'Power users who work with many local files daily'],
+    ], [3.8, 6.5, 6.3])
+    add_spacer(doc, 8)
+
+    add_h3(doc, 'How the Desktop Agent connects')
+    add_flow_diagram(doc,
+        [('File saved\non your PC', ''),
+         ('Agent detects\nthe change', 'Background'),
+         ('Uploads to\nDocuVault', 'Auto'),
+         ('AI indexes\nthe file', 'Instant'),
+         ('Available\neverywhere', 'Web + Desktop')],
+        [H2_HEX, ACC_HEX, '1D4ED8', '059669', H1_HEX],
+        'Figure 7: From saving a file on your computer to it being searchable in DocuVault — fully automatic.')
+    add_spacer(doc, 8)
+
+    add_h3(doc, 'Deployment')
+    add_table(doc, [
+        ['Supported OS',      'Windows 10/11,  macOS 12+,  Ubuntu 20.04+'],
+        ['Server connection', 'Connects to DocuVault over LAN or internet (HTTPS)'],
+        ['Authentication',    'Uses the same username / password as the web platform'],
+        ['Configuration',     'Admin sets allowed folders, sync rules, and notification preferences via a simple settings panel'],
+        ['Distribution',      'Installer provided by Renata AI — deployable via Group Policy (Windows) or MDM (macOS)'],
+    ], [4.5, 12.1])
+    add_spacer(doc, 8)
+
+    add_info_box(doc,
+        'Who should use the Desktop Agent?',
+        'The Desktop Agent is ideal for users who regularly save documents locally (reports, drawings, '
+        'scanned files, spreadsheets) and want them available in DocuVault without any manual effort. '
+        'The web platform remains fully functional alongside it — both modes work together.',
+        'EFF6FF')
+    add_spacer(doc, 14)
+
+    # ── 6.6 Offline Operation ─────────────────────────────────────────────────
+    add_h2(doc, '6.6  Offline Operation — No Internet Required')
+    add_body(doc,
+        'DocuVault is designed to run entirely on your local network or on a single machine '
+        'with no internet connection required at any point during normal operation. '
+        'The AI model, the search engine, the database, and the file storage '
+        'all run on your own hardware — your data never leaves your premises.')
+    add_spacer(doc, 6)
+
+    add_h3(doc, 'What runs locally')
+    add_table(doc, [
+        ['Component',                  'How it runs offline'],
+        ['AI Language Model (LLM)',    'Ollama runs llama3.1:8b (or any compatible model) directly on your server CPU or GPU. '
+                                       'Model is downloaded once during setup — no API calls made during use.'],
+        ['Embedding Model',            'all-MiniLM-L6-v2 runs on-device via sentence-transformers and PyTorch. '
+                                       'No external API needed.'],
+        ['Vector Database',            'ChromaDB stores all document embeddings as local files on the server disk.'],
+        ['Document Storage',           'All uploaded files are stored in the local file system under /media/.'],
+        ['Web Application',            'Django serves the web interface on your local network. '
+                                       'Users access it via LAN IP or a local domain — no internet required.'],
+        ['Database',                   'SQLite or PostgreSQL runs locally. All user data, roles, and activity logs stay on-site.'],
+        ['Desktop Agent',              'Connects to the DocuVault server over LAN (HTTPS). Never calls any external service.'],
+    ], [4.5, 12.1])
+    add_spacer(doc, 8)
+
+    add_h3(doc, 'Setup — one-time steps (internet needed once only)')
+    setup_steps = [
+        ('Step 1 — Install DocuVault',
+         'Install the platform on your server. This requires internet to download the software package once.'),
+        ('Step 2 — Download the AI model',
+         'Run: ollama pull llama3.1:8b  (or the model specified by Renata AI). '
+         'This downloads the model file (~4.7 GB) to the server. Done once — never again.'),
+        ('Step 3 — Download embedding model',
+         'The all-MiniLM-L6-v2 embedding model (~90 MB) is downloaded automatically on first run and cached locally.'),
+        ('Step 4 — Go fully offline',
+         'Once both models are cached, disconnect from the internet. '
+         'DocuVault continues to operate with full AI functionality indefinitely.'),
+    ]
+    for title, desc in setup_steps:
+        add_body(doc, desc, title + ':')
+        add_spacer(doc, 3)
+    add_spacer(doc, 8)
+
+    add_h3(doc, 'Offline capability summary')
+    add_table(doc, [
+        ['Feature',                        'Works Offline?',  'Notes'],
+        ['Document upload & management',   'Yes',             'Files saved locally on server.'],
+        ['AI assistant (Q&A)',             'Yes',             'Ollama runs model locally — no API call.'],
+        ['Document indexing',              'Yes',             'Embeddings generated on-device.'],
+        ['User login & access control',    'Yes',             'Authentication handled by local Django server.'],
+        ['Search & filters',               'Yes',             'ChromaDB vector search runs locally.'],
+        ['Email integration',              'Yes',             'Connects to on-premise mail server on LAN.'],
+        ['Desktop Agent sync',             'Yes',             'Communicates with DocuVault server over LAN.'],
+        ['LLM model updates',              'Requires internet once',  'New model pulled via ollama pull, then offline again.'],
+        ['Software updates',               'Requires internet once',  'Update package downloaded, then offline again.'],
+    ], [5.5, 3.0, 8.1])
+    add_spacer(doc, 8)
+
+    add_h3(doc, 'Hardware recommendations for offline deployment')
+    add_table(doc, [
+        ['Component',   'Minimum',                        'Recommended'],
+        ['CPU',         '4 cores  (model runs on CPU)',   '8+ cores for faster AI responses'],
+        ['RAM',         '16 GB',                          '32 GB for smooth multi-user operation'],
+        ['Storage',     '50 GB free',                     '200 GB+ for large document libraries'],
+        ['GPU',         'Not required',                   'NVIDIA GPU (4 GB+ VRAM) for significantly faster AI responses'],
+        ['OS',          'Ubuntu 20.04+ / Windows Server', 'Ubuntu 22.04 LTS (recommended)'],
+        ['Network',     'LAN only (no internet needed)',  '1 Gbps LAN for fast file sync'],
+    ], [3.5, 5.5, 7.6])
+    add_spacer(doc, 8)
+
+    add_info_box(doc,
+        'Your data stays on your premises — always',
+        'Because DocuVault runs entirely on your own hardware with no cloud dependency, '
+        'your documents, queries, and AI responses are never transmitted to any external server. '
+        'This makes DocuVault suitable for organisations with strict data-sovereignty, '
+        'confidentiality, or air-gapped network requirements.',
+        OR_HEX)
+    doc.add_page_break()
+
+
+# ── 7. Client Q&A Summary ─────────────────────────────────────────────────────
+
+def build_client_qa(doc):
+    add_h1(doc, '7.  Client Q&A Summary')
+    add_spacer(doc, 6)
+    add_body(doc,
+        'The following table summarises the most common questions raised by clients '
+        'during technical discussions about DocuVault.')
+    add_spacer(doc, 8)
+
+    qa_rows = [
+        ['Client Question',                                     'Answer'],
+        ['Can you offer an AMC for LLM upgrades?',
+         'Yes. An AMC covers LLM upgrades, performance improvements, security patches, and UI enhancements.'],
+        ['Do you need to retrain the AI when upgrading the LLM?',
+         'No. DocuVault uses RAG — the LLM is not trained on documents. Upgrades do not affect indexed data.'],
+        ['When is re-indexing required?',
+         'Only if the embedding model itself is changed (e.g. switching providers). This is handled automatically under AMC.'],
+        ['Can DocuVault integrate with our email system (Outlook, Exchange)?',
+         'Yes. Emails and attachments are ingested and indexed. Users can query email content through the AI assistant.'],
+        ['Can it work like Google Drive with automatic sync?',
+         'Yes. A LAN Sync Connector can be implemented so documents sync automatically from user folders to DocuVault.'],
+        ['Does the AI train automatically when I upload a document?',
+         'No. The AI does not train on documents. Uploading triggers indexing, which is fast and does not change the AI model.'],
+        ['How is DocuVault different from BigQuery?',
+         'BigQuery is designed for structured data analytics using SQL. DocuVault is designed for semantic search and '
+         'AI question answering over unstructured documents such as PDFs, emails, and reports.'],
+        ['Do users have to open a browser every time?',
+         'No. With the optional Desktop Agent, DocuVault runs in the system tray. '
+         'Files sync automatically from watched folders, and the platform is accessible with a single click.'],
+        ['Can the Desktop Agent work if the server is offline?',
+         'Yes. The agent queues pending files locally and syncs them automatically once the server is reachable again.'],
+        ['Does the AI require an internet connection or an API key?',
+         'No. The AI runs fully offline using Ollama on your local server. '
+         'No Groq, OpenAI, or any cloud API key is needed. '
+         'The model is downloaded once during setup and then runs without internet.'],
+        ['Does data ever leave our network?',
+         'Never. All documents, queries, AI responses, and user data stay entirely on your own hardware. '
+         'DocuVault has no cloud dependency during operation.'],
+        ['What happens if our internet goes down?',
+         'Nothing — DocuVault continues to work exactly as normal. '
+         'All components (web app, AI model, database, file storage) run on your local server.'],
+        ['How much disk space does the AI model need?',
+         'The default model (llama3.1:8b) requires approximately 4.7 GB. '
+         'This is downloaded once. Additional models can be added without affecting existing operation.'],
+    ]
+    add_table(doc, qa_rows, [6.0, 10.6])
+    add_spacer(doc, 10)
+
+    add_info_box(doc,
+        'Have more questions?',
+        'If you have additional technical questions not covered in this document, '
+        'please contact Renata AI through the channels listed in the Support section.',
+        OR_HEX)
+    doc.add_page_break()
+
+
+# ── 8. Support ────────────────────────────────────────────────────────────────
 
 def build_support(doc):
-    add_h1(doc, '6.  Support & Contact')
+    add_h1(doc, '8.  Support & Contact')
     add_spacer(doc, 8)
 
     add_body(doc,
@@ -1169,6 +1576,8 @@ def build_docx(output_path: str):
     build_access(doc)
     build_architecture(doc)
     build_technical(doc)
+    build_addons(doc)
+    build_client_qa(doc)
     build_support(doc)
 
     doc.save(output_path)
@@ -1176,4 +1585,5 @@ def build_docx(output_path: str):
 
 
 if __name__ == '__main__':
-    build_docx('DocuVault_Client_Reference_Guide.docx')
+    out = r'D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\DocuVault_Client_Reference_Guide.docx'
+    build_docx(out)

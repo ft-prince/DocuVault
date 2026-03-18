@@ -1,0 +1,31 @@
+{% load static %}
+<div class="folder-item" style="padding-left:{{ depth|add:'0' }}px">
+  <div class="folder-row {% if folder_id|stringformat:'s' == node.obj.id|stringformat:'s' %}active{% endif %}"
+       data-folder-id="{{ node.obj.id }}"
+       onclick="window.location='{% url 'workspace' %}?folder={{ node.obj.id }}'">
+    {% if node.children %}
+    <button class="folder-toggle" id="toggle-{{ node.obj.id }}"
+            onclick="event.stopPropagation();toggleFolder({{ node.obj.id }})">▶</button>
+    {% else %}
+    <span style="width:18px;flex-shrink:0"></span>
+    {% endif %}
+    <span class="folder-icon" style="color:{{ node.obj.color }}">📁</span>
+    <span class="folder-name">{{ node.obj.name }}</span>
+    {% if node.count %}<span class="folder-badge">{{ node.count }}</span>{% endif %}
+    <div class="folder-actions" onclick="event.stopPropagation()">
+      <button class="btn-fol-action" onclick="showInlineCreate({{ node.obj.id }})" title="Add subfolder">＋</button>
+      <button class="btn-fol-action" onclick="renameFolder({{ node.obj.id }}, '{{ node.obj.name|escapejs }}')" title="Rename">✏</button>
+      <button class="btn-fol-action" onclick="deleteFolder({{ node.obj.id }}, '{{ node.obj.name|escapejs }}')" title="Delete">🗑</button>
+    </div>
+  </div>
+
+  {% if node.children %}
+  <div class="folder-children" id="children-{{ node.obj.id }}">
+    {% for child in node.children %}
+      {% with depth=depth|add:"14" %}
+        {% include 'documents/_folder_node.html' with node=child depth=depth %}
+      {% endwith %}
+    {% endfor %}
+  </div>
+  {% endif %}
+</div>

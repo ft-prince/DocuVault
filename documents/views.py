@@ -19,8 +19,10 @@ import mimetypes
 
 from .models import (
     User, Role, Document, Category, Tag, DocumentVersion,
-    DocumentComment, SharedLink, Favorite, ActivityLog, Notification
+    DocumentComment, SharedLink, Favorite, ActivityLog, Notification, Folder
 )
+from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from .forms import (
     UserRegistrationForm, UserLoginForm, DocumentForm, CategoryForm,
     RoleForm, UserProfileForm, CommentForm, SharedLinkForm
@@ -34,8 +36,8 @@ from .forms import (
 def register_view(request):
     """User registration"""
     if request.user.is_authenticated:
-        return redirect('dashboard')
-    
+        return redirect('workspace')
+
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
@@ -51,7 +53,7 @@ def register_view(request):
             
             login(request, user)
             messages.success(request, 'Account created successfully!')
-            return redirect('dashboard')
+            return redirect('workspace')
     else:
         form = UserRegistrationForm()
     
@@ -62,19 +64,19 @@ def register_view(request):
 def login_view(request):
     """User login"""
     if request.user.is_authenticated:
-        return redirect('dashboard')
-    
+        return redirect('workspace')
+
     if request.method == 'POST':
         form = UserLoginForm(request.POST)
         if form.is_valid():
             username = form.cleaned_data['username']
             password = form.cleaned_data['password']
             user = authenticate(request, username=username, password=password)
-            
+
             if user is not None:
                 login(request, user)
                 messages.success(request, f'Welcome back, {user.username}!')
-                return redirect(request.GET.get('next', 'dashboard'))
+                return redirect(request.GET.get('next', 'workspace'))
             else:
                 messages.error(request, 'Invalid username or password.')
     else:
@@ -247,8 +249,8 @@ def document_detail_view(request, pk):
     # Get comments
     comments = document.comments.filter(parent=None).select_related('user').prefetch_related('replies')
     
-    # Get versions
-    versions = document.versions.all()[:5]
+    # Get ALL versions — full history like GitHub
+    versions = document.versions.select_related('uploaded_by').order_by('-version_number')
     
     # Check if favorited
     is_favorited = Favorite.objects.filter(user=request.user, document=document).exists()
@@ -283,9 +285,17 @@ def document_create_view(request):
                 document.file_size = uploaded_file.size
                 document.file_type = uploaded_file.content_type
             
+            # Auto-assign to folder if ?folder= was in the create URL
+            folder_id = request.POST.get('_folder_id') or request.GET.get('folder')
+            if folder_id:
+                try:
+                    document.folder = Folder.objects.get(id=folder_id, owner=request.user)
+                except Folder.DoesNotExist:
+                    pass
+
             document.save()
             form.save_m2m()  # Save many-to-many relationships (tags)
-            
+
             # Create version 1
             if document.file:
                 DocumentVersion.objects.create(
@@ -296,7 +306,7 @@ def document_create_view(request):
                     uploaded_by=request.user,
                     change_note="Initial version"
                 )
-            
+
             # Log activity
             ActivityLog.objects.create(
                 user=request.user,
@@ -305,13 +315,26 @@ def document_create_view(request):
                 description=f"Created document: {document.title}",
                 ip_address=request.META.get('REMOTE_ADDR')
             )
-            
+
             messages.success(request, 'Document created successfully!')
-            return redirect('document_detail', pk=document.pk)
+            if document.folder:
+                from django.urls import reverse as _rev
+                return redirect(_rev('workspace') + f'?folder={document.folder_id}')
+            return redirect('workspace')
     else:
         form = DocumentForm(user=request.user)
-    
-    return render(request, 'documents/document_form.html', {'form': form, 'action': 'Create'})
+
+    folder_id = request.GET.get('folder')
+    pre_folder = None
+    if folder_id:
+        try:
+            pre_folder = Folder.objects.get(id=folder_id, owner=request.user)
+        except Folder.DoesNotExist:
+            pass
+
+    return render(request, 'documents/document_form.html', {
+        'form': form, 'action': 'Create', 'pre_folder': pre_folder,
+    })
 
 
 @login_required
@@ -346,9 +369,7 @@ def document_edit_view(request, pk):
                 document.save()
                 form.save_m2m()
 
-                # Archive the OLD file as a version snapshot
-                # Use get_or_create to safely handle duplicate version numbers
-                # from any previous failed attempts
+                # Archive the OLD file as a version snapshot (if not already recorded)
                 DocumentVersion.objects.get_or_create(
                     document=document,
                     version_number=old_version_number,
@@ -356,7 +377,20 @@ def document_edit_view(request, pk):
                         'file': old_file,
                         'file_size': old_file_size,
                         'uploaded_by': request.user,
-                        'change_note': request.POST.get('change_note', '') or f'Version {old_version_number}',
+                        'change_note': f'Version {old_version_number}',
+                    }
+                )
+
+                # Create a version record for the NEW version
+                change_note_new = request.POST.get('change_note', '').strip() or f'Version {new_version_number}'
+                DocumentVersion.objects.get_or_create(
+                    document=document,
+                    version_number=new_version_number,
+                    defaults={
+                        'file': document.file,
+                        'file_size': document.file_size,
+                        'uploaded_by': request.user,
+                        'change_note': change_note_new,
                     }
                 )
             else:
@@ -452,6 +486,120 @@ def document_download_view(request, pk):
     response['Content-Disposition'] = f'attachment; filename="{escape_uri_path(original_filename)}"'
     
     return response
+
+
+@login_required
+def version_download_view(request, doc_pk, version_pk):
+    """Download a specific historical version of a document"""
+    document = get_object_or_404(Document, pk=doc_pk, is_deleted=False)
+
+    if not document.can_view(request.user):
+        raise PermissionDenied("You don't have permission to access this document.")
+
+    if not document.allow_download:
+        messages.error(request, 'Downloads are not allowed for this document.')
+        return redirect('document_detail', pk=document.pk)
+
+    version = get_object_or_404(DocumentVersion, pk=version_pk, document=document)
+
+    file_path = version.file.path
+    if not os.path.exists(file_path):
+        raise Http404("Version file not found.")
+
+    # Build a descriptive filename: title_v2.docx
+    ext = os.path.splitext(version.file.name)[1]
+    safe_title = document.title.replace(' ', '_')
+    download_name = f"{safe_title}_v{version.version_number}{ext}"
+
+    ActivityLog.objects.create(
+        user=request.user,
+        document=document,
+        action='download',
+        description=f"Downloaded version {version.version_number} of: {document.title}",
+        ip_address=request.META.get('REMOTE_ADDR')
+    )
+
+    response = FileResponse(open(file_path, 'rb'))
+    response['Content-Type'] = document.file_type or 'application/octet-stream'
+    response['Content-Disposition'] = f'attachment; filename="{escape_uri_path(download_name)}"'
+    return response
+
+
+@login_required
+@require_POST
+def version_restore_view(request, doc_pk, version_pk):
+    """Restore a previous version — creates a new version from the old file."""
+    document = get_object_or_404(Document, pk=doc_pk, is_deleted=False)
+    if not document.can_edit(request.user):
+        raise PermissionDenied
+
+    old_ver = get_object_or_404(DocumentVersion, pk=version_pk, document=document)
+    if not os.path.exists(old_ver.file.path):
+        messages.error(request, 'Version file not found on disk.')
+        return redirect('document_detail', pk=document.pk)
+
+    import shutil
+    from django.core.files import File
+
+    # New version number = current doc version + 1
+    new_ver_num = document.version + 1
+
+    # Copy the old file to a new path so both versions stay on disk
+    old_path   = old_ver.file.path
+    old_ext    = os.path.splitext(old_path)[1]
+    import uuid as _uuid
+    new_name   = f'{_uuid.uuid4()}{old_ext}'
+    new_dir    = os.path.dirname(old_path)
+    new_path   = os.path.join(new_dir, new_name)
+    shutil.copy2(old_path, new_path)
+
+    # Archive current document file as the previous version first
+    if document.file and os.path.exists(document.file.path):
+        cur_ext  = os.path.splitext(document.file.path)[1]
+        cur_name = f'{_uuid.uuid4()}{cur_ext}'
+        cur_path = os.path.join(new_dir, cur_name)
+        shutil.copy2(document.file.path, cur_path)
+        DocumentVersion.objects.get_or_create(
+            document=document,
+            version_number=document.version,
+            defaults={
+                'uploaded_by': request.user,
+                'file':        f'documents/{document.owner.id}/{cur_name}',
+                'file_size':   document.file_size or 0,
+                'change_note': f'Auto-archived before restore to v{old_ver.version_number}',
+            }
+        )
+
+    # Point document.file to the restored copy
+    with open(new_path, 'rb') as fh:
+        document.file.save(new_name, File(fh), save=False)
+
+    document.version   = new_ver_num
+    document.file_size = old_ver.file_size
+    document.save()
+
+    # Create a version record for the restore
+    DocumentVersion.objects.create(
+        document=document,
+        version_number=new_ver_num,
+        uploaded_by=request.user,
+        file=document.file,
+        file_size=old_ver.file_size,
+        change_note=f'Restored from v{old_ver.version_number}',
+    )
+
+    ActivityLog.objects.create(
+        user=request.user,
+        document=document,
+        action='edit',
+        description=f'Restored document to v{old_ver.version_number} → new v{new_ver_num}',
+        ip_address=request.META.get('REMOTE_ADDR'),
+    )
+
+    messages.success(request, f'Document restored to v{old_ver.version_number} (now v{new_ver_num}).')
+    return redirect('document_detail', pk=document.pk)
+
+
 # ============================================================
 # COMMENT VIEWS
 # ============================================================
@@ -962,3 +1110,645 @@ def activity_log_view(request):
     page_obj = paginator.get_page(page_number)
     
     return render(request, 'documents/activity_log.html', {'page_obj': page_obj})
+
+
+# ============================================================
+# WORKSPACE — folder tree + all user documents
+# ============================================================
+
+def _build_folder_tree(folders, docs_by_folder):
+    """Return list of dicts ready for template rendering (recursive)."""
+    result = []
+    for f in folders:
+        children = _build_folder_tree(
+            list(f.subfolders.all().order_by('name')), docs_by_folder
+        )
+        result.append({
+            'obj':      f,
+            'children': children,
+            'count':    docs_by_folder.get(f.id, 0),
+        })
+    return result
+
+
+@login_required
+def workspace_view(request):
+    """Two-panel workspace: folder sidebar + document grid."""
+    user = request.user
+    folder_id = request.GET.get('folder')
+    search_q  = request.GET.get('q', '').strip()
+
+    # All user folders, with their subfolders pre-loaded
+    root_folders = (
+        Folder.objects
+        .filter(owner=user, parent=None)
+        .prefetch_related('subfolders__subfolders')
+        .order_by('name')
+    )
+
+    # Count docs per folder for the sidebar badges
+    from django.db.models import Count as _Count
+    folder_counts = (
+        Document.objects
+        .filter(owner=user, is_deleted=False, folder__isnull=False)
+        .values('folder_id')
+        .annotate(n=_Count('id'))
+    )
+    docs_by_folder = {row['folder_id']: row['n'] for row in folder_counts}
+
+    folder_tree = _build_folder_tree(list(root_folders), docs_by_folder)
+
+    # Current folder context
+    current_folder = None
+    if folder_id == 'unfiled':
+        docs = Document.objects.filter(owner=user, folder=None, is_deleted=False)
+        panel_title = 'Unfiled Documents'
+    elif folder_id:
+        try:
+            current_folder = Folder.objects.get(id=folder_id, owner=user)
+            docs = Document.objects.filter(owner=user, folder=current_folder, is_deleted=False)
+            panel_title = current_folder.name
+        except Folder.DoesNotExist:
+            docs = Document.objects.filter(owner=user, is_deleted=False)
+            panel_title = 'All Documents'
+    else:
+        docs = Document.objects.filter(owner=user, is_deleted=False)
+        panel_title = 'All Documents'
+
+    if search_q:
+        docs = docs.filter(Q(title__icontains=search_q) | Q(description__icontains=search_q))
+
+    docs = docs.select_related('folder', 'category').prefetch_related('versions').order_by('-updated_at')
+
+    # Stats
+    total_docs    = Document.objects.filter(owner=user, is_deleted=False).count()
+    total_folders = Folder.objects.filter(owner=user).count()
+    total_versions = DocumentVersion.objects.filter(document__owner=user).count()
+    unfiled_count  = Document.objects.filter(owner=user, folder=None, is_deleted=False).count()
+
+    # Recent version activity (last 8 edits)
+    recent_versions = (
+        DocumentVersion.objects
+        .filter(document__owner=user)
+        .select_related('document', 'uploaded_by')
+        .order_by('-created_at')[:8]
+    )
+
+    # All user folders flat list (for "move to folder" dropdown)
+    all_folders = Folder.objects.filter(owner=user).order_by('name')
+
+    return render(request, 'documents/workspace.html', {
+        'folder_tree':     folder_tree,
+        'docs':            docs,
+        'current_folder':  current_folder,
+        'panel_title':     panel_title,
+        'folder_id':       folder_id,
+        'search_q':        search_q,
+        'stats': {
+            'total_docs':    total_docs,
+            'total_folders': total_folders,
+            'total_versions': total_versions,
+            'unfiled':       unfiled_count,
+        },
+        'recent_versions': recent_versions,
+        'all_folders':     all_folders,
+    })
+
+
+# ── Folder CRUD (AJAX, JSON responses) ───────────────────────
+
+@login_required
+@require_POST
+def folder_create_api(request):
+    data      = json.loads(request.body)
+    name      = data.get('name', '').strip()
+    parent_id = data.get('parent_id')
+    color     = data.get('color', '#6c757d')
+
+    if not name:
+        return JsonResponse({'ok': False, 'error': 'Folder name required'})
+
+    parent = None
+    if parent_id:
+        try:
+            parent = Folder.objects.get(id=parent_id, owner=request.user)
+        except Folder.DoesNotExist:
+            return JsonResponse({'ok': False, 'error': 'Parent folder not found'}, status=404)
+
+    if Folder.objects.filter(owner=request.user, parent=parent, name=name).exists():
+        return JsonResponse({'ok': False, 'error': f'A folder named "{name}" already exists here'})
+
+    folder = Folder.objects.create(name=name, owner=request.user, parent=parent, color=color)
+    return JsonResponse({
+        'ok': True, 'id': folder.id, 'name': folder.name,
+        'color': folder.color, 'parent_id': parent_id,
+        'path': folder.get_path(),
+    })
+
+
+@login_required
+@require_POST
+def folder_rename_api(request, pk):
+    try:
+        folder = Folder.objects.get(id=pk, owner=request.user)
+    except Folder.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'Not found'}, status=404)
+
+    data = json.loads(request.body)
+    name = data.get('name', '').strip()
+    if not name:
+        return JsonResponse({'ok': False, 'error': 'Name required'})
+
+    folder.name = name
+    folder.save(update_fields=['name', 'updated_at'])
+    return JsonResponse({'ok': True, 'name': folder.name})
+
+
+@login_required
+@require_POST
+def folder_delete_api(request, pk):
+    try:
+        folder = Folder.objects.get(id=pk, owner=request.user)
+    except Folder.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'Not found'}, status=404)
+
+    # Move documents up to the parent folder (don't orphan them)
+    Document.objects.filter(folder=folder, owner=request.user).update(folder=folder.parent)
+    folder.delete()
+    return JsonResponse({'ok': True})
+
+
+@login_required
+@require_POST
+def document_move_api(request, pk):
+    try:
+        doc = Document.objects.get(id=pk, owner=request.user, is_deleted=False)
+    except Document.DoesNotExist:
+        return JsonResponse({'ok': False, 'error': 'Not found'}, status=404)
+
+    data      = json.loads(request.body)
+    folder_id = data.get('folder_id')
+
+    if folder_id:
+        try:
+            folder = Folder.objects.get(id=folder_id, owner=request.user)
+            doc.folder = folder
+        except Folder.DoesNotExist:
+            return JsonResponse({'ok': False, 'error': 'Folder not found'}, status=404)
+    else:
+        doc.folder = None   # move to Unfiled
+
+    doc.save(update_fields=['folder'])
+    return JsonResponse({'ok': True, 'folder_name': doc.folder.name if doc.folder else None})
+
+
+# ============================================================
+# AGENT SETTINGS — full UI setup + process control
+# ============================================================
+
+_AGENT_DIR         = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'desktop_agent')
+_AGENT_CONFIG_PATH = os.path.join(_AGENT_DIR, 'config.json')
+_AGENT_PID_PATH    = os.path.join(_AGENT_DIR, 'agent.pid')
+_AGENT_SCRIPT      = os.path.join(_AGENT_DIR, 'agent.py')
+
+_DEFAULT_CONFIG = {
+    'server_url': 'http://localhost:8000',
+    'username': '',
+    'password': '',
+    'watch_folders': [],
+    'sync': {'debounce_seconds': 3, 'heartbeat_interval_seconds': 60,
+             'retry_on_failure': True, 'max_retries': 5},
+    'startup': {'run_on_login': False, 'minimize_to_tray': True, 'show_notifications': True},
+    'log': {'level': 'INFO', 'file': 'desktop_agent.log', 'max_size_mb': 10},
+}
+
+
+def _read_agent_config():
+    try:
+        with open(_AGENT_CONFIG_PATH, 'r', encoding='utf-8') as f:
+            cfg = json.load(f)
+        cfg.pop('_comment', None)
+        return cfg
+    except Exception:
+        return dict(_DEFAULT_CONFIG)
+
+
+def _write_agent_config(cfg):
+    with open(_AGENT_CONFIG_PATH, 'w', encoding='utf-8') as f:
+        json.dump(cfg, f, indent=2)
+
+
+def _agent_process_status():
+    """Return (is_running, pid_or_None).
+    Checks both the web-UI pid file and the APPDATA pid file (written by the popup wizard).
+    """
+    # Locations to check — web-UI writes to _AGENT_PID_PATH, popup wizard writes to APPDATA
+    _appdata = os.environ.get('APPDATA', '')
+    candidate_paths = [
+        _AGENT_PID_PATH,
+        os.path.join(_appdata, 'DocuVaultAgent', 'agent.pid') if _appdata else None,
+    ]
+
+    for pid_path in candidate_paths:
+        if not pid_path or not os.path.exists(pid_path):
+            continue
+        try:
+            with open(pid_path) as f:
+                pid = int(f.read().strip())
+            os.kill(pid, 0)   # signal 0 = check existence without killing
+            return True, pid
+        except (ValueError, OSError):
+            # Stale PID file — remove it
+            try:
+                os.remove(pid_path)
+            except OSError:
+                pass
+
+    return False, None
+
+
+@login_required
+def workspace_agent_view(request):
+    from .agent_api import AgentToken
+    user = request.user
+    cfg  = _read_agent_config()
+    all_folders = Folder.objects.filter(owner=user).order_by('name')
+
+    recent_syncs = (
+        ActivityLog.objects
+        .filter(user=user, action__in=['create', 'edit'],
+                description__icontains='Desktop Agent')
+        .select_related('document')
+        .order_by('-created_at')[:15]
+    )
+
+    agent_online = False
+    agent_last   = None
+    try:
+        tok = AgentToken.objects.get(user=user, is_active=True)
+        agent_last = tok.last_used
+        if agent_last:
+            agent_online = (timezone.now() - agent_last).total_seconds() <= 120
+    except AgentToken.DoesNotExist:
+        pass
+
+    proc_running, proc_pid = _agent_process_status()
+
+    exe_built = os.path.exists(os.path.join(_AGENT_DIR, 'dist', 'DocuVaultAgent.exe'))
+
+    steps = [
+        ('1', '⬇️', 'Download', 'Click Download Agent on this page'),
+        ('2', '🖱️', 'Double-click', 'Open DocuVaultAgent.exe — setup wizard appears automatically'),
+        ('3', '✅', 'Done', 'Agent runs silently in background. No terminal ever needed.'),
+    ]
+
+    return render(request, 'documents/workspace_agent.html', {
+        'cfg':          cfg,
+        'all_folders':  all_folders,
+        'recent_syncs': recent_syncs,
+        'agent_online': agent_online,
+        'agent_last':   agent_last,
+        'proc_running': proc_running,
+        'proc_pid':     proc_pid,
+        'agent_dir':    _AGENT_DIR,
+        'server_url':   cfg.get('server_url', 'http://localhost:8000'),
+        'exe_built':    exe_built,
+        'steps':        steps,
+    })
+
+
+# ── AJAX: save full config ────────────────────────────────────
+@login_required
+@require_POST
+def agent_config_save_view(request):
+    """Save entire config.json from the UI form (AJAX POST, JSON body)."""
+    try:
+        data = json.loads(request.body)
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'Invalid JSON'})
+
+    cfg = _read_agent_config()
+
+    # Basic fields
+    if 'server_url' in data:
+        cfg['server_url'] = data['server_url'].strip().rstrip('/')
+    if 'username' in data:
+        cfg['username'] = data['username'].strip()
+    if 'password' in data and data['password']:   # only update if non-empty
+        cfg['password'] = data['password']
+    if 'debounce' in data:
+        cfg.setdefault('sync', {})['debounce_seconds'] = int(data['debounce'])
+    if 'heartbeat' in data:
+        cfg.setdefault('sync', {})['heartbeat_interval_seconds'] = int(data['heartbeat'])
+
+    # Watch folders (full replacement)
+    if 'watch_folders' in data:
+        cleaned = []
+        for wf in data['watch_folders']:
+            path_val = wf.get('path', '').strip()
+            if not path_val:
+                continue
+            entry = {
+                'path':      path_val,
+                'recursive': bool(wf.get('recursive', True)),
+                'category':  wf.get('category', 'General').strip(),
+                'extensions': [e.strip() for e in wf.get('extensions', []) if e.strip()],
+            }
+            fid = wf.get('folder_id')
+            if fid:
+                try:
+                    f_obj = Folder.objects.get(id=int(fid), owner=request.user)
+                    entry['folder_id']   = f_obj.id
+                    entry['folder_name'] = f_obj.name
+                except (Folder.DoesNotExist, ValueError):
+                    pass
+            cleaned.append(entry)
+        cfg['watch_folders'] = cleaned
+
+    _write_agent_config(cfg)
+    return JsonResponse({'ok': True, 'message': 'Configuration saved'})
+
+
+# ── AJAX: start agent process ─────────────────────────────────
+@login_required
+@require_POST
+def agent_process_start_view(request):
+    """Launch agent.py as a background subprocess."""
+    import subprocess, sys
+    running, pid = _agent_process_status()
+    if running:
+        return JsonResponse({'ok': True, 'message': f'Already running (PID {pid})', 'pid': pid})
+
+    if not os.path.exists(_AGENT_SCRIPT):
+        return JsonResponse({'ok': False, 'error': f'agent.py not found at {_AGENT_SCRIPT}'})
+
+    cfg = _read_agent_config()
+    if not cfg.get('username') or not cfg.get('password'):
+        return JsonResponse({'ok': False, 'error': 'Save credentials first before starting the agent.'})
+
+    try:
+        # Use the same Python executable as the Django process
+        proc = subprocess.Popen(
+            [sys.executable, _AGENT_SCRIPT, '--no-tray'],
+            cwd=_AGENT_DIR,
+            stdout=open(os.path.join(_AGENT_DIR, 'desktop_agent.log'), 'a'),
+            stderr=subprocess.STDOUT,
+            creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
+        )
+        # Write PID file
+        with open(_AGENT_PID_PATH, 'w') as f:
+            f.write(str(proc.pid))
+        return JsonResponse({'ok': True, 'pid': proc.pid, 'message': f'Agent started (PID {proc.pid})'})
+    except Exception as exc:
+        return JsonResponse({'ok': False, 'error': str(exc)})
+
+
+# ── AJAX: stop agent process ──────────────────────────────────
+@login_required
+@require_POST
+def agent_process_stop_view(request):
+    """Terminate the running agent process (by PID or by process name)."""
+    import signal as _sig
+    import subprocess
+
+    running, pid = _agent_process_status()
+
+    if os.name == 'nt':
+        killed = False
+
+        # 1. Kill by PID (includes process tree with /T)
+        if pid:
+            subprocess.call(
+                ['taskkill', '/F', '/T', '/PID', str(pid)],
+                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+            )
+            killed = True
+
+        # 2. Fallback: kill any DocuVaultAgent.exe still running
+        subprocess.call(
+            ['taskkill', '/F', '/IM', 'DocuVaultAgent.exe'],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+
+        # 3. Clean up both PID files
+        _appdata = os.environ.get('APPDATA', '')
+        for pid_path in [
+            _AGENT_PID_PATH,
+            os.path.join(_appdata, 'DocuVaultAgent', 'agent.pid') if _appdata else None,
+        ]:
+            if pid_path:
+                try:
+                    os.remove(pid_path)
+                except OSError:
+                    pass
+
+        msg = f'Agent stopped (PID {pid})' if pid else 'Agent stopped'
+        return JsonResponse({'ok': True, 'message': msg})
+
+    else:
+        # Linux / macOS
+        if not running:
+            return JsonResponse({'ok': True, 'message': 'Agent is not running'})
+        try:
+            os.kill(pid, _sig.SIGTERM)
+            try:
+                os.remove(_AGENT_PID_PATH)
+            except OSError:
+                pass
+            return JsonResponse({'ok': True, 'message': f'Agent stopped (PID {pid})'})
+        except Exception as exc:
+            return JsonResponse({'ok': False, 'error': str(exc)})
+
+
+# ── AJAX: get current process status ─────────────────────────
+@login_required
+def agent_process_status_view(request):
+    from .agent_api import AgentToken
+    running, pid = _agent_process_status()
+
+    agent_online = False
+    agent_last   = None
+    try:
+        tok = AgentToken.objects.get(user=request.user, is_active=True)
+        agent_last = tok.last_used
+        if agent_last:
+            agent_online = (timezone.now() - agent_last).total_seconds() <= 120
+    except AgentToken.DoesNotExist:
+        pass
+
+    return JsonResponse({
+        'ok':           True,
+        'proc_running': running,
+        'pid':          pid,
+        'online':       agent_online,
+        'last_seen':    agent_last.isoformat() if agent_last else None,
+    })
+
+
+# ── Download agent package ────────────────────────────────────
+@login_required
+def agent_download_view(request):
+    """
+    GET /workspace/agent/download/
+    Serves DocuVaultAgent.exe if built, otherwise a ready-to-run ZIP
+    containing agent.py + setup_wizard.py + requirements.txt + install.bat
+    so the user can run it with Python directly.
+    """
+    import zipfile, io
+
+    # Prefer pre-built exe (PyInstaller puts it in dist/)
+    exe_path = os.path.join(_AGENT_DIR, 'dist', 'DocuVaultAgent.exe')
+    if os.path.exists(exe_path):
+        with open(exe_path, 'rb') as f:
+            data = f.read()
+        resp = HttpResponse(data, content_type='application/octet-stream')
+        resp['Content-Disposition'] = 'attachment; filename="DocuVaultAgent.exe"'
+        return resp
+
+    # Fallback ZIP — works if the client PC has Python installed.
+    # Primary launcher = DocuVaultAgent.vbs  (double-click, no terminal)
+    # Backup launcher  = install.bat         (installs deps first time)
+
+    server_url = request.build_absolute_uri('/').rstrip('/')
+
+    # Portable VBS: finds Python automatically, no hardcoded paths
+    vbs_content = (
+        '\'  DocuVault Agent Launcher\r\n'
+        '\'  Double-click this file to start.\r\n'
+        '\'  Requires Python 3.10+ — get it from https://www.python.org\r\n\r\n'
+        'Dim objFSO, strDir, WshShell\r\n'
+        'Set objFSO   = CreateObject("Scripting.FileSystemObject")\r\n'
+        'Set WshShell = CreateObject("WScript.Shell")\r\n'
+        'strDir = objFSO.GetParentFolderName(WScript.ScriptFullName)\r\n\r\n'
+        'On Error Resume Next\r\n'
+        'WshShell.Run "pythonw """ & strDir & "\\agent.py""", 0, False\r\n'
+        'If Err.Number <> 0 Then\r\n'
+        '    Err.Clear\r\n'
+        '    WshShell.Run "python """ & strDir & "\\agent.py""", 1, False\r\n'
+        'End If\r\n'
+    )
+
+    install_bat = (
+        '@echo off\r\n'
+        'cd /d "%~dp0"\r\n'
+        'echo DocuVault Agent — First-time install\r\n'
+        'echo =====================================\r\n'
+        'python --version >nul 2>&1\r\n'
+        'if errorlevel 1 (\r\n'
+        '    echo ERROR: Python not found.\r\n'
+        '    echo Download Python from https://www.python.org/downloads/\r\n'
+        '    echo Make sure to tick "Add Python to PATH" during install.\r\n'
+        '    pause & exit /b 1\r\n'
+        ')\r\n'
+        'echo Installing required packages...\r\n'
+        'pip install -r requirements.txt --quiet\r\n'
+        'echo.\r\n'
+        'echo Done! Double-click DocuVaultAgent.vbs to start the agent.\r\n'
+        'pause\r\n'
+    )
+
+    readme = (
+        'DocuVault Desktop Agent\r\n'
+        '=======================\r\n\r\n'
+        'OPTION A — If you have Python installed (quick start):\r\n'
+        '  1. Run install.bat  (one-time, installs packages)\r\n'
+        '  2. Double-click DocuVaultAgent.vbs\r\n'
+        '  3. Setup wizard opens — enter server + credentials + folder\r\n'
+        '  4. Click Launch Agent — runs in background automatically\r\n\r\n'
+        'OPTION B — Ask your admin to build DocuVaultAgent.exe\r\n'
+        '  Then you just double-click the .exe — no Python needed.\r\n\r\n'
+        f'Your DocuVault server: {server_url}\r\n'
+    )
+
+    FILES_TO_INCLUDE = [
+        'agent.py',
+        'setup_wizard.py',
+        'requirements.txt',
+    ]
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for fname in FILES_TO_INCLUDE:
+            fpath = os.path.join(_AGENT_DIR, fname)
+            if os.path.exists(fpath):
+                zf.write(fpath, f'DocuVaultAgent/{fname}')
+        # Portable VBS is the main launcher — named prominently
+        zf.writestr('DocuVaultAgent/DocuVaultAgent.vbs', vbs_content)
+        zf.writestr('DocuVaultAgent/install.bat', install_bat)
+        zf.writestr('DocuVaultAgent/README.txt', readme)
+
+    buf.seek(0)
+    resp = HttpResponse(buf.read(), content_type='application/zip')
+    resp['Content-Disposition'] = 'attachment; filename="DocuVaultAgent.zip"'
+    return resp
+
+
+# ── Build .exe in browser ─────────────────────────────────────
+_BUILD_LOG_PATH = os.path.join(_AGENT_DIR, 'build.log')
+
+@login_required
+@require_POST
+def agent_build_exe_view(request):
+    """Start a background PyInstaller build and return immediately."""
+    if not request.user.is_staff:
+        return JsonResponse({'ok': False, 'error': 'Admin only'})
+
+    import subprocess, sys
+
+    exe_path = os.path.join(_AGENT_DIR, 'dist', 'DocuVaultAgent.exe')
+
+    # Kill any running DocuVaultAgent.exe so the file isn't locked during build
+    if os.name == 'nt':
+        subprocess.call(
+            ['taskkill', '/F', '/IM', 'DocuVaultAgent.exe'],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL
+        )
+
+    # Remove the old exe so PyInstaller isn't blocked by a locked file
+    if os.path.exists(exe_path):
+        try:
+            os.remove(exe_path)
+        except OSError:
+            pass  # still locked — build will fail with a clear error
+
+    # Clear old log
+    with open(_BUILD_LOG_PATH, 'w', encoding='utf-8') as f:
+        f.write('Build started...\n')
+
+    cmd = [
+        sys.executable, '-m', 'PyInstaller',
+        '--onefile', '--noconsole',
+        '--name', 'DocuVaultAgent',
+        '--hidden-import', 'setup_wizard',
+        '--hidden-import', 'tkinter',
+        '--hidden-import', 'tkinter.filedialog',
+        '--hidden-import', 'pystray',
+        '--hidden-import', 'PIL',
+        '--hidden-import', 'watchdog',
+        '--hidden-import', 'requests',
+        '--hidden-import', 'dateutil',
+        '--hidden-import', 'winreg',
+        'agent.py',
+    ]
+
+    log_file = open(_BUILD_LOG_PATH, 'a', encoding='utf-8')
+    subprocess.Popen(
+        cmd, cwd=_AGENT_DIR,
+        stdout=log_file, stderr=subprocess.STDOUT,
+        creationflags=subprocess.CREATE_NO_WINDOW if os.name == 'nt' else 0,
+    )
+    return JsonResponse({'ok': True, 'message': 'Build started'})
+
+
+@login_required
+def agent_build_log_view(request):
+    """Poll build progress — returns last N lines of build.log."""
+    try:
+        with open(_BUILD_LOG_PATH, 'r', encoding='utf-8', errors='replace') as f:
+            lines = f.readlines()
+        last = lines[-60:] if len(lines) > 60 else lines
+        exe_path = os.path.join(_AGENT_DIR, 'dist', 'DocuVaultAgent.exe')
+        built = os.path.exists(exe_path)
+        return JsonResponse({'ok': True, 'log': ''.join(last), 'built': built})
+    except FileNotFoundError:
+        return JsonResponse({'ok': True, 'log': '', 'built': False})

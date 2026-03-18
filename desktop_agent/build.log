@@ -1,0 +1,110 @@
+Build started...
+140 INFO: PyInstaller: 6.19.0, contrib hooks: 2026.3
+140 INFO: Python: 3.12.6
+165 INFO: Platform: Windows-11-10.0.26200-SP0
+165 INFO: Python environment: D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\env
+166 INFO: wrote D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\DocuVaultAgent.spec
+168 INFO: Module search paths (PYTHONPATH):
+['D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\desktop_agent',
+ 'C:\\Python312\\python312.zip',
+ 'C:\\Python312\\DLLs',
+ 'C:\\Python312\\Lib',
+ 'C:\\Python312',
+ 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env',
+ 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages',
+ 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\desktop_agent']
+536 INFO: checking Analysis
+549 INFO: Building because D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py changed
+549 INFO: Looking for Python shared library...
+549 INFO: Using Python shared library: C:\Python312\python312.dll
+549 INFO: Running Analysis Analysis-00.toc
+549 INFO: Target bytecode optimization level: 0
+549 INFO: Initializing module dependency graph...
+554 INFO: Initializing module graph hook caches...
+567 INFO: Analyzing modules for base_library.zip ...
+1370 INFO: Processing standard module hook 'hook-encodings.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+4029 INFO: Processing standard module hook 'hook-pickle.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+5396 INFO: Processing standard module hook 'hook-heapq.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+7147 INFO: Caching module dependency graph...
+7189 INFO: Analyzing D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py
+7572 INFO: Processing standard module hook 'hook-urllib3.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+7699 INFO: Processing standard module hook 'hook-platform.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+7770 INFO: Processing pre-safe-import-module hook 'hook-typing_extensions.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+7772 INFO: SetuptoolsInfo: initializing cached setuptools info...
+11493 INFO: Processing standard module hook 'hook-multiprocessing.util.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+11610 INFO: Processing standard module hook 'hook-xml.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+12019 INFO: Processing standard module hook 'hook-_ctypes.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+13318 INFO: Processing standard module hook 'hook-charset_normalizer.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+13396 INFO: Processing standard module hook 'hook-chardet.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+14119 INFO: Processing standard module hook 'hook-cryptography.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+15120 INFO: hook-cryptography: cryptography does not seem to be using dynamically linked OpenSSL.
+15396 INFO: Processing standard module hook 'hook-bcrypt.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+15417 INFO: Processing standard module hook 'hook-certifi.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+15708 INFO: Processing standard module hook 'hook-pystray.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+16627 INFO: Processing pre-safe-import-module hook 'hook-six.moves.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+16969 INFO: Processing pre-safe-import-module hook 'hook-gi.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks\\pre_safe_import_module'
+17010 INFO: Processing standard module hook 'hook-PIL.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+17400 INFO: Processing standard module hook 'hook-PIL.Image.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+18346 INFO: Processing standard module hook 'hook-numpy.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+19018 INFO: Processing standard module hook 'hook-difflib.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+20795 INFO: Processing standard module hook 'hook-sysconfig.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+23521 INFO: Processing standard module hook 'hook-psutil.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+27419 INFO: Processing standard module hook 'hook-xml.etree.cElementTree.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+27617 INFO: Processing standard module hook 'hook-PIL.ImageFilter.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+28390 INFO: Processing pre-find-module-path hook 'hook-tkinter.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks\\pre_find_module_path'
+28394 INFO: TclTkInfo: initializing cached Tcl/Tk info...
+29986 INFO: Processing standard module hook 'hook-_tkinter.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+30256 INFO: Analyzing hidden import 'dateutil'
+30267 INFO: Processing standard module hook 'hook-dateutil.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\stdhooks'
+30319 INFO: Processing module hooks (post-graph stage)...
+31364 INFO: Processing standard module hook 'hook-PIL.SpiderImagePlugin.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+31608 INFO: Processing standard module hook 'hook-_tkinter.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks'
+31643 INFO: Performing binary vs. data reclassification (936 entries)
+40740 INFO: Looking for ctypes DLLs
+40785 INFO: Analyzing run-time hooks ...
+40787 INFO: Including run-time hook 'pyi_rth_inspect.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+40792 INFO: Including run-time hook 'pyi_rth__tkinter.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+40792 INFO: Including run-time hook 'pyi_rth_pkgutil.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+40795 INFO: Including run-time hook 'pyi_rth_multiprocessing.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\PyInstaller\\hooks\\rthooks'
+40797 INFO: Including run-time hook 'pyi_rth_cryptography_openssl.py' from 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\_pyinstaller_hooks_contrib\\rthooks'
+40825 INFO: Creating base_library.zip...
+40842 INFO: Looking for dynamic libraries
+41391 INFO: Extra DLL search directories (AddDllDirectory): ['D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Lib\\site-packages\\numpy.libs']
+41391 INFO: Extra DLL search directories (PATH): []
+42156 INFO: Warnings written to D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\build\DocuVaultAgent\warn-DocuVaultAgent.txt
+42231 INFO: Graph cross-reference written to D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\build\DocuVaultAgent\xref-DocuVaultAgent.html
+42265 INFO: checking PYZ
+42275 INFO: Building because D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\setup_wizard.py changed
+42276 INFO: Building PYZ (ZlibArchive) D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\build\DocuVaultAgent\PYZ-00.pyz
+42888 INFO: Building PYZ (ZlibArchive) D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\build\DocuVaultAgent\PYZ-00.pyz completed successfully.
+42925 INFO: checking PKG
+42931 INFO: Building because toc changed
+42931 INFO: Building PKG (CArchive) DocuVaultAgent.pkg
+50973 INFO: Building PKG (CArchive) DocuVaultAgent.pkg completed successfully.
+50990 INFO: Bootloader D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\env\Lib\site-packages\PyInstaller\bootloader\Windows-64bit-intel\runw.exe
+50990 INFO: checking EXE
+51000 INFO: Building because toc changed
+51000 INFO: Building EXE from EXE-00.toc
+Traceback (most recent call last):
+  File "<frozen runpy>", line 198, in _run_module_as_main
+  File "<frozen runpy>", line 88, in _run_code
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\env\Lib\site-packages\PyInstaller\__main__.py", line 321, in <module>
+    run()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\env\Lib\site-packages\PyInstaller\__main__.py", line 215, in run
+    run_build(pyi_config, spec_file, **vars(args))
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\env\Lib\site-packages\PyInstaller\__main__.py", line 70, in run_build
+    PyInstaller.building.build_main.main(pyi_config, spec_file, **kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\env\Lib\site-packages\PyInstaller\building\build_main.py", line 1275, in main
+    build(specfile, distpath, workpath, clean_build)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\env\Lib\site-packages\PyInstaller\building\build_main.py", line 1213, in build
+    exec(code, spec_namespace)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\DocuVaultAgent.spec", line 19, in <module>
+    exe = EXE(
+          ^^^^
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\env\Lib\site-packages\PyInstaller\building\api.py", line 675, in __init__
+    self.__postinit__()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\env\Lib\site-packages\PyInstaller\building\datastruct.py", line 184, in __postinit__
+    self.assemble()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\env\Lib\site-packages\PyInstaller\building\api.py", line 769, in assemble
+    os.remove(self.name)
+PermissionError: [WinError 5] Access is denied: 'D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\desktop_agent\\dist\\DocuVaultAgent.exe'

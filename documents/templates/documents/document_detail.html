@@ -191,34 +191,112 @@
 </div>
 {% endif %}
 
-<!-- Version History -->
-{% if versions %}
-<div>
-    <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
+<!-- Version History — GitHub style -->
+<div style="margin-top:2.5rem;">
+<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
+    <h2 style="font-size:1.25rem;font-weight:700;color:#1a1a1a;margin:0;">
         Version History
     </h2>
-    <div class="card">
-        {% for version in versions %}
-            <div style="padding: 1rem 0; {% if not forloop.last %}border-bottom: 1px solid #e5e5e5;{% endif %}">
-                <div style="display: flex; justify-content: space-between; align-items: start;">
-                    <div>
-                        <strong style="color: #2c2c2c;">Version {{ version.version_number }}</strong>
-                        <p style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
-                            Uploaded by {{ version.uploaded_by.username }} • {{ version.created_at|timesince }} ago
-                        </p>
-                        {% if version.change_note %}
-                            <p style="color: #5c5c5c; margin-top: 0.5rem; font-size: 0.95rem;">
-                                {{ version.change_note }}
-                            </p>
+    <span style="font-size:.8rem;color:#6b7280;background:#f3f4f6;padding:.25rem .75rem;border-radius:20px;font-weight:600;">
+        {{ versions|length }} commit{% if versions|length != 1 %}s{% endif %}
+    </span>
+</div>
+
+{% if versions %}
+<div style="position:relative;">
+    <!-- vertical timeline line -->
+    <div style="position:absolute;left:19px;top:24px;bottom:24px;width:2px;background:#e5e7eb;z-index:0;"></div>
+
+    {% for version in versions %}
+    <div style="display:flex;gap:1rem;margin-bottom:.75rem;position:relative;z-index:1;">
+
+        <!-- Commit dot -->
+        <div style="flex-shrink:0;width:40px;display:flex;flex-direction:column;align-items:center;">
+            <div style="width:14px;height:14px;border-radius:50%;border:2px solid
+                {% if version.version_number == document.version %}#2563eb{% else %}#9ca3af{% endif %};
+                background:{% if version.version_number == document.version %}#2563eb{% else %}#fff{% endif %};
+                margin-top:14px;">
+            </div>
+        </div>
+
+        <!-- Commit card -->
+        <div style="flex:1;background:#fff;border:1px solid
+            {% if version.version_number == document.version %}#bfdbfe{% else %}#e5e7eb{% endif %};
+            border-radius:10px;padding:1rem 1.25rem;
+            {% if version.version_number == document.version %}background:#f0f7ff;{% endif %}">
+
+            <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;">
+
+                <!-- Left: version + message -->
+                <div style="flex:1;min-width:0;">
+                    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.3rem;">
+                        <code style="background:#1e293b;color:#e2e8f0;font-size:.75rem;font-weight:700;
+                                     padding:.2rem .5rem;border-radius:5px;letter-spacing:.02em;">
+                            v{{ version.version_number }}
+                        </code>
+                        {% if version.version_number == document.version %}
+                        <span style="background:#dbeafe;color:#1d4ed8;font-size:.7rem;font-weight:700;
+                                     padding:.15rem .55rem;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;">
+                            ● HEAD
+                        </span>
                         {% endif %}
+                        <span style="color:#374151;font-size:.9rem;font-weight:500;
+                                     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px;">
+                            {% if version.change_note %}{{ version.change_note }}{% else %}<em style="color:#9ca3af;">No message</em>{% endif %}
+                        </span>
                     </div>
-                    <span style="color: #7c7c7c; font-size: 0.875rem;">
-                        {{ version.file_size|filesizeformat }}
-                    </span>
+
+                    <div style="font-size:.78rem;color:#6b7280;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+                        <span>
+                            <strong style="color:#374151;">{{ version.uploaded_by.username }}</strong>
+                            committed {{ version.created_at|timesince }} ago
+                        </span>
+                        <span style="color:#d1d5db;">|</span>
+                        <span>{{ version.file_size|filesizeformat }}</span>
+                        <span style="color:#d1d5db;">|</span>
+                        <span style="font-family:monospace;font-size:.72rem;color:#9ca3af;">
+                            {{ version.created_at|date:"Y-m-d H:i" }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Right: action buttons -->
+                <div style="display:flex;gap:.45rem;flex-shrink:0;align-items:center;">
+                    {% if document.allow_download %}
+                    <a href="{% url 'version_download' document.pk version.pk %}"
+                       style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;
+                              border:1px solid #d1d5db;border-radius:6px;font-size:.78rem;
+                              color:#374151;text-decoration:none;background:#fff;font-weight:500;"
+                       title="Download this version">
+                        ↓ Download
+                    </a>
+                    {% endif %}
+
+                    {% if can_edit and version.version_number != document.version %}
+                    <form method="post" action="{% url 'version_restore' document.pk version.pk %}"
+                          onsubmit="return confirm('Restore to v{{ version.version_number }}? This creates a new version.');">
+                        {% csrf_token %}
+                        <button type="submit"
+                                style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;
+                                       border:1px solid #fbbf24;border-radius:6px;font-size:.78rem;
+                                       color:#92400e;background:#fffbeb;cursor:pointer;font-weight:500;">
+                            ↩ Restore
+                        </button>
+                    </form>
+                    {% endif %}
                 </div>
             </div>
-        {% endfor %}
+        </div>
     </div>
+    {% endfor %}
+</div>
+
+{% else %}
+<div style="text-align:center;padding:2.5rem;border:2px dashed #e5e7eb;border-radius:12px;color:#9ca3af;">
+    <div style="font-size:2rem;margin-bottom:.5rem;">📂</div>
+    <p style="font-size:.9rem;">No version history yet. Upload a new version to start tracking.</p>
 </div>
 {% endif %}
+</div>
+
 {% endblock %}

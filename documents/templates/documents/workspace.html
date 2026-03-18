@@ -1,0 +1,502 @@
+{% extends 'documents/base.html' %}
+{% block title %}My Workspace – DocuVault{% endblock %}
+
+{% block content %}
+<style>
+/* ── Workspace layout ────────────────────────── */
+.ws-wrap{display:flex;gap:0;min-height:calc(100vh - 120px);margin:-1rem -2rem 0;background:#f7f8fa}
+.ws-sidebar{width:260px;min-width:220px;background:#fff;border-right:1px solid #e5e7eb;display:flex;flex-direction:column;padding:0;flex-shrink:0}
+.ws-main{flex:1;padding:1.75rem 2rem;overflow-y:auto;background:#f7f8fa}
+
+/* ── Sidebar ─────────────────────────────────── */
+.ws-sidebar-header{padding:1.1rem 1.25rem 0.75rem;border-bottom:1px solid #f0f0f0}
+.ws-sidebar-title{font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;margin:0 0 .6rem}
+.ws-stat-row{display:flex;justify-content:space-between;font-size:0.82rem;color:#6b7280;margin:.2rem 0}
+.ws-stat-row strong{color:#111}
+
+.ws-nav-link{display:flex;align-items:center;gap:.6rem;padding:.55rem 1.25rem;font-size:.875rem;color:#374151;text-decoration:none;border-radius:0;cursor:pointer;border:none;background:none;width:100%;text-align:left;transition:background .12s}
+.ws-nav-link:hover{background:#f3f4f6;color:#111}
+.ws-nav-link.active{background:#eff6ff;color:#1d4ed8;font-weight:600}
+.ws-nav-link .badge{margin-left:auto;background:#e5e7eb;color:#374151;font-size:.7rem;padding:.1rem .45rem;border-radius:10px;font-weight:600}
+.ws-nav-link.active .badge{background:#dbeafe;color:#1d4ed8}
+
+.folder-section{flex:1;overflow-y:auto;padding:.5rem 0}
+.folder-section-label{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9ca3af;padding:.6rem 1.25rem .3rem;display:flex;align-items:center;justify-content:space-between}
+.btn-add-folder{background:none;border:none;color:#9ca3af;cursor:pointer;font-size:1.1rem;line-height:1;padding:0 .25rem;transition:color .15s}
+.btn-add-folder:hover{color:#374151}
+
+.folder-item{position:relative}
+.folder-row{display:flex;align-items:center;gap:.5rem;padding:.42rem .75rem .42rem 1.1rem;font-size:.86rem;color:#374151;text-decoration:none;cursor:pointer;border-radius:0;transition:background .12s;user-select:none}
+.folder-row:hover{background:#f3f4f6}
+.folder-row.active{background:#eff6ff;color:#1d4ed8;font-weight:600}
+.folder-icon{font-size:.9rem;flex-shrink:0}
+.folder-name{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.folder-badge{background:#e5e7eb;color:#6b7280;font-size:.68rem;padding:.05rem .35rem;border-radius:8px;font-weight:600;flex-shrink:0}
+.folder-row.active .folder-badge{background:#dbeafe;color:#1d4ed8}
+.folder-toggle{background:none;border:none;cursor:pointer;color:#9ca3af;font-size:.75rem;padding:0 .2rem;flex-shrink:0;transition:transform .15s}
+.folder-children{padding-left:1.1rem;display:none}
+.folder-children.open{display:block}
+
+.folder-actions{display:none;gap:.2rem;margin-left:auto}
+.folder-row:hover .folder-actions{display:flex}
+.btn-fol-action{background:none;border:none;cursor:pointer;color:#9ca3af;font-size:.8rem;padding:.1rem .2rem;transition:color .15s;border-radius:3px}
+.btn-fol-action:hover{color:#374151;background:#e5e7eb}
+
+/* ── Inline folder create input ─────────────── */
+.inline-folder-input{display:flex;align-items:center;gap:.4rem;padding:.35rem .75rem .35rem 1.1rem}
+.inline-folder-input input{flex:1;border:1px solid #3b82f6;border-radius:4px;padding:.25rem .5rem;font-size:.84rem;outline:none}
+.inline-folder-input button{background:none;border:none;cursor:pointer;font-size:.85rem;padding:.1rem .3rem}
+
+/* ── Main header ─────────────────────────────── */
+.ws-main-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem}
+.ws-breadcrumb{font-size:1.15rem;font-weight:700;color:#111;display:flex;align-items:center;gap:.4rem}
+.ws-breadcrumb .crumb-sep{color:#9ca3af;font-weight:400}
+.ws-actions{display:flex;gap:.6rem;align-items:center}
+
+/* ── Search bar ──────────────────────────────── */
+.ws-search{display:flex;gap:.5rem;margin-bottom:1.2rem}
+.ws-search input{flex:1;border:1px solid #d1d5db;border-radius:8px;padding:.5rem .9rem;font-size:.9rem;outline:none;background:#fff;transition:border-color .15s}
+.ws-search input:focus{border-color:#3b82f6;box-shadow:0 0 0 3px #eff6ff}
+.ws-search button{background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:.5rem 1rem;font-size:.875rem;cursor:pointer;font-weight:500;transition:background .15s}
+.ws-search button:hover{background:#2563eb}
+
+/* ── Document cards grid ─────────────────────── */
+.doc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:1rem}
+.doc-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1rem 1.1rem;display:flex;flex-direction:column;gap:.55rem;transition:box-shadow .18s,border-color .18s;position:relative}
+.doc-card:hover{box-shadow:0 4px 18px rgba(0,0,0,.08);border-color:#c7d2fe}
+.doc-card-top{display:flex;align-items:flex-start;gap:.7rem}
+.doc-type-icon{width:38px;height:38px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;flex-shrink:0}
+.doc-type-icon.pdf{background:#fef2f2;color:#dc2626}
+.doc-type-icon.docx{background:#eff6ff;color:#2563eb}
+.doc-type-icon.xlsx{background:#f0fdf4;color:#16a34a}
+.doc-type-icon.pptx{background:#fff7ed;color:#ea580c}
+.doc-type-icon.img{background:#fdf4ff;color:#9333ea}
+.doc-type-icon.other{background:#f8fafc;color:#64748b}
+.doc-card-meta{flex:1;min-width:0}
+.doc-card-title{font-weight:600;font-size:.9rem;color:#111;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-decoration:none;display:block}
+.doc-card-title:hover{color:#2563eb}
+.doc-card-sub{font-size:.75rem;color:#9ca3af;margin-top:.15rem}
+.doc-version-badge{display:inline-block;padding:.1rem .45rem;background:#e0f2fe;color:#0369a1;font-size:.7rem;font-weight:700;border-radius:6px;letter-spacing:.02em}
+.doc-folder-tag{display:inline-flex;align-items:center;gap:.25rem;font-size:.72rem;color:#6b7280;background:#f3f4f6;border-radius:5px;padding:.1rem .4rem;margin-top:.2rem}
+
+.doc-card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:.4rem;border-top:1px solid #f3f4f6;margin-top:auto}
+.doc-card-date{font-size:.73rem;color:#9ca3af}
+.doc-card-actions{display:flex;gap:.25rem}
+.btn-doc-action{background:none;border:none;cursor:pointer;color:#9ca3af;font-size:.85rem;padding:.2rem .3rem;border-radius:5px;text-decoration:none;transition:color .15s,background .15s}
+.btn-doc-action:hover{color:#374151;background:#f3f4f6}
+
+/* ── Empty state ─────────────────────────────── */
+.ws-empty{text-align:center;padding:4rem 2rem;color:#9ca3af}
+.ws-empty-icon{font-size:3rem;margin-bottom:.75rem}
+.ws-empty h3{font-size:1.1rem;color:#374151;font-weight:600;margin-bottom:.35rem}
+.ws-empty p{font-size:.875rem}
+
+/* ── Version history panel ───────────────────── */
+.ws-versions{margin-top:2rem}
+.ws-versions-title{font-size:.875rem;font-weight:700;color:#374151;margin-bottom:.75rem;display:flex;align-items:center;gap:.5rem}
+.version-row{display:flex;align-items:center;gap:.75rem;padding:.6rem 0;border-bottom:1px solid #f3f4f6;font-size:.82rem}
+.version-row:last-child{border-bottom:none}
+.version-num{background:#e0f2fe;color:#0369a1;font-weight:700;font-size:.7rem;padding:.15rem .5rem;border-radius:6px;flex-shrink:0}
+.version-doc-link{font-weight:500;color:#111;text-decoration:none;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.version-doc-link:hover{color:#2563eb}
+.version-who{color:#9ca3af;flex-shrink:0}
+.version-dl{color:#9ca3af;text-decoration:none;font-size:.8rem;padding:.15rem .35rem;border-radius:4px;transition:color .15s,background .15s}
+.version-dl:hover{color:#2563eb;background:#eff6ff}
+
+/* ── Move modal ──────────────────────────────── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.35);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal-box{background:#fff;border-radius:14px;padding:1.75rem;width:360px;max-width:95vw;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.modal-box h3{font-size:1rem;font-weight:700;margin:0 0 1rem;color:#111}
+.modal-folder-list{max-height:260px;overflow-y:auto;border:1px solid #e5e7eb;border-radius:8px}
+.modal-folder-opt{display:block;padding:.6rem .9rem;font-size:.875rem;color:#374151;cursor:pointer;border-bottom:1px solid #f3f4f6;transition:background .12s}
+.modal-folder-opt:last-child{border-bottom:none}
+.modal-folder-opt:hover{background:#f3f4f6}
+.modal-folder-opt.selected{background:#eff6ff;color:#1d4ed8;font-weight:600}
+.modal-actions{display:flex;gap:.6rem;margin-top:1rem;justify-content:flex-end}
+.btn-primary{background:#3b82f6;color:#fff;border:none;border-radius:8px;padding:.55rem 1.1rem;font-size:.875rem;cursor:pointer;font-weight:500;transition:background .15s}
+.btn-primary:hover{background:#2563eb}
+.btn-ghost{background:none;color:#6b7280;border:1px solid #d1d5db;border-radius:8px;padding:.55rem 1rem;font-size:.875rem;cursor:pointer;transition:background .15s}
+.btn-ghost:hover{background:#f3f4f6}
+
+/* ── Toast ───────────────────────────────────── */
+#ws-toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#111;color:#fff;padding:.6rem 1.1rem;border-radius:8px;font-size:.85rem;opacity:0;transition:opacity .25s;pointer-events:none;z-index:2000}
+#ws-toast.show{opacity:1}
+</style>
+
+<div class="ws-wrap">
+
+  <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
+  <nav class="ws-sidebar">
+    <div class="ws-sidebar-header">
+      <p class="ws-sidebar-title">My Workspace</p>
+      <div class="ws-stat-row"><span>Documents</span><strong>{{ stats.total_docs }}</strong></div>
+      <div class="ws-stat-row"><span>Folders</span><strong>{{ stats.total_folders }}</strong></div>
+      <div class="ws-stat-row"><span>Versions</span><strong>{{ stats.total_versions }}</strong></div>
+    </div>
+
+    <!-- Fixed nav links -->
+    <a href="{% url 'workspace' %}"
+       class="ws-nav-link {% if not folder_id %}active{% endif %}">
+      🗂 All Documents
+      <span class="badge">{{ stats.total_docs }}</span>
+    </a>
+    <a href="{% url 'workspace' %}?folder=unfiled"
+       class="ws-nav-link {% if folder_id == 'unfiled' %}active{% endif %}">
+      📄 Unfiled
+      <span class="badge">{{ stats.unfiled }}</span>
+    </a>
+
+    <!-- Agent status pill -->
+    <a href="{% url 'workspace_agent' %}" id="agent-pill"
+       style="display:flex;align-items:center;gap:.55rem;padding:.65rem 1.25rem;border-bottom:1px solid #f0f0f0;text-decoration:none;transition:background .12s"
+       onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background=''">
+      <span id="sb-agent-dot" style="width:9px;height:9px;border-radius:50%;background:#ccc;flex-shrink:0"></span>
+      <span style="flex:1;font-size:.82rem;color:#374151">
+        <span id="sb-agent-label">Desktop Agent</span><br>
+        <span id="sb-agent-sub" style="font-size:.73rem;color:#9ca3af">Checking…</span>
+      </span>
+      <span style="font-size:.7rem;color:#9ca3af">⚙</span>
+    </a>
+
+    <!-- Folders section -->
+    <div class="folder-section">
+      <div class="folder-section-label">
+        Folders
+        <button class="btn-add-folder" onclick="showInlineCreate(null)" title="New root folder">＋</button>
+      </div>
+      <div id="folder-root">
+        {% for node in folder_tree %}
+          {% include 'documents/_folder_node.html' with node=node depth=0 %}
+        {% empty %}
+          <p style="font-size:.8rem;color:#9ca3af;padding:.5rem 1.25rem;">No folders yet.</p>
+        {% endfor %}
+      </div>
+    </div>
+  </nav>
+
+  <!-- ══ MAIN PANEL ════════════════════════════════════════════ -->
+  <main class="ws-main">
+
+    <!-- Header -->
+    <div class="ws-main-header">
+      <div class="ws-breadcrumb">
+        <span>{{ panel_title }}</span>
+        {% if current_folder %}
+          <span class="crumb-sep">·</span>
+          <span style="font-size:.85rem;color:#6b7280;font-weight:400;">{{ current_folder.get_path }}</span>
+        {% endif %}
+      </div>
+      <div class="ws-actions">
+        {% if current_folder %}
+          <button class="btn-ghost" onclick="showInlineCreate({{ current_folder.id }})"
+                  style="font-size:.8rem;padding:.4rem .8rem;">＋ Subfolder</button>
+        {% endif %}
+        <a href="{% url 'document_create' %}{% if current_folder %}?folder={{ current_folder.id }}{% endif %}"
+           class="btn-primary" style="text-decoration:none;">＋ New Document</a>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <form method="get" action="{% url 'workspace' %}" class="ws-search">
+      {% if folder_id %}<input type="hidden" name="folder" value="{{ folder_id }}">{% endif %}
+      <input type="text" name="q" value="{{ search_q }}" placeholder="Search documents…">
+      <button type="submit">Search</button>
+    </form>
+
+    <!-- Document grid -->
+    {% if docs %}
+    <div class="doc-grid" id="doc-grid">
+      {% for doc in docs %}
+      {% with ext=doc.file.name|lower %}
+      <div class="doc-card" id="doc-card-{{ doc.id }}" draggable="true"
+           ondragstart="dragStart(event, {{ doc.id }})">
+        <div class="doc-card-top">
+          <div class="doc-type-icon
+            {% if '.pdf' in ext %}pdf
+            {% elif '.docx' in ext or '.doc' in ext %}docx
+            {% elif '.xlsx' in ext or '.xls' in ext %}xlsx
+            {% elif '.pptx' in ext or '.ppt' in ext %}pptx
+            {% elif '.png' in ext or '.jpg' in ext or '.jpeg' in ext or '.gif' in ext %}img
+            {% else %}other{% endif %}">
+            {% if '.pdf' in ext %}📕
+            {% elif '.docx' in ext or '.doc' in ext %}📘
+            {% elif '.xlsx' in ext or '.xls' in ext %}📗
+            {% elif '.pptx' in ext or '.ppt' in ext %}📙
+            {% elif '.png' in ext or '.jpg' in ext or '.jpeg' in ext %}🖼
+            {% else %}📎{% endif %}
+          </div>
+          <div class="doc-card-meta">
+            <a href="{% url 'document_detail' doc.id %}" class="doc-card-title">{{ doc.title }}</a>
+            <div class="doc-card-sub">
+              <span class="doc-version-badge">v{{ doc.version }}</span>
+              {% if doc.folder and not current_folder %}
+                <span class="doc-folder-tag">📁 {{ doc.folder.name }}</span>
+              {% endif %}
+            </div>
+          </div>
+        </div>
+
+        <!-- Version history (inline, last 3) -->
+        {% with vlist=doc.versions.all %}
+        {% if vlist %}
+        <div style="border-top:1px solid #f3f4f6;padding-top:.5rem;margin-top:.1rem">
+          <p style="font-size:.7rem;font-weight:600;color:#9ca3af;margin:0 0 .3rem;text-transform:uppercase;letter-spacing:.05em">Version history</p>
+          {% for v in vlist|slice:":3" %}
+          <div style="display:flex;align-items:center;gap:.4rem;font-size:.75rem;margin:.2rem 0">
+            <span style="background:#e0f2fe;color:#0369a1;font-weight:700;font-size:.67rem;padding:.05rem .35rem;border-radius:5px;flex-shrink:0">v{{ v.version_number }}</span>
+            <span style="color:#6b7280;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+              {% if v.change_note %}{{ v.change_note|truncatechars:30 }}{% else %}Updated{% endif %}
+            </span>
+            <a href="{% url 'version_download' doc.id v.id %}"
+               style="color:#9ca3af;font-size:.75rem;text-decoration:none;padding:.1rem .3rem;border-radius:4px;transition:color .15s"
+               title="Download v{{ v.version_number }}">⬇</a>
+          </div>
+          {% endfor %}
+          {% if vlist|length > 3 %}
+          <a href="{% url 'document_detail' doc.id %}#versions" style="font-size:.72rem;color:#3b82f6">
+            + {{ vlist|length|add:"-3" }} more
+          </a>
+          {% endif %}
+        </div>
+        {% endif %}
+        {% endwith %}
+
+        <div class="doc-card-footer">
+          <span class="doc-card-date">{{ doc.updated_at|timesince }} ago</span>
+          <div class="doc-card-actions">
+            <a href="{% url 'document_detail' doc.id %}"    class="btn-doc-action" title="View">👁</a>
+            {% if not doc.is_locked %}
+            <a href="{% url 'document_edit' doc.id %}"      class="btn-doc-action" title="Edit">✏️</a>
+            {% endif %}
+            <a href="{% url 'document_download' doc.id %}"  class="btn-doc-action" title="Download">⬇</a>
+            <button onclick="openMoveModal({{ doc.id }}, '{{ doc.title|escapejs }}')"
+                    class="btn-doc-action" title="Move to folder">📁</button>
+          </div>
+        </div>
+      </div>
+      {% endwith %}
+      {% endfor %}
+    </div>
+
+    {% else %}
+    <div class="ws-empty">
+      <div class="ws-empty-icon">📂</div>
+      <h3>{% if search_q %}No documents match "{{ search_q }}"{% elif folder_id == 'unfiled' %}No unfiled documents{% elif current_folder %}{{ current_folder.name }} is empty{% else %}No documents yet{% endif %}</h3>
+      <p>{% if search_q %}Try a different search term.{% else %}Create your first document to get started.{% endif %}</p>
+      {% if not search_q %}
+      <a href="{% url 'document_create' %}" class="btn-primary" style="text-decoration:none;display:inline-block;margin-top:1rem">＋ New Document</a>
+      {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Recent version activity -->
+    {% if recent_versions %}
+    <div class="ws-versions">
+      <div class="ws-versions-title">🕐 Recent version activity</div>
+      {% for v in recent_versions %}
+      <div class="version-row">
+        <span class="version-num">v{{ v.version_number }}</span>
+        <a href="{% url 'document_detail' v.document.id %}#versions" class="version-doc-link">{{ v.document.title }}</a>
+        <span class="version-who">{{ v.uploaded_by.username|default:'—' }}</span>
+        <a href="{% url 'version_download' v.document.id v.id %}" class="version-dl" title="Download this version">⬇</a>
+        <span style="font-size:.72rem;color:#9ca3af;flex-shrink:0">{{ v.created_at|timesince }} ago</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </main>
+</div>
+
+<!-- ══ MOVE-TO-FOLDER MODAL ════════════════════════════════════ -->
+<div class="modal-overlay" id="move-modal">
+  <div class="modal-box">
+    <h3>Move "<span id="move-doc-title"></span>"</h3>
+    <div class="modal-folder-list" id="move-folder-list">
+      <div class="modal-folder-opt" data-id="" onclick="selectMoveTarget(this, '', 'Unfiled')">📄 Unfiled (remove from folder)</div>
+      {% for f in all_folders %}
+      <div class="modal-folder-opt" data-id="{{ f.id }}" onclick="selectMoveTarget(this, '{{ f.id }}', '{{ f.name|escapejs }}')">
+        📁 {{ f.name }}{% if f.parent %} <span style="color:#9ca3af;font-size:.78rem"> — {{ f.parent.name }}</span>{% endif %}
+      </div>
+      {% endfor %}
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeMoveModal()">Cancel</button>
+      <button class="btn-primary" onclick="confirmMove()">Move</button>
+    </div>
+  </div>
+</div>
+
+<div id="ws-toast"></div>
+
+<script>
+var CSRF = '{{ csrf_token }}';
+var moveDocId = null, moveTargetId = null;
+
+/* ── Toast ─────────────────────────────────── */
+function toast(msg, err) {
+  var t = document.getElementById('ws-toast');
+  t.textContent = msg;
+  t.style.background = err ? '#dc2626' : '#111';
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2600);
+}
+
+/* ── Inline folder create ───────────────────── */
+function showInlineCreate(parentId) {
+  var container = parentId
+    ? document.getElementById('children-' + parentId)
+    : document.getElementById('folder-root');
+  if (!container) return;
+  if (container.querySelector('.inline-folder-input')) return; // already open
+  if (parentId) container.classList.add('open');
+
+  var row = document.createElement('div');
+  row.className = 'inline-folder-input';
+  row.innerHTML =
+    '<input type="text" placeholder="Folder name…" id="new-folder-input" autofocus maxlength="80">' +
+    '<button onclick="submitInlineCreate(' + parentId + ')" title="Create">✔</button>' +
+    '<button onclick="this.closest(\'.inline-folder-input\').remove()" title="Cancel">✕</button>';
+  container.prepend(row);
+  document.getElementById('new-folder-input').focus();
+  document.getElementById('new-folder-input').addEventListener('keydown', function(e){
+    if (e.key === 'Enter') submitInlineCreate(parentId);
+    if (e.key === 'Escape') row.remove();
+  });
+}
+
+function submitInlineCreate(parentId) {
+  var input = document.getElementById('new-folder-input');
+  var name = input ? input.value.trim() : '';
+  if (!name) return;
+  fetch('{% url "folder_create" %}', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({name: name, parent_id: parentId || null})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.ok) {
+      toast('Folder "' + d.name + '" created');
+      setTimeout(function(){ location.reload(); }, 400);
+    } else {
+      toast(d.error, true);
+    }
+  });
+}
+
+/* ── Folder rename ──────────────────────────── */
+function renameFolder(id, currentName) {
+  var newName = prompt('Rename folder:', currentName);
+  if (!newName || newName === currentName) return;
+  fetch('/api/folders/' + id + '/rename/', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({name: newName})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.ok) { toast('Renamed to "' + d.name + '"'); setTimeout(function(){ location.reload(); }, 400); }
+    else toast(d.error, true);
+  });
+}
+
+/* ── Folder delete ──────────────────────────── */
+function deleteFolder(id, name) {
+  if (!confirm('Delete folder "' + name + '"?\nDocuments inside will be moved up.')) return;
+  fetch('/api/folders/' + id + '/delete/', {
+    method: 'POST', headers: {'X-CSRFToken': CSRF}
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.ok) { toast('Folder deleted'); setTimeout(function(){ location.reload(); }, 400); }
+    else toast(d.error, true);
+  });
+}
+
+/* ── Folder expand/collapse ─────────────────── */
+function toggleFolder(id) {
+  var el = document.getElementById('children-' + id);
+  var btn = document.getElementById('toggle-' + id);
+  if (!el) return;
+  var open = el.classList.toggle('open');
+  if (btn) btn.style.transform = open ? 'rotate(90deg)' : '';
+}
+
+/* ── Move modal ─────────────────────────────── */
+function openMoveModal(docId, docTitle) {
+  moveDocId = docId; moveTargetId = null;
+  document.getElementById('move-doc-title').textContent = docTitle;
+  document.querySelectorAll('.modal-folder-opt').forEach(function(el){ el.classList.remove('selected'); });
+  document.getElementById('move-modal').classList.add('open');
+}
+function closeMoveModal(){ document.getElementById('move-modal').classList.remove('open'); }
+function selectMoveTarget(el, id, name){
+  moveTargetId = id;
+  document.querySelectorAll('.modal-folder-opt').forEach(function(e){ e.classList.remove('selected'); });
+  el.classList.add('selected');
+}
+function confirmMove(){
+  if (moveDocId === null) return;
+  fetch('/api/documents/' + moveDocId + '/move/', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+    body: JSON.stringify({folder_id: moveTargetId || null})
+  }).then(function(r){ return r.json(); }).then(function(d){
+    if (d.ok){ closeMoveModal(); toast('Moved'); setTimeout(function(){ location.reload(); }, 500); }
+    else toast(d.error, true);
+  });
+}
+document.getElementById('move-modal').addEventListener('click', function(e){
+  if (e.target === this) closeMoveModal();
+});
+
+/* ── Drag-and-drop onto folder rows ─────────── */
+function dragStart(e, docId){ e.dataTransfer.setData('docId', docId); }
+document.querySelectorAll('.folder-row[data-folder-id]').forEach(function(row){
+  row.addEventListener('dragover', function(e){ e.preventDefault(); this.style.background='#dbeafe'; });
+  row.addEventListener('dragleave', function(){ this.style.background=''; });
+  row.addEventListener('drop', function(e){
+    e.preventDefault(); this.style.background='';
+    var docId = e.dataTransfer.getData('docId');
+    var folderId = this.dataset.folderId;
+    if (!docId) return;
+    fetch('/api/documents/' + docId + '/move/', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json', 'X-CSRFToken': CSRF},
+      body: JSON.stringify({folder_id: folderId})
+    }).then(function(r){ return r.json(); }).then(function(d){
+      if (d.ok){ toast('Moved to ' + (d.folder_name || 'folder')); setTimeout(function(){ location.reload(); }, 500); }
+      else toast(d.error, true);
+    });
+  });
+});
+
+/* ── Sidebar agent status pill ───────────────── */
+(function pollSidebarAgent(){
+  fetch('/agent/status/',{credentials:'same-origin'})
+    .then(function(r){return r.json();})
+    .then(function(d){
+      var dot=document.getElementById('sb-agent-dot');
+      var lbl=document.getElementById('sb-agent-label');
+      var sub=document.getElementById('sb-agent-sub');
+      if(!dot)return;
+      function ta(iso){var s=Math.floor((Date.now()-new Date(iso))/1000);return s<60?s+'s ago':Math.floor(s/60)+'m ago';}
+      if(d.online){dot.style.background='#22c55e';lbl.textContent='Agent running';sub.textContent='Live · click to configure';}
+      else if(d.last_seen){dot.style.background='#f59e0b';lbl.textContent='Agent offline';sub.textContent='Last seen '+ta(d.last_seen);}
+      else{dot.style.background='#d1d5db';lbl.textContent='Agent not linked';sub.textContent='Click to set up';}
+    }).catch(function(){});
+  setTimeout(pollSidebarAgent,30000);
+})();
+
+/* ── Auto-expand active folder ──────────────── */
+{% if folder_id and folder_id != 'unfiled' and current_folder %}
+(function(){
+  var ids = [{{ current_folder.id }}
+    {% for aid in current_folder.all_ancestor_ids %}, {{ aid }}{% endfor %}
+  ];
+  ids.forEach(function(id){
+    var el = document.getElementById('children-' + id);
+    var btn = document.getElementById('toggle-' + id);
+    if (el) el.classList.add('open');
+    if (btn) btn.style.transform = 'rotate(90deg)';
+  });
+})();
+{% endif %}
+</script>
+{% endblock %}

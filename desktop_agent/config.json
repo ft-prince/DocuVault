@@ -1,0 +1,38 @@
+{
+  "server_url": "http://localhost:8000",
+  "username": "prince",
+  "password": "prince123",
+  "watch_folders": [
+    {
+      "path": "D:\\AI_Model_Renata\\Document-management\\Group\\Prince-docs",
+      "recursive": true,
+      "category": "General",
+      "extensions": [
+        ".docx",
+        ".pdf",
+        ".xlsx",
+        ".pptx",
+        ".txt",
+        ".csv"
+      ],
+      "folder_id": 3,
+      "folder_name": "demo"
+    }
+  ],
+  "sync": {
+    "debounce_seconds": 3,
+    "heartbeat_interval_seconds": 60,
+    "retry_on_failure": true,
+    "max_retries": 5
+  },
+  "startup": {
+    "run_on_login": true,
+    "minimize_to_tray": true,
+    "show_notifications": true
+  },
+  "log": {
+    "level": "INFO",
+    "file": "desktop_agent.log",
+    "max_size_mb": 10
+  }
+}

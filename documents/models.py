@@ -79,6 +79,49 @@ class Category(models.Model):
         return self.name
 
 
+class Folder(models.Model):
+    """User-owned folders for workspace document organisation"""
+    COLORS = [
+        ('#6c757d', 'Grey'), ('#0d6efd', 'Blue'), ('#198754', 'Green'),
+        ('#dc3545', 'Red'),  ('#fd7e14', 'Orange'), ('#6610f2', 'Purple'),
+        ('#0dcaf0', 'Cyan'), ('#ffc107', 'Yellow'),
+    ]
+
+    name    = models.CharField(max_length=200)
+    owner   = models.ForeignKey(User, on_delete=models.CASCADE, related_name='folders')
+    parent  = models.ForeignKey('self', on_delete=models.CASCADE, null=True, blank=True,
+                                related_name='subfolders')
+    color   = models.CharField(max_length=7, default='#6c757d')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['name']
+        unique_together = [['owner', 'parent', 'name']]
+
+    def __str__(self):
+        return self.name
+
+    def get_path(self):
+        """Full breadcrumb path: Root / Sub / This"""
+        parts, node = [self.name], self.parent
+        while node:
+            parts.insert(0, node.name)
+            node = node.parent
+        return ' / '.join(parts)
+
+    def doc_count(self):
+        return self.folder_documents.filter(is_deleted=False).count()
+
+    def all_ancestor_ids(self):
+        """Return list of all ancestor folder IDs (for tree expand)"""
+        ids, node = [], self.parent
+        while node:
+            ids.append(node.id)
+            node = node.parent
+        return ids
+
+
 class Tag(models.Model):
     """Tags for flexible document organization"""
     name = models.CharField(max_length=50, unique=True)
@@ -129,6 +172,8 @@ class Document(models.Model):
     )
     
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True, blank=True, related_name='documents')
+    folder   = models.ForeignKey('Folder', on_delete=models.SET_NULL, null=True, blank=True,
+                                 related_name='folder_documents')
     tags = models.ManyToManyField(Tag, blank=True, related_name='documents')
     
     shared_with = models.ManyToManyField(User, blank=True, related_name='shared_documents')
@@ -467,3 +512,39 @@ class DocumentEmbedding(models.Model):
         self.error_message = error_message
         self.retry_count += 1
         self.save()
+
+
+class AgentToken(models.Model):
+    """API token for Desktop Agent authentication — no session cookies needed"""
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='agent_token')
+    token = models.CharField(max_length=64, unique=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    last_used = models.DateTimeField(null=True, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"AgentToken for {self.user.username}"
+
+    @classmethod
+    def get_or_create_for_user(cls, user):
+        import secrets
+        obj, created = cls.objects.get_or_create(
+            user=user,
+            defaults={'token': secrets.token_hex(32)}
+        )
+        return obj.token
+
+    @classmethod
+    def authenticate(cls, token_value):
+        """Return (user, token_obj) if valid, else (None, None)"""
+        try:
+            obj = cls.objects.select_related('user').get(token=token_value, is_active=True)
+            obj.last_used = timezone.now()
+            obj.save(update_fields=['last_used'])
+            return obj.user, obj
+        except cls.DoesNotExist:
+            return None, None
