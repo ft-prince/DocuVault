@@ -40,7 +40,31 @@
       "Bash(python -c \"import torch\")",
       "Bash(python manage.py check --deploy)",
       "Bash(ls \"D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\\\\documents\\\\migrations\"\" | grep -v __pycache__ | grep -v \".pyc \")",
-      "Bash(ls \"D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\\\\desktop_agent\\\\dist\"\" 2>/dev/null && echo \"dist exists\" || echo \"no dist folder \")"
+      "Bash(ls \"D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\\\\desktop_agent\\\\dist\"\" 2>/dev/null && echo \"dist exists\" || echo \"no dist folder \")",
+      "Bash(ls */settings*.py)",
+      "Bash(env/Scripts/python -c \":*)",
+      "Bash(python -c \"import reportlab; print\\(reportlab.Version\\)\")",
+      "Bash(python generate_pdfs.py)",
+      "Bash(dir \"D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\\\\media\\\\uploads\\\\finance*.pdf\")",
+      "Bash(dir \"D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\\\\media\"\" 2>nul && echo \"---\" && dir \"D:AI_Model_RenataDocument-managementGroupV2DocuVaultmediauploads\"\")",
+      "Bash(dir \"D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\\\\media\"\")",
+      "Bash(env/Scripts/python make_docs.py)",
+      "Bash(env/Scripts/pip install:*)",
+      "Bash(env/Scripts/python -c \"import os; print\\(''finance_guide_2024.pdf:'', round\\(os.path.getsize\\(''finance_guide_2024.pdf''\\)/1024,1\\), ''KB''\\); print\\(''finance_questions.pdf:'', round\\(os.path.getsize\\(''finance_questions.pdf''\\)/1024,1\\), ''KB''\\)\")",
+      "Bash(env/Scripts/python make_tech_doc.py)",
+      "Bash(env/Scripts/python -c \"import os; s=os.path.getsize\\(''docuvault_chatbot_voice_tech_doc.pdf''\\); print\\(f''Size: {round\\(s/1024,1\\)} KB''\\)\")",
+      "Bash(pandoc DocuVault_Client_Reference_Guide_v3.docx -o /tmp/docuvault_guide.md)",
+      "Bash(python scripts/office/unpack.py DocuVault_Client_Reference_Guide_v3.docx /tmp/docuvault_unpacked/)",
+      "Bash(python \"C:/Users/saiya/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/35ab4750-823a-49f0-ac4f-89d75c9bfb77/68c5bcb9-2abb-490e-b419-20e956d210cb/skills/docx/scripts/office/unpack.py\" DocuVault_Client_Reference_Guide_v3.docx /tmp/docuvault_unpacked/)",
+      "Bash(find D:/AI_Model_Renata/Document-management/Group/V2/DocuVault -type f \\\\\\(-name *.js -o -name *.html \\\\\\))",
+      "Bash(find D:/AI_Model_Renata/Document-management/Group/V2/DocuVault -path */static/* -name *.js)",
+      "Bash(grep -r \"web.*speech\\\\|whisper\\\\|speech.*synthesis\" D:/AI_Model_Renata/Document-management/Group/V2/DocuVault/documents/ --include=*.py --include=*.js --include=*.html)",
+      "Bash(find D:/AI_Model_Renata/Document-management/Group/V2/DocuVault -name requirements*.txt -o -name setup.py -o -name pyproject.toml)",
+      "Bash(grep -i \"whisper\\\\|openai-whisper\\\\|faster.*whisper\" \"D:/AI_Model_Renata/Document-management/Group/V2/DocuVault/\"*.txt)",
+      "Bash(npm list:*)",
+      "Bash(npm install:*)",
+      "Bash(node generate_guide_v4.js)",
+      "Bash(python \"C:/Users/saiya/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/35ab4750-823a-49f0-ac4f-89d75c9bfb77/68c5bcb9-2abb-490e-b419-20e956d210cb/skills/docx/scripts/office/validate.py\" DocuVault_Client_Reference_Guide_v3.docx)"
     ]
   }
 }

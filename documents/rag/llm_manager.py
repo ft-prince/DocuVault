@@ -98,6 +98,20 @@ class LLMManager:
         #memory_footprint = self.model.get_memory_footprint() / 1e9
         #print(f"✅ Model loaded & wrapped! Memory footprint: {memory_footprint:.2f} GB")
     
+    def _to_langchain_messages(self, messages: List[Dict[str, str]]) -> List[BaseMessage]:
+        """Convert role/content dicts to LangChain message objects."""
+        lc = []
+        for msg in messages:
+            role = msg.get("role")
+            content = msg.get("content", "")
+            if role == "user":
+                lc.append(HumanMessage(content=content))
+            elif role == "assistant":
+                lc.append(AIMessage(content=content))
+            elif role == "system":
+                lc.append(SystemMessage(content=content))
+        return lc
+
     def generate(self, messages: List[Dict[str, str]], max_new_tokens: int = None,
                  temperature: float = None, do_sample: bool = True) -> str:
         """
@@ -106,34 +120,38 @@ class LLMManager:
         """
         if self.llm is None:
             self.load_model()
-            
-        # Convert Dicts to LangChain Message Objects
-        # This bridges your legacy code with the modern LangChain object
-        langchain_messages = []
-        for msg in messages:
-            role = msg.get("role")
-            content = msg.get("content")
-            if role == "user":
-                langchain_messages.append(HumanMessage(content=content))
-            elif role == "assistant":
-                langchain_messages.append(AIMessage(content=content))
-            elif role == "system":
-                langchain_messages.append(SystemMessage(content=content))
 
-        # Runtime configuration overrides
-        # We can pass these to the invoke method to override pipeline defaults
+        langchain_messages = self._to_langchain_messages(messages)
+
         invocation_params = {}
         if max_new_tokens:
             invocation_params["max_tokens"] = max_new_tokens
         if temperature:
             invocation_params["temperature"] = temperature
-        # if not do_sample:
-        #     invocation_params["do_sample"] = False
 
-        # Invoke the modern Chat Model
         response = self.llm.invoke(langchain_messages, **invocation_params)
-        
         return response.content.strip()
+
+    def generate_stream(self, messages: List[Dict[str, str]], max_new_tokens: int = None,
+                        temperature: float = None):
+        """
+        Stream tokens from the LLM one chunk at a time.
+        Yields string fragments as they arrive from the API.
+        """
+        if self.llm is None:
+            self.load_model()
+
+        langchain_messages = self._to_langchain_messages(messages)
+
+        invocation_params = {}
+        if max_new_tokens:
+            invocation_params["max_tokens"] = max_new_tokens
+        if temperature is not None:
+            invocation_params["temperature"] = temperature
+
+        for chunk in self.llm.stream(langchain_messages, **invocation_params):
+            if chunk.content:
+                yield chunk.content
 
     def rewrite_question(self, question: str, chat_history: List) -> str:
         """

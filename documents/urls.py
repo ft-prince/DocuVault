@@ -114,6 +114,8 @@ urlpatterns = [
     # ============================================================
     path('chatbot/', rag_views.chatbot_view, name='chatbot'),
     path('chatbot/query/', rag_views.chatbot_query_api, name='chatbot_query'),
+    path('chatbot/query/stream/', rag_views.chatbot_query_stream_view, name='chatbot_query_stream'),
+    path('chatbot/voice/transcribe/', rag_views.voice_transcribe_view, name='voice_transcribe'),
     path('chatbot/history/', rag_views.chat_history_view, name='chat_history'),
     path('chatbot/session/<int:pk>/', rag_views.chat_session_detail_view, name='chat_session_detail'),
     path('chatbot/clear/', rag_views.clear_chat_view, name='clear_chat'),

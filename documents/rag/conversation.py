@@ -392,6 +392,93 @@ class RAGChatbot:
             self.conversation_memory[thread_id] = \
                 self.conversation_memory[thread_id][-self.config.MAX_HISTORY_TURNS * 2:]
     
+    def query_stream(self, question: str, thread_id: str = "default",
+                    n_results: int = None, use_rewrite: bool = True,
+                    use_hybrid: bool = None):
+        """
+        Stream the response token by token using SSE-style generator.
+
+        Yields dicts:
+          {"type": "sources", "data": [source, ...]}   — emitted once, before any tokens
+          {"type": "token",   "data": "word "}          — one per LLM chunk
+          {"type": "done",    "data": full_answer_str}  — emitted last
+          {"type": "error",   "data": error_message}    — on exception
+        """
+        if not self.is_initialized:
+            yield {"type": "error", "data": "RAG system not initialized"}
+            return
+
+        try:
+            chat_history = self.conversation_memory.get(thread_id, [])
+            original_question = question
+
+            # Rewrite follow-up questions
+            if use_rewrite and chat_history:
+                question = self.retriever.rewrite_query(question, chat_history)
+
+            # Retrieve relevant chunks
+            n_results = n_results or self.config.N_RESULTS
+            use_hybrid = use_hybrid if use_hybrid is not None else self.config.USE_HYBRID_SEARCH
+
+            documents, metadatas, similarities = self.retriever.retrieve(
+                query=question, n_results=n_results, use_hybrid=use_hybrid
+            )
+
+            # Filter by similarity threshold
+            filtered_docs, filtered_metas, filtered_sims = [], [], []
+            for doc, meta, sim in zip(documents, metadatas, similarities):
+                if sim >= self.config.SIMILARITY_THRESHOLD:
+                    filtered_docs.append(doc)
+                    filtered_metas.append(meta)
+                    filtered_sims.append(sim)
+
+            has_context = len(filtered_docs) > 0
+            sources = (
+                self.retriever.prepare_sources_enhanced(filtered_docs, filtered_metas, filtered_sims)
+                if has_context else []
+            )
+
+            # Emit sources immediately so the client can display them right away
+            yield {"type": "sources", "data": sources}
+
+            # Build LLM messages
+            system_prompt = self.config.get_active_system_prompt()
+            messages = [{"role": "system", "content": system_prompt}]
+            messages.extend(chat_history[-self.config.MAX_HISTORY_TURNS:])
+
+            if has_context:
+                context = self.retriever.format_context_enhanced(filtered_docs, filtered_metas)
+                user_msg = self.config.WITH_CONTEXT_TEMPLATE.format(
+                    context=context, question=original_question
+                )
+            elif self.config.STRICT_DOCUMENT_MODE:
+                answer = self.config.STRICT_NO_CONTEXT_RESPONSE
+                yield {"type": "token", "data": answer}
+                yield {"type": "done", "data": answer}
+                self._update_conversation_memory(thread_id, original_question, answer)
+                return
+            else:
+                user_msg = self.config.NO_CONTEXT_TEMPLATE.format(question=original_question)
+
+            messages.append({"role": "user", "content": user_msg})
+
+            # Stream tokens
+            full_answer = ""
+            for token in self.llm_manager.generate_stream(
+                messages,
+                max_new_tokens=self.config.MAX_NEW_TOKENS,
+                temperature=self.config.TEMPERATURE,
+            ):
+                full_answer += token
+                yield {"type": "token", "data": token}
+
+            # Persist to memory and signal completion
+            self._update_conversation_memory(thread_id, original_question, full_answer)
+            yield {"type": "done", "data": full_answer}
+
+        except Exception as exc:
+            yield {"type": "error", "data": str(exc)}
+
     def query_strict(self, question: str, thread_id: str = "default", **kwargs) -> Tuple[str, List[Dict]]:
         """
         Query in strict document-only mode (convenience method)

@@ -3,13 +3,16 @@ Enhanced RAG Views for Document Management System
 RAG-specific views only - works with existing models
 """
 
+import json
 import os
 import time
-from typing import Optional
+import tempfile
+from typing import Optional, List, Dict
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
-from django.http import JsonResponse
+from django.http import JsonResponse, StreamingHttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
 from django.contrib import messages
 from django.conf import settings
@@ -20,6 +23,40 @@ from .models import (
     Document, ChatSession, ChatMessage, DocumentEmbedding,
     ActivityLog
 )
+
+
+def _enrich_sources(sources: List[Dict]) -> List[Dict]:
+    """
+    Replace raw file paths in sources with human-readable document titles.
+    Falls back to the filename if no matching Document record is found.
+    """
+    if not sources:
+        return sources
+
+    # Build a path→title lookup once for all sources
+    path_to_title: Dict[str, str] = {}
+    for doc in Document.objects.filter(is_deleted=False).exclude(file=''):
+        try:
+            path_to_title[doc.file.path] = doc.title
+        except Exception:
+            pass
+
+    enriched = []
+    for src in sources:
+        raw_path = src.get('source', '')
+        # Try exact path match, then basename match
+        title = (
+            path_to_title.get(raw_path)
+            or next(
+                (t for p, t in path_to_title.items()
+                 if os.path.basename(p) == os.path.basename(raw_path)),
+                None,
+            )
+            or os.path.splitext(os.path.basename(raw_path))[0]
+            or raw_path
+        )
+        enriched.append({**src, 'document_title': title})
+    return enriched
 from .forms import ChatQueryForm, DocumentIndexForm
 
 # Import enhanced RAG components
@@ -167,11 +204,14 @@ def chatbot_query_api(request):
         
         retrieval_time = time.time() - start_time
         
-        # Filter sources
+        # Filter sources to only those the user can access
         filtered_sources = [
             source for source in sources
-            if any(doc in source.get('source', '') for doc in accessible_docs)
+            if not accessible_docs or any(doc in source.get('source', '') for doc in accessible_docs)
         ]
+
+        # Enrich sources with human-readable document titles
+        filtered_sources = _enrich_sources(filtered_sources)
         
         # Enhanced logging
         print(f"\n{'='*70}")
@@ -207,6 +247,7 @@ def chatbot_query_api(request):
             'success': True,
             'answer': answer,
             'sources': filtered_sources,
+            'from_documents': len(filtered_sources) > 0,
             'session_id': chat_session.id,
             'message_id': ai_message.id,
             'retrieval_time': round(retrieval_time, 2)
@@ -486,3 +527,156 @@ def api_toggle_rag_feature(request):
         })
     except Exception as e:
         return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+# ============================================================================
+# STREAMING CHAT ENDPOINT
+# ============================================================================
+
+@login_required
+@require_http_methods(["POST"])
+def chatbot_query_stream_view(request):
+    """
+    Server-Sent Events endpoint — streams LLM tokens to the browser as they arrive.
+    The client uses fetch() + ReadableStream to consume the SSE data.
+    """
+    question = request.POST.get('query', '').strip()
+    session_id = request.POST.get('session_id', '')
+
+    if not question:
+        return JsonResponse({'error': 'Empty query'}, status=400)
+
+    # Resolve / create session
+    if session_id:
+        try:
+            chat_session = ChatSession.objects.get(id=session_id, user=request.user)
+        except ChatSession.DoesNotExist:
+            chat_session = ChatSession.objects.create(user=request.user, title=question[:50])
+    else:
+        chat_session = ChatSession.objects.create(user=request.user, title=question[:50])
+
+    # Save the human message before streaming starts
+    ChatMessage.objects.create(
+        session=chat_session,
+        message_type='human',
+        content=question,
+    )
+
+    # Precompute accessible doc titles for source filtering
+    accessible_docs = list(
+        Document.objects.filter(
+            Q(access_level='public') | Q(owner=request.user) | Q(shared_with=request.user),
+            is_deleted=False,
+        ).values_list('title', flat=True)
+    )
+
+    def sse_generator():
+        # Send session id first so JS can use it immediately
+        yield f"data: {json.dumps({'type': 'session', 'session_id': chat_session.id})}\n\n"
+
+        try:
+            chatbot = get_rag_chatbot()
+            full_answer = ""
+            sources = []
+            start_time = time.time()
+
+            for event in chatbot.query_stream(
+                question=question,
+                thread_id=str(chat_session.id),
+            ):
+                etype = event['type']
+
+                if etype == 'sources':
+                    raw = event['data']
+                    # Filter to accessible docs then enrich
+                    if accessible_docs:
+                        raw = [s for s in raw if any(d in s.get('source', '') for d in accessible_docs)]
+                    sources = _enrich_sources(raw)
+                    yield f"data: {json.dumps({'type': 'sources', 'data': sources})}\n\n"
+
+                elif etype == 'token':
+                    full_answer += event['data']
+                    yield f"data: {json.dumps({'type': 'token', 'data': event['data']})}\n\n"
+
+                elif etype == 'done':
+                    elapsed = round(time.time() - start_time, 2)
+                    ai_msg = ChatMessage.objects.create(
+                        session=chat_session,
+                        message_type='ai',
+                        content=full_answer,
+                        sources=sources,
+                        retrieval_time=elapsed,
+                        generation_time=elapsed,
+                    )
+                    yield f"data: {json.dumps({'type': 'done', 'message_id': ai_msg.id, 'from_documents': len(sources) > 0})}\n\n"
+
+                elif etype == 'error':
+                    yield f"data: {json.dumps({'type': 'error', 'data': event['data']})}\n\n"
+
+        except Exception as exc:
+            yield f"data: {json.dumps({'type': 'error', 'data': str(exc)})}\n\n"
+
+    response = StreamingHttpResponse(sse_generator(), content_type='text/event-stream')
+    response['Cache-Control'] = 'no-cache'
+    response['X-Accel-Buffering'] = 'no'  # Disable nginx buffering
+    return response
+
+
+# ============================================================================
+# VOICE TRANSCRIPTION ENDPOINT  (server-side Whisper fallback)
+# ============================================================================
+
+@login_required
+@require_http_methods(["POST"])
+def voice_transcribe_view(request):
+    """
+    Transcribe an audio blob (webm / wav) using Whisper.
+    Used as a fallback when the browser's Web Speech API is unavailable.
+    Primary STT is handled client-side via the Web Speech API.
+    """
+    audio_file = request.FILES.get('audio')
+    if not audio_file:
+        return JsonResponse({'error': 'No audio file provided'}, status=400)
+
+    suffix = '.webm' if 'webm' in (audio_file.content_type or '') else '.wav'
+
+    try:
+        with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as tmp:
+            for chunk in audio_file.chunks():
+                tmp.write(chunk)
+            tmp_path = tmp.name
+
+        text = _transcribe_audio(tmp_path)
+        return JsonResponse({'success': True, 'text': text})
+
+    except Exception as exc:
+        return JsonResponse({'success': False, 'error': str(exc)}, status=500)
+
+    finally:
+        try:
+            os.unlink(tmp_path)
+        except Exception:
+            pass
+
+
+def _transcribe_audio(path: str) -> str:
+    """Transcribe audio file using faster-whisper (preferred) or openai-whisper."""
+    try:
+        from faster_whisper import WhisperModel
+        model = WhisperModel("tiny", device="cpu", compute_type="int8")
+        segments, _ = model.transcribe(path, language="en")
+        return " ".join(seg.text for seg in segments).strip()
+    except ImportError:
+        pass
+
+    try:
+        import whisper
+        model = whisper.load_model("tiny")
+        result = model.transcribe(path)
+        return result["text"].strip()
+    except ImportError:
+        pass
+
+    raise RuntimeError(
+        "No Whisper backend found. Install faster-whisper: pip install faster-whisper"
+    )
