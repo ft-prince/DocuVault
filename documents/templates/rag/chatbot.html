@@ -246,6 +246,38 @@
 .vm-close{font-size:.78rem;color:rgba(255,255,255,.35);background:none;border:none;cursor:pointer;padding:.3rem .5rem;transition:color .15s;}
 .vm-close:hover{color:rgba(255,255,255,.7);}
 .vm-hint{font-size:.72rem;color:rgba(255,255,255,.2);text-align:center;}
+
+/* ── Language Selector (modal) ── */
+.vlang-wrap{width:100%;display:flex;flex-direction:column;align-items:center;gap:.45rem;}
+.vlang-lbl{font-size:.68rem;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:rgba(255,255,255,.28);}
+.vlang-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.35rem;width:100%;}
+.vlpill{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:20px;padding:.28rem .7rem;font-size:.78rem;color:rgba(255,255,255,.55);cursor:pointer;transition:all .18s;white-space:nowrap;}
+.vlpill:hover{background:rgba(139,92,246,.25);border-color:rgba(139,92,246,.5);color:rgba(255,255,255,.85);}
+.vlpill.active{background:rgba(139,92,246,.4);border-color:#a78bfa;color:#fff;font-weight:600;box-shadow:0 0 10px rgba(139,92,246,.35);}
+
+/* ── Language Select (voice bar) ── */
+.vbar-lang{background:transparent;border:1.5px solid currentColor;border-radius:8px;padding:.15rem .45rem;font-size:.73rem;font-weight:600;color:inherit;cursor:pointer;outline:none;max-width:92px;flex-shrink:0;}
+.vbar-lang option{background:#1e293b;color:#e2e8f0;}
+
+/* ── Mic permission modal ── */
+.mic-pm-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(6px);display:none;align-items:center;justify-content:center;z-index:20000;}
+.mic-pm-ov.show{display:flex;animation:mpFade .2s ease-out;}
+@keyframes mpFade{from{opacity:0}to{opacity:1}}
+.mic-pm-box{background:#1e293b;border:1px solid #334155;border-radius:20px;padding:2rem 2.25rem;max-width:370px;width:90%;text-align:center;box-shadow:0 24px 80px rgba(0,0,0,.6);animation:mpUp .25s cubic-bezier(.34,1.56,.64,1);}
+@keyframes mpUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+.mic-pm-ico{font-size:3rem;display:block;margin-bottom:.6rem;}
+.mic-pm-title{font-size:1.1rem;font-weight:700;color:#f1f5f9;margin-bottom:.35rem;}
+.mic-pm-sub{font-size:.84rem;color:#94a3b8;line-height:1.6;margin-bottom:1.1rem;}
+.mic-pm-steps{background:#0f172a;border:1px solid #1e293b;border-radius:12px;padding:.8rem 1rem;text-align:left;margin-bottom:1.1rem;}
+.mic-pm-steps ol{list-style:none;padding:0;margin:0;counter-reset:mps;}
+.mic-pm-steps li{font-size:.79rem;color:#94a3b8;line-height:1.7;display:flex;gap:.5rem;align-items:flex-start;}
+.mic-pm-steps li::before{content:counter(mps);counter-increment:mps;min-width:18px;height:18px;border-radius:50%;background:#7c3aed;color:#fff;font-size:.65rem;font-weight:700;display:flex;align-items:center;justify-content:center;margin-top:2px;flex-shrink:0;}
+.mic-pm-btns{display:flex;gap:.75rem;justify-content:center;}
+.mic-pm-try{background:linear-gradient(135deg,#7c3aed,#6d28d9);color:#fff;border:none;border-radius:10px;padding:.55rem 1.4rem;font-size:.88rem;font-weight:600;cursor:pointer;transition:opacity .15s;}
+.mic-pm-try:hover{opacity:.85;}
+.mic-pm-cancel{background:none;border:1.5px solid #334155;color:#94a3b8;border-radius:10px;padding:.55rem 1.1rem;font-size:.88rem;cursor:pointer;transition:border-color .15s;}
+.mic-pm-cancel:hover{border-color:#7c3aed;color:#c4b5fd;}
+.mic-pm-st{font-size:.76rem;color:#64748b;margin-top:.7rem;min-height:1.1em;}
 </style>
 {% endblock %}
 
@@ -355,6 +387,7 @@
         <span class="vb-dot"></span>
         <div class="vb-waves"><div class="vbw"></div><div class="vbw"></div><div class="vbw"></div><div class="vbw"></div><div class="vbw"></div></div>
         <span class="vb-txt" id="vBarTxt">Listening…</span>
+        <select class="vbar-lang" id="vbarLang" onchange="changeLang(this.value)" title="Voice language"></select>
         <button class="vb-send" id="vbSend" onclick="vbManualSend()">↑ Send now</button>
         <button class="vb-stop" onclick="stopVoice()">■ Stop</button>
       </div>
@@ -371,6 +404,27 @@
         </div>
       </div>
     </div>
+  </div>
+</div>
+
+<!-- ════ MIC PERMISSION MODAL ════ -->
+<div class="mic-pm-ov" id="micPermModal">
+  <div class="mic-pm-box">
+    <span class="mic-pm-ico" id="micPmIco">🎤</span>
+    <div class="mic-pm-title" id="micPmTitle">Microphone Access Needed</div>
+    <div class="mic-pm-sub" id="micPmSub">DocuVault needs microphone permission to use voice input. Please allow access to continue.</div>
+    <div class="mic-pm-steps" id="micPmSteps">
+      <ol>
+        <li>Click the <strong>🔒 lock icon</strong> in your browser's address bar</li>
+        <li>Find <strong>Microphone</strong> and set it to <strong>Allow</strong></li>
+        <li>Reload the page and try the mic button again</li>
+      </ol>
+    </div>
+    <div class="mic-pm-btns">
+      <button class="mic-pm-try" onclick="retryMicPermission()">🎤 Try Again</button>
+      <button class="mic-pm-cancel" onclick="closeMicPermModal()">Cancel</button>
+    </div>
+    <div class="mic-pm-st" id="micPmSt"></div>
   </div>
 </div>
 
@@ -395,6 +449,10 @@
         <svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
       </button>
       <button class="vm-send-now" onclick="vmManualSend()">↑ Send now</button>
+    </div>
+    <div class="vlang-wrap">
+      <div class="vlang-lbl">Language</div>
+      <div class="vlang-row" id="vmLangRow"></div>
     </div>
     <div class="vm-hint">Speak naturally · auto-sends after 2 s of silence</div>
     <button class="vm-close" onclick="closeVoiceModal()">✕ Close</button>
@@ -510,6 +568,7 @@ async function sendQuery(override){
   try{
     const fd=new FormData();
     fd.append('query',q);fd.append('session_id',sid);fd.append('csrfmiddlewaretoken','{{ csrf_token }}');
+    fd.append('reply_lang',replyLang); /* always send: en-IN enforces English, hi-IN triggers translate */
     const resp=await fetch('{% url "chatbot_query_stream" %}',{method:'POST',body:fd,signal:streamAbort.signal});
     if(!resp.ok)throw new Error('HTTP '+resp.status);
     $typRow.classList.remove('show');
@@ -623,6 +682,127 @@ document.addEventListener('keydown', e=>{ if(e.key==='Escape'&&vmIsOpen()) close
 document.getElementById('vmod').addEventListener('click', e=>{ if(e.target===document.getElementById('vmod')) closeVoiceModal(); });
 
 /* ════════════════════════════════════
+   MULTILINGUAL CONFIG
+   Indian languages with STT codes + preferred TTS voices
+════════════════════════════════════ */
+const LANGS=[
+  {code:'en-IN', short:'EN',  label:'English (IN)', voices:['Microsoft Hemant','Microsoft Kalpana','Google हिन्दी']},
+  {code:'hi-IN', short:'हि',   label:'हिंदी',         voices:['Microsoft Hemant','Microsoft Kalpana','Google हिन्दी']},
+  {code:'ta-IN', short:'த',   label:'தமிழ்',        voices:['Microsoft Valluvar','Google தமிழ்']},
+  {code:'te-IN', short:'తె',   label:'తెలుగు',    voices:['Microsoft Chandra','Google తెలుగు']},
+  {code:'bn-IN', short:'বা',   label:'বাংলা',      voices:['Microsoft Asha','Google বাংলা']},
+  {code:'mr-IN', short:'म',   label:'मराठी',      voices:['Google मराठी']},
+  {code:'gu-IN', short:'gu',  label:'ગુજરાતી',    voices:['Google ગુજરાતી']},
+  {code:'kn-IN', short:'ಕ',   label:'ಕನ್ನಡ',      voices:['Google ಕನ್ನಡ']},
+  {code:'ml-IN', short:'മ',   label:'മലയാളം',    voices:['Google മലയാളം']},
+  {code:'pa-IN', short:'ਪ',   label:'ਪੰਜਾਬੀ',      voices:['Google ਪੰਜਾਬੀ']},
+  {code:'ur-IN', short:'اُ',   label:'اردو',       voices:['Microsoft Rizwan']},
+];
+
+/* Translate-mode entries: speak English, bot replies in target language */
+const TRANSLATE_LANGS=[
+  {code:'tr:hi-IN', short:'→हि', label:'English → हिंदी',   reply:'hi-IN', voices:['Microsoft Hemant','Microsoft Kalpana']},
+  {code:'tr:ta-IN', short:'→த', label:'English → தமிழ்',  reply:'ta-IN', voices:['Microsoft Valluvar']},
+  {code:'tr:te-IN', short:'→తె', label:'English → తెలుగు', reply:'te-IN', voices:['Microsoft Chitra']},
+  {code:'tr:bn-IN', short:'→বা', label:'English → বাংলা',   reply:'bn-IN', voices:['Microsoft Riya']},
+  {code:'tr:mr-IN', short:'→म', label:'English → मराठी',   reply:'mr-IN', voices:['Microsoft Aarohi']},
+  {code:'tr:gu-IN', short:'→ગ', label:'English → ગુજરાતી', reply:'gu-IN', voices:['Microsoft Dhwani']},
+  {code:'tr:kn-IN', short:'→ಕ', label:'English → ಕನ್ನಡ',   reply:'kn-IN', voices:['Microsoft Sapna']},
+  {code:'tr:ml-IN', short:'→മ', label:'English → മലയാളം',  reply:'ml-IN', voices:['Microsoft Sobhana']},
+];
+
+let curLang=LANGS[0];        /* language object used for TTS voice selection */
+let replyLang='en-IN';       /* BCP-47 code to send to backend as reply_lang  */
+let translateMode=false;     /* speak English → reply in another language      */
+
+function changeLang(code){
+  /* Language switching: reset session so LLM history doesn't bleed into new language */
+  const prevCode = translateMode ? ('tr:'+replyLang) : replyLang;
+  if(code !== prevCode) sid = '';   /* empty sid → backend creates a fresh session */
+
+  /* ── Translate mode: code starts with 'tr:' ── */
+  if(code.startsWith('tr:')){
+    const tL=TRANSLATE_LANGS.find(l=>l.code===code);
+    if(!tL)return;
+    translateMode=true;
+    replyLang=tL.reply;           /* backend target language, e.g. 'hi-IN'  */
+    srLang='en-IN';               /* STT always listens in English           */
+    curLang={...tL, code:tL.reply};/* TTS uses reply-lang voices             */
+    loadVoices();
+  } else {
+    /* ── Normal mode: same language in and out ── */
+    const L=LANGS.find(l=>l.code===code);
+    if(!L)return;
+    translateMode=false;
+    replyLang=code;
+    curLang=L;
+    srLang=L.code;
+    loadVoices();
+  }
+  /* Sync UI: pills + voice-bar select */
+  document.querySelectorAll('.vlpill').forEach(p=>p.classList.toggle('active',p.dataset.code===code));
+  const sel=document.getElementById('vbarLang');
+  if(sel) sel.value=code;
+  /* Restart SR with new STT language if mid-session */
+  if(isListening&&voiceActive){_killRecog();accumulated='';startSR();}
+}
+
+function buildLangUI(){
+  /* Modal pills — normal languages */
+  const row=document.getElementById('vmLangRow');
+  if(row){
+    row.innerHTML='';
+    /* Section label */
+    const lbl1=document.createElement('div');
+    lbl1.style.cssText='width:100%;font-size:.63rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;margin:2px 0 1px;';
+    lbl1.textContent='Speak & Reply';
+    row.appendChild(lbl1);
+    LANGS.forEach(L=>{
+      const p=document.createElement('button');
+      p.className='vlpill'+(L.code===curLang.code&&!translateMode?' active':'');
+      p.dataset.code=L.code; p.title=L.label;
+      p.textContent=L.short+' '+L.label;
+      p.onclick=()=>changeLang(L.code);
+      row.appendChild(p);
+    });
+    /* Translate mode section */
+    const lbl2=document.createElement('div');
+    lbl2.style.cssText='width:100%;font-size:.63rem;color:rgba(255,255,255,.3);text-transform:uppercase;letter-spacing:.08em;margin:6px 0 1px;';
+    lbl2.textContent='🔄 Translate Mode (speak English)';
+    row.appendChild(lbl2);
+    TRANSLATE_LANGS.forEach(L=>{
+      const p=document.createElement('button');
+      p.className='vlpill'+(translateMode&&replyLang===L.reply?' active':'');
+      p.dataset.code=L.code; p.title=L.label;
+      p.textContent=L.short+' '+L.label;
+      p.onclick=()=>changeLang(L.code);
+      row.appendChild(p);
+    });
+  }
+  /* Voice bar select — normal + translate options */
+  const sel=document.getElementById('vbarLang');
+  if(sel){
+    sel.innerHTML='';
+    const g1=document.createElement('optgroup'); g1.label='Speak & Reply';
+    LANGS.forEach(L=>{
+      const o=document.createElement('option');
+      o.value=L.code; o.textContent=L.short+' '+L.label;
+      if(!translateMode&&L.code===curLang.code)o.selected=true;
+      g1.appendChild(o);
+    });
+    sel.appendChild(g1);
+    const g2=document.createElement('optgroup'); g2.label='Translate Mode';
+    TRANSLATE_LANGS.forEach(L=>{
+      const o=document.createElement('option');
+      o.value=L.code; o.textContent=L.short+' '+L.label;
+      if(translateMode&&replyLang===L.reply)o.selected=true;
+      g2.appendChild(o);
+    });
+    sel.appendChild(g2);
+  }
+}
+
+/* ════════════════════════════════════
    TTS — Web Speech Synthesis
    Speaks when: ttsOn OR voiceActive
 ════════════════════════════════════ */
@@ -630,11 +810,19 @@ let ttsOn=false, ttsQ=[], ttsBusy=false, bestV=null;
 
 function loadVoices(){
   const vs=speechSynthesis.getVoices();if(!vs.length)return;
-  const want=['Microsoft Heera','Microsoft Ravi','Lekha','Veena'];
-  for(const w of want){const v=vs.find(v=>v.name.includes(w));if(v){bestV=v;return;}}
-  bestV=vs.find(v=>v.lang==='en-AU')||vs.find(v=>v.lang.startsWith('en'))||vs[0]||null;
+  /* Try preferred voices for current language first */
+  for(const w of curLang.voices){
+    const v=vs.find(v=>v.name.toLowerCase().includes(w.toLowerCase()));
+    if(v){bestV=v;return;}
+  }
+  /* Fallback: any voice matching the language code */
+  bestV=vs.find(v=>v.lang===curLang.code)
+      ||vs.find(v=>v.lang==='en-IN')
+      ||vs.find(v=>v.lang.startsWith('en'))
+      ||vs[0]||null;
 }
-if('speechSynthesis' in window){speechSynthesis.addEventListener('voiceschanged',loadVoices);loadVoices();setTimeout(loadVoices,1000);}
+if('speechSynthesis' in window){speechSynthesis.addEventListener('voiceschanged',()=>{loadVoices();buildLangUI();});loadVoices();setTimeout(()=>{loadVoices();buildLangUI();},800);}
+buildLangUI(); /* render immediately with defaults */
 
 function toggleTTS(){
   ttsOn=!ttsOn;
@@ -665,8 +853,8 @@ function pumpTTS(){
   if(vmIsOpen())setVmState('speaking');
   setVBarState('speaking');
   const utt=new SpeechSynthesisUtterance(ttsQ.shift());
-  utt.rate=1.8;utt.pitch=1.8;
-  if(bestV)utt.voice=bestV;else utt.lang='en-AU';
+  utt.rate=1.18;utt.pitch=1.05;
+  if(bestV)utt.voice=bestV;else utt.lang=curLang.code;
   /* Safety timer: recover if onend never fires (Chrome bug) */
   let safe=setTimeout(()=>{ttsBusy=false;afterSpeak();},25000);
   utt.onend=utt.onerror=()=>{clearTimeout(safe);ttsBusy=false;if(ttsQ.length)setTimeout(pumpTTS,60);else afterSpeak();};
@@ -687,7 +875,7 @@ function stopSpeak(){if('speechSynthesis' in window)speechSynthesis.cancel();tts
    No modal. Uses a compact bar above input.
 ════════════════════════════════════ */
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-let recog=null, isListening=false, silTimer=null, rstCD=false, srLang='en-AU';
+let recog=null, isListening=false, silTimer=null, rstCD=false, srLang='en-IN';
 let voiceActive=false;   /* true while in a voice session (mic was clicked) */
 let accumulated='';      /* full transcript for current listen session */
 
@@ -721,8 +909,9 @@ async function startVoice(){
   }catch(err){
     console.error('Mic denied:',err);
     voiceActive=false;$micBtn.classList.remove('live');
-    setVBarState('error');setVBarTxt('⚠ Microphone blocked — allow mic access in your browser');
-    setTimeout(()=>setVBarState(''),4000);
+    setVBarState('');
+    const reason=(err.name==='NotFoundError'||err.name==='DevicesNotFoundError')?'notfound':'blocked';
+    showMicPermModal(reason);
   }
 }
 
@@ -804,11 +993,12 @@ function startSR(){
     if(e.error==='aborted')return;
     if(e.error==='not-allowed'){
       voiceActive=false;isListening=false;$micBtn.classList.remove('live');
-      setVBarState('error');setVBarTxt('⚠ Microphone blocked — check browser settings');
-      setTimeout(()=>setVBarState(''),4000);return;
+      setVBarState('');
+      showMicPermModal('blocked');
+      return;
     }
     if(e.error==='language-not-supported'){
-      srLang='en-US';  /* silent fallback */
+      changeLang('en-IN'); /* silent fallback to English */
       if(voiceActive){_killRecog();startSR();}return;
     }
     if(e.error==='no-speech'&&voiceActive){tryRst();return;}
@@ -869,5 +1059,84 @@ $qi.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDef
 /* ── init ── */
 document.addEventListener('DOMContentLoaded',()=>{fmtExisting();scrollBot(false);$qi.focus();});
 setTimeout(()=>{fmtExisting();scrollBot(false);},200);
+
+/* ════ MIC PERMISSION MODAL ════ */
+function showMicPermModal(reason){
+  const $ov    = document.getElementById('micPermModal');
+  const $ico   = document.getElementById('micPmIco');
+  const $title = document.getElementById('micPmTitle');
+  const $sub   = document.getElementById('micPmSub');
+  const $steps = document.getElementById('micPmSteps');
+  const $st    = document.getElementById('micPmSt');
+  if(reason==='notfound'){
+    $ico.textContent   = '🔇';
+    $title.textContent = 'No Microphone Found';
+    $sub.textContent   = 'No microphone was detected on this device. Please connect a microphone and try again.';
+    $steps.style.display='none';
+  } else {
+    /* 'blocked' or anything else */
+    $ico.textContent   = '🎤';
+    $title.textContent = 'Microphone Blocked';
+    $sub.textContent   = 'Your browser has blocked microphone access for this site. Follow the steps below to allow it:';
+    $steps.style.display='block';
+  }
+  $st.textContent='';
+  $ov.classList.add('show');
+}
+
+function closeMicPermModal(){
+  document.getElementById('micPermModal').classList.remove('show');
+  document.getElementById('micPmSt').textContent='';
+}
+
+async function retryMicPermission(){
+  const $st=document.getElementById('micPmSt');
+  $st.textContent='Requesting microphone…';
+  try{
+    const stream=await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    stream.getTracks().forEach(t=>t.stop()); /* release — voice engine gets its own */
+    $st.textContent='✅ Access granted!';
+    setTimeout(()=>{
+      closeMicPermModal();
+      openVoiceModal();   /* auto-open voice so user can speak right away */
+    },600);
+  }catch(err){
+    if(err.name==='NotAllowedError'||err.name==='PermissionDeniedError'){
+      $st.textContent='⚠ Still blocked — please update your browser settings and reload.';
+    } else if(err.name==='NotFoundError'||err.name==='DevicesNotFoundError'){
+      $st.textContent='⚠ No microphone found — please connect one and try again.';
+    } else {
+      $st.textContent='⚠ Error: '+err.message;
+    }
+  }
+}
+
+/* Close mic modal on Escape key */
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape' && document.getElementById('micPermModal').classList.contains('show'))
+    closeMicPermModal();
+});
+/* Close mic modal on overlay click */
+document.getElementById('micPermModal').addEventListener('click',e=>{
+  if(e.target===document.getElementById('micPermModal')) closeMicPermModal();
+});
+
+/* Proactive permission check on page load — watch for permission state changes */
+(async function checkMicOnLoad(){
+  if(!navigator||!navigator.permissions)return;
+  try{
+    const status=await navigator.permissions.query({name:'microphone'});
+    status.onchange=()=>{
+      /* If user grants permission while modal is open, auto-close it */
+      if(status.state==='granted'){
+        const $ov=document.getElementById('micPermModal');
+        if($ov.classList.contains('show')){
+          document.getElementById('micPmSt').textContent='✅ Permission granted!';
+          setTimeout(()=>{closeMicPermModal();openVoiceModal();},700);
+        }
+      }
+    };
+  }catch(e){/* permissions API unavailable — ignore */}
+})();
 </script>
 {% endblock %}

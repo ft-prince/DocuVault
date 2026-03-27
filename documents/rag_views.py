@@ -86,12 +86,15 @@ def get_rag_chatbot() -> RAGChatbot:
         
         # Lightweight mode recommended for production
         config.set_lightweight_mode()
-        
-        # Customize settings
+
+        # Overrides — keep lightweight but retrieve more chunks so multi-page
+        # documents (stories, reports) surface all relevant sections.
         config.ENABLE_TABLE_EXTRACTION = True
         config.ENABLE_OCR = True
-        config.ENABLE_IMAGE_DESCRIPTION = False  # Disable to save resources
+        config.ENABLE_IMAGE_DESCRIPTION = False
         config.USE_HYBRID_SEARCH = True
+        config.N_RESULTS = 20          # retrieve 20 chunks so all story pages surface
+        config.SIMILARITY_THRESHOLD = -1.0  # accept all chromadb results (neg-sim ok); hybrid reranker handles quality
         
         # Set storage path
         media_root = getattr(settings, 'MEDIA_ROOT', os.path.join(settings.BASE_DIR, 'media'))
@@ -183,31 +186,33 @@ def chatbot_query_api(request):
         # Get chatbot
         chatbot = get_rag_chatbot()
         
-        # Get accessible documents for filtering
-        accessible_docs = Document.objects.filter(
-            Q(access_level='public') |
-            Q(owner=request.user) |
-            Q(shared_with=request.user)
-        ).filter(
-            is_deleted=False,
-            embedding__is_indexed=True
-        ).values_list('title', flat=True)
-        
-        # Measure time
+        # Build accessible file-path set (OS path + basename) for source filtering
+        _acc_qs = Document.objects.filter(
+            Q(access_level='public') | Q(owner=request.user) | Q(shared_with=request.user),
+            is_deleted=False, embedding__is_indexed=True,
+        ).exclude(file='')
+        accessible_paths = set()
+        for _d in _acc_qs:
+            try:
+                _p = _d.file.path
+                accessible_paths.add(_p)
+                accessible_paths.add(os.path.basename(_p))
+            except Exception:
+                pass
+
         start_time = time.time()
-        
-        # Query with enhanced system
         answer, sources = chatbot.query(
             question=question,
             thread_id=str(chat_session.id)
         )
-        
         retrieval_time = time.time() - start_time
-        
-        # Filter sources to only those the user can access
+
+        # Filter sources — match by path OR basename
         filtered_sources = [
-            source for source in sources
-            if not accessible_docs or any(doc in source.get('source', '') for doc in accessible_docs)
+            s for s in sources
+            if not accessible_paths or
+               s.get('source', '') in accessible_paths or
+               os.path.basename(s.get('source', '')) in accessible_paths
         ]
 
         # Enrich sources with human-readable document titles
@@ -298,6 +303,40 @@ def chat_session_detail_view(request, pk):
 
 @login_required
 @require_http_methods(["POST"])
+def reindex_document_api(request, pk):
+    """
+    Force re-index a single document (any supported type) via AJAX POST.
+    Resets is_indexed so the background thread picks it up fresh.
+    Returns JSON: { success, message }
+    """
+    document = get_object_or_404(Document, pk=pk)
+    if not (document.owner == request.user or request.user.is_staff or document.can_view(request.user)):
+        return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+    if not document.file:
+        return JsonResponse({'success': False, 'error': 'Document has no file attached'}, status=400)
+
+    ext = os.path.splitext(document.file.name)[1].lower()
+    from .signals import SUPPORTED_EXTENSIONS
+    if ext not in SUPPORTED_EXTENSIONS:
+        return JsonResponse({'success': False, 'error': f'File type {ext} not supported for indexing'}, status=400)
+
+    # Reset status so _index_in_background will re-run
+    embedding, _ = DocumentEmbedding.objects.get_or_create(document=document)
+    embedding.is_indexed = False
+    embedding.index_status = 'pending'
+    embedding.save(update_fields=['is_indexed', 'index_status'])
+
+    from .signals import _index_in_background
+    import threading
+    t = threading.Thread(target=_index_in_background, args=(document.id,), daemon=True)
+    t.start()
+
+    return JsonResponse({'success': True, 'message': f'Re-indexing started for "{document.title}" ({ext})'})
+
+
+@login_required
+@require_http_methods(["POST"])
 def clear_chat_view(request):
     """Clear conversation history"""
     session_id = request.POST.get('session_id')
@@ -345,27 +384,38 @@ def document_index_view(request, pk):
             raise ValueError("Document has no file attached")
         
         file_path = document.file.path
-        
-        if not file_path.lower().endswith('.pdf'):
-            raise ValueError("Only PDF documents can be indexed currently")
-        
-        # Get chatbot
+        ext = os.path.splitext(file_path)[1].lower()
+
+        from .signals import SUPPORTED_EXTENSIONS, _load_text_file, _load_docx_file
+        if ext not in SUPPORTED_EXTENSIONS:
+            raise ValueError(f"Unsupported file type: {ext}. Supported: {', '.join(SUPPORTED_EXTENSIONS)}")
+
         chatbot = get_rag_chatbot()
-        
-        # Index with enhanced processing
-        chatbot.index_documents(
-            pdf_path=file_path,
-            extract_tables=chatbot.config.ENABLE_TABLE_EXTRACTION,
-            describe_images=chatbot.config.ENABLE_IMAGE_DESCRIPTION
-        )
-        
-        # Get stats
-        stats = chatbot.document_processor.get_processing_stats()
-        
-        # Mark completed
+
+        if ext == '.pdf':
+            chatbot.index_documents(
+                pdf_path=file_path,
+                extract_tables=chatbot.config.ENABLE_TABLE_EXTRACTION,
+                describe_images=chatbot.config.ENABLE_IMAGE_DESCRIPTION,
+            )
+            stats = chatbot.document_processor.get_processing_stats()
+            chunk_count = stats.get('total_pages', 0)
+        elif ext in {'.txt', '.md', '.text'}:
+            lc_docs = _load_text_file(file_path, document)
+            if not lc_docs:
+                raise ValueError("File appears to be empty")
+            chatbot.index_documents(documents=lc_docs)
+            chunk_count = len(lc_docs)
+        elif ext in {'.docx', '.doc'}:
+            lc_docs = _load_docx_file(file_path, document)
+            if not lc_docs:
+                raise ValueError("Could not extract text from .docx file")
+            chatbot.index_documents(documents=lc_docs)
+            chunk_count = len(lc_docs)
+
         embedding.mark_completed(
-            chunk_count=stats.get('total_pages', 0),
-            embedding_model=chatbot.config.EMBEDDING_MODEL
+            chunk_count=chunk_count,
+            embedding_model=chatbot.config.EMBEDDING_MODEL,
         )
         
         # Log activity
@@ -373,9 +423,7 @@ def document_index_view(request, pk):
             user=request.user,
             action='edit',
             document=document,
-            description=f"Indexed document: {document.title} "
-                       f"({stats.get('total_pages', 0)} pages, "
-                       f"{stats.get('tables_extracted', 0)} tables)"
+            description=f"Indexed document: {document.title} ({chunk_count} chunks, {ext})"
         )
         
         messages.success(
@@ -540,8 +588,9 @@ def chatbot_query_stream_view(request):
     Server-Sent Events endpoint — streams LLM tokens to the browser as they arrive.
     The client uses fetch() + ReadableStream to consume the SSE data.
     """
-    question = request.POST.get('query', '').strip()
-    session_id = request.POST.get('session_id', '')
+    question    = request.POST.get('query', '').strip()
+    session_id  = request.POST.get('session_id', '')
+    reply_lang  = request.POST.get('reply_lang', '').strip() or None  # e.g. 'hi-IN' in translate mode
 
     if not question:
         return JsonResponse({'error': 'Empty query'}, status=400)
@@ -562,13 +611,22 @@ def chatbot_query_stream_view(request):
         content=question,
     )
 
-    # Precompute accessible doc titles for source filtering
-    accessible_docs = list(
-        Document.objects.filter(
-            Q(access_level='public') | Q(owner=request.user) | Q(shared_with=request.user),
-            is_deleted=False,
-        ).values_list('title', flat=True)
-    )
+    # Precompute accessible doc FILE PATHS for source filtering.
+    # We must match file paths (not titles) because ChromaDB stores the OS
+    # path as the 'source' field — UUID-based filenames never contain the title.
+    _accessible_qs = Document.objects.filter(
+        Q(access_level='public') | Q(owner=request.user) | Q(shared_with=request.user),
+        is_deleted=False,
+    ).exclude(file='')
+    # Build both full OS paths and bare basenames so we handle any stored format.
+    accessible_docs = set()
+    for _doc in _accessible_qs:
+        try:
+            _p = _doc.file.path
+            accessible_docs.add(_p)
+            accessible_docs.add(os.path.basename(_p))
+        except Exception:
+            pass
 
     def sse_generator():
         # Send session id first so JS can use it immediately
@@ -583,14 +641,20 @@ def chatbot_query_stream_view(request):
             for event in chatbot.query_stream(
                 question=question,
                 thread_id=str(chat_session.id),
+                reply_lang=reply_lang,
+                use_rewrite=False,  # Disabled: rewriter causes wrong chunks when history is polluted
             ):
                 etype = event['type']
 
                 if etype == 'sources':
                     raw = event['data']
-                    # Filter to accessible docs then enrich
+                    # Filter to accessible docs then enrich.
+                    # Match full path OR basename against the accessible set.
                     if accessible_docs:
-                        raw = [s for s in raw if any(d in s.get('source', '') for d in accessible_docs)]
+                        def _accessible(src_path):
+                            return (src_path in accessible_docs or
+                                    os.path.basename(src_path) in accessible_docs)
+                        raw = [s for s in raw if _accessible(s.get('source', ''))]
                     sources = _enrich_sources(raw)
                     yield f"data: {json.dumps({'type': 'sources', 'data': sources})}\n\n"
 
@@ -680,3 +744,200 @@ def _transcribe_audio(path: str) -> str:
     raise RuntimeError(
         "No Whisper backend found. Install faster-whisper: pip install faster-whisper"
     )
+
+
+# ============================================================================
+# VOICE ASSISTANT PAGE  (server-side STT + edge-tts TTS)
+# ============================================================================
+
+# Microsoft Neural voice mapping for Indian languages
+_EDGE_VOICES = {
+    'en-IN': 'en-IN-NeerjaNeural',
+    'en-US': 'en-IN-NeerjaNeural',   # always use Indian English — not US accent
+    'hi-IN': 'hi-IN-SwaraNeural',
+    'ta-IN': 'ta-IN-PallaviNeural',
+    'te-IN': 'te-IN-ShrutiNeural',
+    'bn-IN': 'bn-IN-TanishaaNeural',
+    'mr-IN': 'mr-IN-AarohiNeural',
+    'gu-IN': 'gu-IN-DhwaniNeural',
+    'kn-IN': 'kn-IN-SapnaNeural',
+    'ml-IN': 'ml-IN-SobhanaNeural',
+    'pa-IN': 'pa-IN-OjasNeural',
+    'ur-IN': 'ur-IN-UzmaNeural',
+}
+
+
+def _edge_tts_synthesize(text: str, voice: str, rate: str = '+10%') -> bytes:
+    """
+    Synchronous wrapper around edge-tts async API.
+    Returns raw MP3 bytes.
+    """
+    import asyncio
+    import edge_tts
+
+    async def _run():
+        communicate = edge_tts.Communicate(text, voice, rate=rate)
+        chunks = []
+        async for chunk in communicate.stream():
+            if chunk['type'] == 'audio':
+                chunks.append(chunk['data'])
+        return b''.join(chunks)
+
+    loop = asyncio.new_event_loop()
+    try:
+        return loop.run_until_complete(_run())
+    finally:
+        loop.close()
+
+
+@login_required
+def voice_assistant_view(request):
+    """Dedicated voice assistant page — server-side Whisper STT + edge-tts TTS."""
+    chat_session, _ = ChatSession.objects.get_or_create(
+        user=request.user,
+        title='Voice Assistant',
+    )
+    return render(request, 'rag/voice_assistant.html', {
+        'chat_session': chat_session,
+        'csrf_token': request.META.get('CSRF_COOKIE', ''),
+    })
+
+
+@login_required
+@require_http_methods(["POST"])
+def voice_assistant_transcribe_view(request):
+    """
+    STT endpoint for the voice assistant page.
+    Expects a 16-kHz mono WAV blob (converted client-side — no ffmpeg needed).
+    Falls back gracefully if faster-whisper is unavailable.
+    """
+    audio_file = request.FILES.get('audio')
+    if not audio_file:
+        return JsonResponse({'error': 'No audio provided'}, status=400)
+
+    lang_hint = request.POST.get('lang', '')
+    whisper_lang = lang_hint[:2] if lang_hint else None
+
+    tmp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(suffix='.wav', delete=False) as tmp:
+            for chunk in audio_file.chunks():
+                tmp.write(chunk)
+            tmp_path = tmp.name
+
+        text, detected_lang = _whisper_from_wav(tmp_path, whisper_lang)
+        return JsonResponse({'success': True, 'text': text, 'detected_lang': detected_lang})
+
+    except Exception as exc:
+        import traceback
+        traceback.print_exc()
+        return JsonResponse({'success': False, 'error': str(exc)}, status=500)
+    finally:
+        if tmp_path:
+            try:
+                os.unlink(tmp_path)
+            except Exception:
+                pass
+
+
+def _whisper_from_wav(wav_path: str, language: Optional[str] = None):
+    """
+    Transcribe a 16-kHz mono WAV using faster-whisper.
+    Reads via Python's built-in 'wave' module — no ffmpeg required.
+
+    Hinglish handling:
+      - Never force language when input looks Hinglish (Latin-script Hindi).
+      - Use initial_prompt to bias Whisper toward Hinglish transcription.
+    Returns (text, detected_language).
+    """
+    import wave
+    import numpy as np
+
+    with wave.open(wav_path, 'rb') as wf:
+        n_channels   = wf.getnchannels()
+        sample_width = wf.getsampwidth()
+        frame_rate   = wf.getframerate()
+        raw_frames   = wf.readframes(wf.getnframes())
+
+    if sample_width == 2:
+        pcm = np.frombuffer(raw_frames, dtype=np.int16).astype(np.float32) / 32768.0
+    elif sample_width == 4:
+        pcm = np.frombuffer(raw_frames, dtype=np.int32).astype(np.float32) / 2147483648.0
+    else:
+        pcm = np.frombuffer(raw_frames, dtype=np.uint8).astype(np.float32) / 128.0 - 1.0
+
+    if n_channels > 1:
+        pcm = pcm.reshape(-1, n_channels).mean(axis=1)
+
+    if frame_rate != 16000:
+        from scipy.signal import resample_poly
+        from math import gcd
+        g = gcd(frame_rate, 16000)
+        pcm = resample_poly(pcm, 16000 // g, frame_rate // g).astype(np.float32)
+
+    from faster_whisper import WhisperModel
+    global _whisper_model
+    if _whisper_model is None:
+        # 'small' handles Hinglish / multilingual significantly better than 'base'
+        _whisper_model = WhisperModel("small", device="cpu", compute_type="int8")
+
+    # For Indian languages (especially hi-IN) let Whisper auto-detect —
+    # forcing 'hi' on Hinglish causes hallucinations. Use initial_prompt instead.
+    indian_langs = {'hi', 'ta', 'te', 'bn', 'mr', 'gu', 'kn', 'ml', 'pa', 'ur'}
+    opts = {
+        "beam_size": 5,
+        "temperature": 0.0,
+        "vad_filter": True,        # skip silent segments (speeds up + reduces noise)
+        "vad_parameters": {"min_silence_duration_ms": 500},
+    }
+
+    if language and language not in indian_langs:
+        # Non-Indian forced language (e.g. 'en') — honour it
+        opts["language"] = language
+    elif language in indian_langs:
+        # Indian language hint: don't force, but bias with initial_prompt
+        opts["initial_prompt"] = (
+            "The following is a spoken query in Indian English, Hindi, or Hinglish "
+            "(a mix of Hindi and English spoken in India)."
+        )
+        # Do NOT set opts["language"] → let Whisper auto-detect
+    # else: no hint at all → full auto-detect
+
+    segments, info = _whisper_model.transcribe(pcm, **opts)
+    text = " ".join(seg.text for seg in segments).strip()
+    return text, info.language
+
+_whisper_model = None
+
+
+@login_required
+@require_http_methods(["POST"])
+def voice_synthesize_view(request):
+    """
+    TTS endpoint using edge-tts (Microsoft Neural voices).
+    Accepts JSON {text, lang}, returns MP3 audio bytes.
+    """
+    from django.http import HttpResponse
+    try:
+        data = json.loads(request.body)
+        text = data.get('text', '').strip()
+        lang = data.get('lang', 'en-IN')
+        rate = data.get('rate', '+10%')   # speed adjustment
+
+        if not text:
+            return JsonResponse({'error': 'No text provided'}, status=400)
+
+        # Cap at 800 chars to keep latency reasonable
+        if len(text) > 800:
+            text = text[:800] + '…'
+
+        voice = _EDGE_VOICES.get(lang, 'en-IN-NeerjaNeural')
+        audio_bytes = _edge_tts_synthesize(text, voice, rate=rate)
+
+        if not audio_bytes:
+            return JsonResponse({'error': 'TTS produced no audio'}, status=500)
+
+        return HttpResponse(audio_bytes, content_type='audio/mpeg')
+
+    except Exception as exc:
+        return JsonResponse({'error': str(exc)}, status=500)

@@ -25,7 +25,7 @@ SECRET_KEY = "django-insecure-8ruczd1(ui8+6io7@!9ms16k$k*3l(mn=&#q9rv0znww@%n$oq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -80,10 +80,12 @@ DATABASES = {
     }
 }
 
-
+CSRF_TRUSTED_ORIGINS = [
+    "https://3452-43-251-93-127.ngrok-free.app",
+]
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
-
+CORS_ALLOW_ALL_ORIGINS = True
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",

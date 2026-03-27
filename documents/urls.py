@@ -119,11 +119,17 @@ urlpatterns = [
     path('chatbot/history/', rag_views.chat_history_view, name='chat_history'),
     path('chatbot/session/<int:pk>/', rag_views.chat_session_detail_view, name='chat_session_detail'),
     path('chatbot/clear/', rag_views.clear_chat_view, name='clear_chat'),
+
+    # Voice Assistant (server-side Whisper STT + edge-tts TTS)
+    path('voice/', rag_views.voice_assistant_view, name='voice_assistant'),
+    path('voice/transcribe/', rag_views.voice_assistant_transcribe_view, name='voice_assistant_transcribe'),
+    path('voice/synthesize/', rag_views.voice_synthesize_view, name='voice_synthesize'),
     
     # ============================================================
     # DOCUMENT INDEXING URLS
     # ============================================================
     path('documents/<int:pk>/index/', rag_views.document_index_view, name='document_index'),
+    path('documents/<int:pk>/reindex/', rag_views.reindex_document_api, name='document_reindex'),
     path('documents/bulk-index/', rag_views.bulk_index_documents_view, name='bulk_index_documents'),
     
     # ============================================================

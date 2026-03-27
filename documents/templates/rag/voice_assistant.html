@@ -1,0 +1,1007 @@
+{% extends 'documents/base.html' %}
+{% load static %}
+{% block title %}Voice Assistant — DocuVault{% endblock %}
+
+{% block extra_css %}
+<style>
+:root{
+  --bg0:#05070f;--bg1:#0d0f1e;--bg2:#13162b;
+  --acc:#8b5cf6;--acc2:#6d28d9;--acc3:#c4b5fd;
+  --ok:#10b981;--err:#ef4444;--warn:#f59e0b;--blue:#3b82f6;
+  --tx:#e2e8f0;--tx2:#94a3b8;--tx3:#475569;
+  --bdr:rgba(255,255,255,.08);
+  --sh:0 0 40px rgba(139,92,246,.25);
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg0);color:var(--tx);font-family:'Segoe UI',system-ui,sans-serif;}
+
+/* ── Layout ── */
+.va-wrap{display:flex;height:calc(100vh );overflow:hidden;}
+
+/* ── Left Panel: Conversation ── */
+.va-conv{
+  width:340px;flex-shrink:0;
+  background:var(--bg1);
+  border-right:1px solid var(--bdr);
+  display:flex;flex-direction:column;
+  overflow:hidden;
+}
+.va-conv-hd{
+  padding:0.125rem 0.25rem;
+  border-bottom:1px solid var(--bdr);
+  display:flex;align-items:center;justify-content:space-between;
+}
+.va-conv-ttl{font-size:.9rem;font-weight:700;color:var(--tx);}
+.va-conv-sub{font-size:.7rem;color:var(--tx2);margin-top:.1rem;}
+.va-clear{background:none;border:1px solid var(--bdr);border-radius:8px;padding:.25rem .65rem;font-size:.72rem;color:var(--tx2);cursor:pointer;transition:all .15s;}
+.va-clear:hover{border-color:var(--err);color:var(--err);}
+
+.va-msgs{flex:1;overflow-y:auto;padding:.875rem;display:flex;flex-direction:column;gap:.875rem;}
+.va-msgs::-webkit-scrollbar{width:3px;}
+.va-msgs::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px;}
+
+/* Messages */
+.vm{display:flex;gap:.5rem;animation:mIn .22s ease-out;}
+@keyframes mIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.vm.user{flex-direction:row-reverse;}
+.vm-av{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;margin-top:2px;}
+.vm.user .vm-av{background:linear-gradient(135deg,var(--acc),var(--acc2));}
+.vm.ai .vm-av{background:var(--bg2);border:1px solid var(--bdr);}
+.vm-bub{max-width:220px;padding:.6rem .85rem;border-radius:14px;font-size:.82rem;line-height:1.6;word-break:break-word;}
+.vm.user .vm-bub{background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;border-bottom-right-radius:4px;}
+.vm.ai  .vm-bub{background:var(--bg2);border:1px solid var(--bdr);color:var(--tx);border-bottom-left-radius:4px;}
+.vm-time{font-size:.64rem;color:var(--tx3);margin-top:.2rem;text-align:right;}
+.vm.ai .vm-time{text-align:left;}
+
+/* Typing indicator */
+.va-typing{display:none;gap:.5rem;}
+.va-typing.show{display:flex;}
+.tdots{background:var(--bg2);border:1px solid var(--bdr);border-radius:14px;border-bottom-left-radius:4px;padding:.6rem .85rem;display:flex;gap:4px;align-items:center;}
+.td{width:6px;height:6px;background:var(--tx3);border-radius:50%;animation:td 1.3s infinite;}
+.td:nth-child(1){animation-delay:0s}.td:nth-child(2){animation-delay:.18s}.td:nth-child(3){animation-delay:.36s}
+@keyframes td{0%,60%,100%{transform:translateY(0);opacity:.3}30%{transform:translateY(-5px);opacity:1}}
+
+/* Empty state */
+.va-empty{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:1.5rem;gap:.5rem;}
+.va-empty-ico{font-size:2rem;opacity:.35;}
+.va-empty-tx{font-size:.78rem;color:var(--tx3);line-height:1.6;}
+
+/* ── Right Panel: Voice Interface ── */
+.va-main{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:1.75rem 2rem 1.5rem;overflow:hidden;position:relative;background:radial-gradient(ellipse at 50% 0%,rgba(109,40,217,.08) 0%,transparent 70%);}
+
+/* Top bar */
+.va-top{width:100%;display:flex;align-items:center;justify-content:space-between;}
+.va-brand{display:flex;align-items:center;gap:.625rem;}
+.va-brand-ico{width:36px;height:36px;border-radius:12px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:flex;align-items:center;justify-content:center;font-size:1rem;box-shadow:0 4px 14px rgba(109,40,217,.4);}
+.va-brand-name{font-size:.9rem;font-weight:700;color:var(--tx);}
+.va-brand-sub{font-size:.67rem;color:var(--tx2);}
+.va-top-acts{display:flex;gap:.5rem;align-items:center;}
+.va-link{height:32px;padding:0 .875rem;border:1px solid var(--bdr);border-radius:10px;color:var(--tx2);font-size:.75rem;font-weight:500;text-decoration:none;display:flex;align-items:center;gap:.3rem;transition:all .15s;}
+.va-link:hover{border-color:var(--acc);color:var(--acc3);}
+
+/* Language selector */
+.lang-sel{display:flex;align-items:center;gap:.375rem;background:var(--bg2);border:1px solid var(--bdr);border-radius:10px;padding:.35rem .75rem;cursor:pointer;}
+.lang-sel select{background:transparent;border:none;outline:none;color:var(--tx);font-size:.8rem;font-weight:600;cursor:pointer;}
+.lang-sel select option{background:#1e293b;color:var(--tx);}
+.lang-ico{font-size:.85rem;}
+
+/* ── Orb ── */
+.orb-section{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1.5rem;}
+
+.orb-wrap{position:relative;width:220px;height:220px;display:flex;align-items:center;justify-content:center;}
+.orb-ring{position:absolute;border-radius:50%;animation:orbRing 3s ease-in-out infinite;}
+.or1{width:220px;height:220px;background:radial-gradient(circle,rgba(109,40,217,.12) 0%,transparent 70%);animation-delay:0s;}
+.or2{width:176px;height:176px;background:radial-gradient(circle,rgba(109,40,217,.18) 0%,transparent 70%);animation-delay:.5s;}
+.or3{width:136px;height:136px;background:radial-gradient(circle,rgba(139,92,246,.24) 0%,transparent 70%);animation-delay:1s;}
+@keyframes orbRing{0%,100%{transform:scale(1);opacity:.5}50%{transform:scale(1.18);opacity:1}}
+
+.orb{width:96px;height:96px;border-radius:50%;z-index:2;position:relative;cursor:pointer;
+  background:radial-gradient(circle at 32% 32%,#c4b5fd,#7c3aed 55%,#3b0764);
+  box-shadow:0 0 50px rgba(109,40,217,.7),0 0 100px rgba(109,40,217,.25);
+  transition:transform .2s;
+  animation:orbIdle 4s ease-in-out infinite;}
+@keyframes orbIdle{0%,100%{transform:scale(1)}50%{transform:scale(1.06)}}
+.orb:hover{transform:scale(1.08);}
+.orb:active{transform:scale(.96);}
+
+/* State: listening */
+.va-wrap.listening .or1{background:radial-gradient(circle,rgba(239,68,68,.14) 0%,transparent 70%);}
+.va-wrap.listening .or2{background:radial-gradient(circle,rgba(239,68,68,.2) 0%,transparent 70%);}
+.va-wrap.listening .or3{background:radial-gradient(circle,rgba(220,38,38,.28) 0%,transparent 70%);}
+.va-wrap.listening .orb{background:radial-gradient(circle at 32% 32%,#fca5a5,#ef4444 55%,#7f1d1d);box-shadow:0 0 50px rgba(239,68,68,.7),0 0 100px rgba(239,68,68,.25);animation:orbListen 1.2s ease-in-out infinite;}
+@keyframes orbListen{0%,100%{transform:scale(1)}40%{transform:scale(1.14)}}
+
+/* State: processing */
+.va-wrap.processing .or1{background:radial-gradient(circle,rgba(245,158,11,.12) 0%,transparent 70%);}
+.va-wrap.processing .or2{background:radial-gradient(circle,rgba(245,158,11,.18) 0%,transparent 70%);}
+.va-wrap.processing .or3{background:radial-gradient(circle,rgba(217,119,6,.24) 0%,transparent 70%);}
+.va-wrap.processing .orb{background:radial-gradient(circle at 32% 32%,#fcd34d,#d97706 55%,#451a03);box-shadow:0 0 50px rgba(217,119,6,.7),0 0 100px rgba(217,119,6,.25);animation:orbSpin 1s linear infinite;}
+@keyframes orbSpin{to{transform:rotate(360deg)}}
+
+/* State: speaking */
+.va-wrap.speaking .or1{background:radial-gradient(circle,rgba(16,185,129,.12) 0%,transparent 70%);}
+.va-wrap.speaking .or2{background:radial-gradient(circle,rgba(16,185,129,.18) 0%,transparent 70%);}
+.va-wrap.speaking .or3{background:radial-gradient(circle,rgba(5,150,105,.24) 0%,transparent 70%);}
+.va-wrap.speaking .orb{background:radial-gradient(circle at 32% 32%,#6ee7b7,#10b981 55%,#022c22);box-shadow:0 0 50px rgba(16,185,129,.7),0 0 100px rgba(16,185,129,.25);animation:orbSpeak .9s ease-in-out infinite;}
+@keyframes orbSpeak{0%,100%{transform:scale(1)}35%{transform:scale(1.13)}75%{transform:scale(1.07)}}
+
+/* Status text */
+.orb-status{text-align:center;}
+.orb-stat-txt{font-size:1.025rem;font-weight:600;color:var(--tx2);letter-spacing:.02em;}
+.orb-trns{font-size:.875rem;color:var(--tx3);margin-top:.35rem;max-width:320px;line-height:1.6;min-height:1.4em;text-align:center;word-break:break-word;}
+.orb-trns.live{color:var(--tx);}
+
+/* Audio level bars */
+.va-levels{display:flex;align-items:flex-end;gap:3px;height:32px;margin-top:.5rem;opacity:0;transition:opacity .3s;}
+.va-wrap.listening .va-levels{opacity:1;}
+.va-lv{width:3px;border-radius:2px;background:var(--err);animation:lvAnim 1s ease-in-out infinite;min-height:3px;}
+@keyframes lvAnim{0%,100%{transform:scaleY(.15)}50%{transform:scaleY(1)}}
+
+/* Wave bars for speaking */
+.va-waves{display:flex;align-items:center;gap:3px;height:32px;margin-top:.5rem;opacity:0;transition:opacity .3s;}
+.va-wrap.speaking .va-waves{opacity:1;}
+.va-wv{width:3px;border-radius:2px;background:var(--ok);animation:wvAnim 1s ease-in-out infinite;}
+@keyframes wvAnim{0%,100%{transform:scaleY(.2)}50%{transform:scaleY(1)}}
+
+/* STT/TTS badges */
+.va-badges{display:flex;gap:.5rem;margin-top:.375rem;}
+.va-badge{font-size:.68rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;letter-spacing:.04em;}
+.ba-stt{background:rgba(59,130,246,.15);border:1px solid rgba(59,130,246,.3);color:#93c5fd;}
+.ba-tts{background:rgba(16,185,129,.15);border:1px solid rgba(16,185,129,.3);color:#6ee7b7;}
+
+/* ── Bottom Controls ── */
+.va-ctrls{width:100%;display:flex;flex-direction:column;align-items:center;gap:1rem;}
+
+/* Mode toggles */
+.va-modes{display:flex;gap:.5rem;background:var(--bg2);border:1px solid var(--bdr);border-radius:12px;padding:.25rem;}
+.va-mode-btn{padding:.3rem .875rem;border-radius:9px;border:none;font-size:.78rem;font-weight:600;cursor:pointer;transition:all .18s;color:var(--tx2);background:transparent;}
+.va-mode-btn.active{background:var(--acc2);color:#fff;box-shadow:0 2px 10px rgba(109,40,217,.5);}
+
+/* Main button row */
+.va-btn-row{display:flex;align-items:center;gap:1rem;}
+
+.va-mic-btn{
+  width:72px;height:72px;border-radius:50%;border:none;cursor:pointer;
+  background:linear-gradient(135deg,var(--acc),var(--acc2));
+  color:#fff;font-size:1.5rem;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 6px 28px rgba(109,40,217,.55);
+  transition:all .2s;
+}
+.va-mic-btn:hover{transform:translateY(-2px);box-shadow:0 10px 36px rgba(109,40,217,.7);}
+.va-mic-btn:active{transform:scale(.95);}
+.va-mic-btn.recording{background:linear-gradient(135deg,#ef4444,#b91c1c);animation:recPulse 1.5s ease-in-out infinite;}
+@keyframes recPulse{0%,100%{box-shadow:0 6px 28px rgba(239,68,68,.5)}50%{box-shadow:0 6px 40px rgba(239,68,68,.9),0 0 0 12px rgba(239,68,68,.08)}}
+
+.va-side-btn{width:48px;height:48px;border-radius:50%;border:1.5px solid var(--bdr);background:var(--bg2);color:var(--tx2);font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .17s;}
+.va-side-btn:hover{border-color:var(--acc);color:var(--acc3);}
+.va-side-btn.active{border-color:var(--ok);color:var(--ok);}
+
+.va-hint{font-size:.72rem;color:var(--tx3);text-align:center;}
+
+/* ── Error toast ── */
+.va-toast{position:fixed;bottom:1.5rem;left:50%;transform:translateX(-50%) translateY(100px);background:#1e293b;border:1px solid var(--err);color:var(--err);border-radius:10px;padding:.6rem 1.25rem;font-size:.82rem;font-weight:500;transition:transform .3s;z-index:9999;white-space:nowrap;}
+.va-toast.show{transform:translateX(-50%) translateY(0);}
+
+/* ── Microphone permission modal ── */
+.mic-perm-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(6px);
+  display:none;align-items:center;justify-content:center;z-index:10000;
+  animation:fadeIn .2s ease-out;
+}
+.mic-perm-overlay.show{display:flex;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.mic-perm-box{
+  background:var(--bg2);border:1px solid var(--bdr);border-radius:20px;
+  padding:2rem 2.25rem;max-width:380px;width:90%;text-align:center;
+  box-shadow:0 24px 80px rgba(0,0,0,.5);
+  animation:slideUp .25s cubic-bezier(.34,1.56,.64,1);
+}
+@keyframes slideUp{from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+.mic-perm-icon{font-size:3rem;margin-bottom:.75rem;display:block;}
+.mic-perm-title{font-size:1.15rem;font-weight:700;color:var(--tx1);margin-bottom:.4rem;}
+.mic-perm-sub{font-size:.85rem;color:var(--tx2);line-height:1.6;margin-bottom:1.25rem;}
+.mic-perm-steps{
+  background:var(--bg);border:1px solid var(--bdr);border-radius:12px;
+  padding:.875rem 1rem;text-align:left;margin-bottom:1.25rem;
+}
+.mic-perm-steps li{
+  font-size:.8rem;color:var(--tx2);line-height:1.7;
+  display:flex;gap:.5rem;align-items:flex-start;
+}
+.mic-perm-steps li::before{
+  content:counter(step);counter-increment:step;
+  min-width:18px;height:18px;border-radius:50%;background:var(--acc);
+  color:#fff;font-size:.65rem;font-weight:700;
+  display:flex;align-items:center;justify-content:center;margin-top:2px;flex-shrink:0;
+}
+.mic-perm-steps ol{list-style:none;padding:0;margin:0;counter-reset:step;}
+.mic-perm-btn-row{display:flex;gap:.75rem;justify-content:center;}
+.mic-perm-try{
+  background:linear-gradient(135deg,var(--acc),var(--acc2));color:#fff;
+  border:none;border-radius:10px;padding:.6rem 1.5rem;font-size:.9rem;
+  font-weight:600;cursor:pointer;transition:opacity .15s;
+}
+.mic-perm-try:hover{opacity:.88;}
+.mic-perm-cancel{
+  background:none;border:1.5px solid var(--bdr);color:var(--tx2);
+  border-radius:10px;padding:.6rem 1.2rem;font-size:.9rem;cursor:pointer;
+  transition:border-color .15s;
+}
+.mic-perm-cancel:hover{border-color:var(--acc);color:var(--acc3);}
+.mic-perm-status{font-size:.78rem;color:var(--tx3);margin-top:.75rem;min-height:1.2em;}
+
+/* ── Waveform Canvas ── */
+.va-canvas-wrap{width:100%;max-width:320px;height:48px;position:relative;}
+#va-canvas{width:100%;height:100%;border-radius:8px;display:none;}
+.va-wrap.listening #va-canvas{display:block;}
+
+/* ── Responsive ── */
+@media(max-width:860px){
+  .va-conv{width:260px;}
+  .va-main{padding:1.25rem 1rem 1rem;}
+}
+@media(max-width:640px){
+  .va-wrap{flex-direction:column;}
+  .va-conv{width:100%;height:200px;border-right:none;border-bottom:1px solid var(--bdr);}
+  .va-main{padding:1rem;}
+  .orb-wrap{width:160px;height:160px;}
+  .orb{width:72px;height:72px;}
+  .or1{width:160px;height:160px;}.or2{width:128px;height:128px;}.or3{width:100px;height:100px;}
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="va-wrap" id="vaWrap">
+
+  <!-- ═══ LEFT: Conversation Panel ═══ -->
+  <div class="va-conv">
+    <div class="va-conv-hd">
+      <div>
+        <div class="va-conv-ttl">Conversation</div>
+        <div class="va-conv-sub" id="convSub">No messages yet</div>
+      </div>
+      <button class="va-clear" onclick="clearConv()">Clear</button>
+    </div>
+    <div class="va-msgs" id="vaMsgs">
+      <div class="va-empty" id="vaEmpty">
+        <div class="va-empty-ico">🎙</div>
+        <div class="va-empty-tx">Tap the orb or mic button to start speaking. Your conversation will appear here.</div>
+      </div>
+      <div class="va-typing" id="vaTyping">
+        <div class="vm-av" style="background:var(--bg2);border:1px solid var(--bdr);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;flex-shrink:0;">🤖</div>
+        <div class="tdots"><span class="td"></span><span class="td"></span><span class="td"></span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ RIGHT: Voice Interface ═══ -->
+  <div class="va-main">
+
+    <!-- Top bar -->
+    <div class="va-top">
+      <div class="va-brand">
+        <div class="va-brand-ico">🎙</div>
+        <div>
+          <div class="va-brand-name">Voice Assistant</div>
+          <div class="va-brand-sub">Server-side STT + Neural TTS</div>
+        </div>
+      </div>
+      <div class="va-top-acts">
+        <div class="lang-sel">
+          <span class="lang-ico">🌐</span>
+          <select id="langSel" onchange="changeLang(this.value)">
+            <optgroup label="── Speak &amp; Reply ──">
+              <option value="en-IN">🇮🇳 English (Indian)</option>
+              <option value="hi-IN">🇮🇳 हिंदी</option>
+              <option value="ta-IN">🇮🇳 தமிழ்</option>
+              <option value="te-IN">🇮🇳 తెలుగు</option>
+              <option value="bn-IN">🇮🇳 বাংলা</option>
+              <option value="mr-IN">🇮🇳 मराठी</option>
+              <option value="gu-IN">🇮🇳 ગુજરાતી</option>
+              <option value="kn-IN">🇮🇳 ಕನ್ನಡ</option>
+              <option value="ml-IN">🇮🇳 മലയാളം</option>
+              <option value="pa-IN">🇮🇳 ਪੰਜਾਬੀ</option>
+              <option value="ur-IN">🇮🇳 اردو</option>
+            </optgroup>
+            <optgroup label="── Translate Mode (speak English) ──">
+              <option value="tr:hi-IN">🔄 English → हिंदी</option>
+              <option value="tr:ta-IN">🔄 English → தமிழ்</option>
+              <option value="tr:te-IN">🔄 English → తెలుగు</option>
+              <option value="tr:bn-IN">🔄 English → বাংলা</option>
+              <option value="tr:mr-IN">🔄 English → मराठी</option>
+              <option value="tr:gu-IN">🔄 English → ગુજરાતી</option>
+              <option value="tr:kn-IN">🔄 English → ಕನ್ನಡ</option>
+              <option value="tr:ml-IN">🔄 English → മലയാളം</option>
+              <option value="tr:pa-IN">🔄 English → ਪੰਜਾਬੀ</option>
+              <option value="tr:ur-IN">🔄 English → اردو</option>
+            </optgroup>
+          </select>
+        </div>
+        <a class="va-link" href="{% url 'chatbot' %}">💬 Text Chat</a>
+      </div>
+    </div>
+
+    <!-- Orb + status -->
+    <div class="orb-section">
+      <div class="orb-wrap">
+        <div class="orb-ring or1"></div>
+        <div class="orb-ring or2"></div>
+        <div class="orb-ring or3"></div>
+        <div class="orb" id="vaOrb" onclick="toggleRecording()" title="Click to speak"></div>
+      </div>
+
+      <div class="orb-status">
+        <div class="orb-stat-txt" id="vaStat">Tap orb to speak</div>
+        <div class="orb-trns" id="vaTrns">Your speech will appear here…</div>
+        <div class="va-badges">
+          <span class="va-badge ba-stt">STT: Whisper</span>
+          <span class="va-badge ba-tts">TTS: Edge Neural</span>
+        </div>
+      </div>
+
+      <!-- Audio level viz (listening) -->
+      <div class="va-levels" id="vaLevels">
+        <div class="va-lv" style="animation-delay:.0s"></div>
+        <div class="va-lv" style="animation-delay:.07s"></div>
+        <div class="va-lv" style="animation-delay:.14s"></div>
+        <div class="va-lv" style="animation-delay:.21s"></div>
+        <div class="va-lv" style="animation-delay:.28s"></div>
+        <div class="va-lv" style="animation-delay:.35s"></div>
+        <div class="va-lv" style="animation-delay:.14s"></div>
+        <div class="va-lv" style="animation-delay:.07s"></div>
+        <div class="va-lv" style="animation-delay:.00s"></div>
+      </div>
+
+      <!-- Wave bars (speaking) -->
+      <div class="va-waves" id="vaWaves">
+        <div class="va-wv" style="height:6px;animation-delay:.0s"></div>
+        <div class="va-wv" style="height:14px;animation-delay:.1s"></div>
+        <div class="va-wv" style="height:22px;animation-delay:.2s"></div>
+        <div class="va-wv" style="height:28px;animation-delay:.15s"></div>
+        <div class="va-wv" style="height:20px;animation-delay:.25s"></div>
+        <div class="va-wv" style="height:16px;animation-delay:.05s"></div>
+        <div class="va-wv" style="height:10px;animation-delay:.3s"></div>
+      </div>
+
+      <!-- Real-time waveform canvas -->
+      <div class="va-canvas-wrap">
+        <canvas id="va-canvas"></canvas>
+      </div>
+    </div>
+
+    <!-- Controls -->
+    <div class="va-ctrls">
+      <!-- Auto/Manual mode -->
+      <div class="va-modes">
+        <button class="va-mode-btn active" id="modeAuto" onclick="setMode('auto')">⚡ Auto-send</button>
+        <button class="va-mode-btn" id="modeHold" onclick="setMode('hold')">⏯ Hold-to-speak</button>
+      </div>
+
+      <div class="va-btn-row">
+        <!-- Stop/Skip TTS -->
+        <button class="va-side-btn" id="btnStop" onclick="stopAll()" title="Stop">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><rect x="4" y="4" width="16" height="16" rx="2"/></svg>
+        </button>
+
+        <!-- Main mic button -->
+        <button class="va-mic-btn" id="vaMicBtn" onclick="toggleRecording()" title="Speak">
+          🎤
+        </button>
+
+        <!-- Auto-listen toggle -->
+        <button class="va-side-btn" id="btnAuto" onclick="toggleAutoListen()" title="Toggle auto-listen after response">
+          🔁
+        </button>
+      </div>
+
+      <div class="va-hint" id="vaHint">Click the orb or mic button to start recording</div>
+    </div>
+
+  </div><!-- .va-main -->
+</div><!-- .va-wrap -->
+
+<!-- ── Microphone Permission Modal ─────────────────────────────── -->
+<div class="mic-perm-overlay" id="micPermOverlay">
+  <div class="mic-perm-box">
+    <span class="mic-perm-icon" id="micPermIcon">🎙️</span>
+    <div class="mic-perm-title" id="micPermTitle">Microphone Access Needed</div>
+    <div class="mic-perm-sub" id="micPermSub">
+      DocuVault Voice needs your microphone to hear you. Please allow access to start speaking.
+    </div>
+    <div class="mic-perm-steps">
+      <ol>
+        <li>Click the <strong>🔒 lock icon</strong> in your browser's address bar</li>
+        <li>Find <strong>Microphone</strong> and set it to <strong>Allow</strong></li>
+        <li>Click <strong>"Try Again"</strong> below — no page reload needed</li>
+      </ol>
+    </div>
+    <div class="mic-perm-btn-row">
+      <button class="mic-perm-try"   onclick="retryMicPermission()">🎤 Try Again</button>
+      <button class="mic-perm-cancel" onclick="closeMicPermModal()">Cancel</button>
+    </div>
+    <div class="mic-perm-status" id="micPermStatus"></div>
+  </div>
+</div>
+
+<!-- Hidden audio player for TTS output -->
+<audio id="ttsPlayer" style="display:none;"></audio>
+
+<!-- Error toast -->
+<div class="va-toast" id="vaToast"></div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   DocuVault Voice Assistant
+   STT: faster-whisper (server-side via /voice/transcribe/)
+   TTS: edge-tts  (server-side via /voice/synthesize/)
+   RAG: same /chatbot/query/stream/ endpoint as text chatbot
+═══════════════════════════════════════════════════════════════ */
+
+const CSRF   = '{{ csrf_token }}';
+let   SID    = '{{ chat_session.id }}';
+const URL_TR = '{% url "voice_assistant_transcribe" %}';
+const URL_SY = '{% url "voice_synthesize" %}';
+const URL_ST = '{% url "chatbot_query_stream" %}';
+
+/* DOM */
+const $wrap   = document.getElementById('vaWrap');
+const $orb    = document.getElementById('vaOrb');
+const $stat   = document.getElementById('vaStat');
+const $trns   = document.getElementById('vaTrns');
+const $msgs   = document.getElementById('vaMsgs');
+const $empty  = document.getElementById('vaEmpty');
+const $typing = document.getElementById('vaTyping');
+const $micBtn = document.getElementById('vaMicBtn');
+const $btnAuto= document.getElementById('btnAuto');
+const $hint   = document.getElementById('vaHint');
+const $player = document.getElementById('ttsPlayer');
+const $langSel= document.getElementById('langSel');
+const $convSub= document.getElementById('convSub');
+const $canvas = document.getElementById('va-canvas');
+const ctx2d   = $canvas.getContext('2d');
+const $toast  = document.getElementById('vaToast');
+
+/* State */
+let curLang      = 'en-IN';   /* TTS / reply language (kept for TTS calls) */
+let inputLang    = 'en-IN';   /* STT language — what the user SPEAKS */
+let replyLang    = 'en-IN';   /* LLM reply language — what the bot SPEAKS */
+let translateMode= false;     /* true = user speaks English, bot replies in another lang */
+let mode         = 'auto';    /* 'auto' or 'hold' */
+let autoListen  = true;      /* re-listen after AI speaks */
+let recording   = false;
+let mediaRec    = null;
+let audioChunks = [];
+let silTimer    = null;
+let silStream   = null;      /* mic stream for silence detection */
+let audioCtx    = null;
+let analyser    = null;
+let animFrame   = null;
+let busy        = false;
+let msgCount    = 0;
+
+/* ── State management ──────────────────────────────────────── */
+function setState(s){
+  $wrap.classList.remove('listening','processing','speaking');
+  if(s) $wrap.classList.add(s);
+
+  const labels = {
+    idle:       'Tap orb to speak',
+    listening:  'Listening… speak now',
+    processing: 'Thinking…',
+    speaking:   'Speaking…',
+  };
+  const hints = {
+    idle:       'Click the orb or mic button to start recording',
+    listening:  'Speak clearly — auto-sends after 2 s of silence',
+    processing: 'Processing your question…',
+    speaking:   'AI is speaking — tap orb to interrupt',
+  };
+  $stat.textContent  = labels[s||'idle'] || '';
+  $hint.textContent  = hints[s||'idle']  || '';
+}
+
+function setTrns(t, live=false){
+  $trns.textContent = t;
+  $trns.classList.toggle('live', live);
+}
+
+/* ── Toast ──────────────────────────────────────────────────── */
+let toastTimer = null;
+function showToast(msg, ms=4000){
+  $toast.textContent = msg;
+  $toast.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>$toast.classList.remove('show'), ms);
+}
+
+/* ── Language ───────────────────────────────────────────────── */
+function changeLang(code){
+  /* Language switching: reset session so LLM history doesn't bleed into new language */
+  const prevCode = translateMode ? ('tr:'+replyLang) : replyLang;
+  if(code !== prevCode) SID = '';
+
+  if(code.startsWith('tr:')){
+    /* Translate mode: user speaks English, bot replies in target language */
+    replyLang     = code.slice(3);   /* e.g. 'hi-IN' */
+    inputLang     = 'en-IN';         /* STT: recognise English */
+    curLang       = replyLang;       /* TTS: speak in target language */
+    translateMode = true;
+  } else {
+    /* Normal mode: same language in and out */
+    inputLang     = code;
+    replyLang     = code;
+    curLang       = code;
+    translateMode = false;
+  }
+}
+
+/* ── Mode ────────────────────────────────────────────────────── */
+function setMode(m){
+  mode = m;
+  document.getElementById('modeAuto').classList.toggle('active', m==='auto');
+  document.getElementById('modeHold').classList.toggle('active', m==='hold');
+}
+
+/* ── Auto-listen toggle ──────────────────────────────────────── */
+function toggleAutoListen(){
+  autoListen = !autoListen;
+  $btnAuto.classList.toggle('active', autoListen);
+  $btnAuto.title = autoListen ? 'Auto-listen ON' : 'Auto-listen OFF';
+}
+
+/* ── Canvas waveform ─────────────────────────────────────────── */
+function startWaveform(stream){
+  if(!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = audioCtx.createAnalyser();
+  analyser.fftSize = 256;
+  const src = audioCtx.createMediaStreamSource(stream);
+  src.connect(analyser);
+  const data = new Uint8Array(analyser.frequencyBinCount);
+
+  function draw(){
+    animFrame = requestAnimationFrame(draw);
+    analyser.getByteFrequencyData(data);
+    $canvas.width  = $canvas.offsetWidth;
+    $canvas.height = $canvas.offsetHeight;
+    ctx2d.clearRect(0,0,$canvas.width,$canvas.height);
+    const bw = $canvas.width/data.length*2;
+    for(let i=0;i<data.length/2;i++){
+      const h = (data[i]/255)*$canvas.height;
+      const alpha = 0.4+data[i]/255*0.6;
+      ctx2d.fillStyle = `rgba(239,68,68,${alpha})`;
+      ctx2d.fillRect(i*bw, $canvas.height-h, bw-1, h);
+    }
+  }
+  draw();
+}
+
+function stopWaveform(){
+  if(animFrame) cancelAnimationFrame(animFrame);
+  animFrame = null;
+  ctx2d.clearRect(0,0,$canvas.width,$canvas.height);
+}
+
+/* ── Recording ────────────────────────────────────────────────── */
+async function startRecording(){
+  if(recording || busy) return;
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true,video:false});
+    silStream = stream;
+    recording  = true;
+    audioChunks= [];
+    $micBtn.classList.add('recording');
+    $micBtn.textContent = '⏹';
+    setState('listening');
+    setTrns('Listening… speak now', false);
+
+    startWaveform(stream);
+
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm') ? 'audio/webm' : 'audio/ogg';
+    mediaRec = new MediaRecorder(stream, {mimeType});
+    mediaRec.ondataavailable = e => { if(e.data.size>0) audioChunks.push(e.data); };
+    mediaRec.onstop = ()=> sendAudio();
+    mediaRec.start(200);  /* collect every 200ms chunk */
+
+    if(mode === 'auto') startSilenceDetector(stream);
+
+  }catch(err){
+    console.error('Mic error:', err.name, err.message);
+    recording = false;
+    setState('idle');
+    if(err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError'){
+      showMicPermModal('blocked');
+    } else if(err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError'){
+      showMicPermModal('notfound');
+    } else {
+      showToast('⚠ Microphone error: ' + (err.message || err.name));
+    }
+  }
+}
+
+/* ── Mic Permission Modal ─────────────────────────────────────── */
+const $micPerm       = document.getElementById('micPermOverlay');
+const $micPermIcon   = document.getElementById('micPermIcon');
+const $micPermTitle  = document.getElementById('micPermTitle');
+const $micPermSub    = document.getElementById('micPermSub');
+const $micPermStatus = document.getElementById('micPermStatus');
+
+function showMicPermModal(reason){
+  if(reason === 'notfound'){
+    $micPermIcon.textContent  = '🎙️❌';
+    $micPermTitle.textContent = 'No Microphone Found';
+    $micPermSub.textContent   = 'Your device does not have a microphone, or it is not connected. Please plug in a microphone and try again.';
+  } else {
+    $micPermIcon.textContent  = '🎙️🔒';
+    $micPermTitle.textContent = 'Microphone Access Blocked';
+    $micPermSub.textContent   = 'DocuVault Voice needs microphone access to hear you. Follow the steps below to allow it.';
+  }
+  $micPermStatus.textContent = '';
+  $micPerm.classList.add('show');
+}
+
+function closeMicPermModal(){
+  $micPerm.classList.remove('show');
+  $micPermStatus.textContent = '';
+}
+
+async function retryMicPermission(){
+  $micPermStatus.textContent = 'Requesting microphone access…';
+  try{
+    const stream = await navigator.mediaDevices.getUserMedia({audio:true, video:false});
+    /* Permission granted — release the test stream and close modal */
+    stream.getTracks().forEach(t => t.stop());
+    $micPermStatus.textContent = '✅ Microphone access granted!';
+    setTimeout(()=>{
+      closeMicPermModal();
+      startRecording();   /* kick off the actual recording now */
+    }, 600);
+  }catch(err){
+    if(err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError'){
+      $micPermStatus.textContent = '⚠ Still blocked. Please follow the steps above and try again.';
+    } else if(err.name === 'NotFoundError'){
+      $micPermStatus.textContent = '⚠ No microphone detected. Please connect one and retry.';
+    } else {
+      $micPermStatus.textContent = '⚠ ' + (err.message || err.name);
+    }
+  }
+}
+
+/* Close modal if user clicks the dark overlay */
+$micPerm.addEventListener('click', e => { if(e.target === $micPerm) closeMicPermModal(); });
+
+/* ── Proactive permission check on page load ──────────────────── */
+(async function checkMicOnLoad(){
+  if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    setTrns('⚠ Browser does not support audio recording', false);
+    return;
+  }
+  /* navigator.permissions is not available in all browsers — wrap safely */
+  try{
+    const perm = await navigator.permissions.query({name:'microphone'});
+    if(perm.state === 'denied'){
+      /* Already permanently denied — show the modal on page load */
+      setTrns('Microphone blocked — click mic to fix', false);
+      $micPermIcon.textContent  = '🎙️🔒';
+      $micPermTitle.textContent = 'Microphone is Blocked';
+      $micPermSub.textContent   = 'You previously denied microphone access. Follow these steps to re-enable it.';
+      /* Don't auto-open the modal — user sees the hint and clicks mic */
+    }
+    /* Watch for permission changes (user unblocks mid-session) */
+    perm.onchange = () => {
+      if(perm.state === 'granted') setTrns('Microphone ready — tap to speak', false);
+    };
+  }catch{ /* permissions API not supported — silently skip */ }
+})();
+
+function stopRecording(){
+  if(!recording) return;
+  recording = false;
+  clearTimeout(silTimer);
+  stopWaveform();
+  $micBtn.classList.remove('recording');
+  $micBtn.textContent = '🎤';
+
+  if(mediaRec && mediaRec.state !== 'inactive'){
+    mediaRec.stop();
+  }
+  if(silStream){
+    silStream.getTracks().forEach(t=>t.stop());
+    silStream = null;
+  }
+}
+
+function toggleRecording(){
+  if(busy){ stopAll(); return; }
+  if(recording) stopRecording();
+  else          startRecording();
+}
+
+/* Silence detection via AudioContext analyser */
+function startSilenceDetector(stream){
+  const ac = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+  const an = ac.createAnalyser();
+  an.fftSize = 512;
+  const src = ac.createMediaStreamSource(stream);
+  src.connect(an);
+  const data = new Uint8Array(an.frequencyBinCount);
+  let lastSound = Date.now();
+
+  function check(){
+    if(!recording) return;
+    an.getByteFrequencyData(data);
+    const vol = data.reduce((a,b)=>a+b,0)/data.length;
+    if(vol > 6) lastSound = Date.now();
+    if(Date.now()-lastSound > 2000){
+      /* 2 seconds of silence → stop */
+      stopRecording();
+      return;
+    }
+    silTimer = setTimeout(check, 120);
+  }
+  setTimeout(check, 800); /* give 800ms before we start checking */
+}
+
+/* ── Browser-side webm → 16kHz mono WAV (no ffmpeg on server) ── */
+async function blobToWav(blob){
+  const arrayBuf = await blob.arrayBuffer();
+  const ac = new (window.AudioContext||window.webkitAudioContext)({sampleRate:16000});
+  let audioBuf;
+  try{ audioBuf = await ac.decodeAudioData(arrayBuf); }
+  catch(e){ console.warn('decodeAudioData failed, sending raw',e); return blob; }
+  await ac.close();
+
+  const samples = audioBuf.getChannelData(0); /* first channel = mono */
+  const pcm16 = new Int16Array(samples.length);
+  for(let i=0;i<samples.length;i++){
+    const s=Math.max(-1,Math.min(1,samples[i]));
+    pcm16[i] = s<0 ? s*0x8000 : s*0x7FFF;
+  }
+  /* Build WAV header */
+  const dataLen = pcm16.length*2;
+  const buf = new ArrayBuffer(44+dataLen);
+  const v = new DataView(buf);
+  const ws=(o,s)=>{for(let i=0;i<s.length;i++)v.setUint8(o+i,s.charCodeAt(i));};
+  ws(0,'RIFF'); v.setUint32(4,36+dataLen,true);
+  ws(8,'WAVE'); ws(12,'fmt '); v.setUint32(16,16,true);
+  v.setUint16(20,1,true); v.setUint16(22,1,true);        /* PCM, Mono */
+  v.setUint32(24,16000,true); v.setUint32(28,32000,true); /* sampleRate, byteRate */
+  v.setUint16(32,2,true); v.setUint16(34,16,true);        /* blockAlign, bitsPerSample */
+  ws(36,'data'); v.setUint32(40,dataLen,true);
+  new Uint8Array(buf).set(new Uint8Array(pcm16.buffer),44);
+  return new Blob([buf],{type:'audio/wav'});
+}
+
+/* ── Send audio to Whisper STT ────────────────────────────────── */
+async function sendAudio(){
+  if(!audioChunks.length){ setState('idle'); return; }
+  setState('processing');
+  setTrns('Converting audio…', false);
+  busy = true;
+
+  const rawBlob = new Blob(audioChunks, {type: mediaRec ? mediaRec.mimeType : 'audio/webm'});
+  setTrns('Transcribing…', false);
+  const wavBlob = await blobToWav(rawBlob);
+
+  const fd = new FormData();
+  fd.append('audio', wavBlob, 'voice.wav');
+  fd.append('lang', inputLang.split('-')[0]);  /* STT uses inputLang, not TTS lang */
+  fd.append('csrfmiddlewaretoken', CSRF);
+
+  try{
+    const r = await fetch(URL_TR, {method:'POST', body:fd});
+    const d = await r.json();
+    if(!d.success || !d.text){
+      showToast('⚠ Could not transcribe. Try speaking more clearly.');
+      setState('idle'); busy = false; return;
+    }
+
+    const transcript = d.text.trim();
+    setTrns(transcript, true);
+    addMsg('user', transcript);
+    await queryRAG(transcript);
+
+  }catch(err){
+    console.error(err);
+    showToast('⚠ Transcription failed: '+err.message);
+    setState('idle'); busy = false;
+  }
+}
+
+/* ── Real-time TTS: sentence queue ───────────────────────────── */
+let ttsQueue   = [];
+let ttsPlaying = false;
+let ttsBuf     = '';
+const SENT_RE  = /[^।.!?\n]+[।.!?\n]+/g;  /* handles Devanagari danda ।  */
+
+function flushSentences(buf, isFinal){
+  let last=0, m;
+  SENT_RE.lastIndex=0;
+  while((m=SENT_RE.exec(buf))!==null){
+    const s=m[0].trim(); if(s) ttsQueue.push(s);
+    last=m.index+m[0].length;
+  }
+  const leftover=buf.slice(last).trim();
+  if(isFinal && leftover) ttsQueue.push(leftover);
+  pumpTTSQueue();
+  return isFinal ? '' : buf.slice(last);
+}
+
+async function pumpTTSQueue(){
+  if(ttsPlaying || !ttsQueue.length) return;
+  ttsPlaying=true;
+  const sentence=ttsQueue.shift();
+  setState('speaking');
+  setTrns('Speaking…', false);
+  try{
+    const r=await fetch(URL_SY,{
+      method:'POST',
+      headers:{'Content-Type':'application/json','X-CSRFToken':CSRF},
+      body:JSON.stringify({text:sentence, lang:curLang, rate:'+12%'}),
+    });
+    if(!r.ok) throw new Error('TTS '+r.status);
+    const blob=await r.blob();
+    const url=URL.createObjectURL(blob);
+    $player.src=url;
+    await new Promise((res,rej)=>{
+      $player.onended=()=>{URL.revokeObjectURL(url);res();};
+      $player.onerror=rej;
+      $player.play().catch(rej);
+    });
+  }catch(e){ console.warn('TTS sentence:',e); }
+  ttsPlaying=false;
+  if(ttsQueue.length){ pumpTTSQueue(); }
+  else if(!busy){
+    setState('idle'); setTrns('Tap orb to speak',false);
+    if(autoListen) scheduleNextListen();
+  }
+}
+
+/* ── RAG Stream Query ─────────────────────────────────────────── */
+async function queryRAG(question){
+  setState('processing');
+  showTyping(true);
+  ttsQueue=[]; ttsPlaying=false; ttsBuf='';
+
+  const fd=new FormData();
+  fd.append('query',question);
+  fd.append('session_id',SID);
+  fd.append('csrfmiddlewaretoken',CSRF);
+  fd.append('reply_lang', replyLang);  /* always send: en-IN enforces English, others trigger translate */
+
+  let fullAnswer='', msgEl=null;
+  try{
+    const resp=await fetch(URL_ST,{method:'POST',body:fd});
+    if(!resp.ok) throw new Error('HTTP '+resp.status);
+    showTyping(false);
+    msgEl=addMsg('ai','');
+
+    const reader=resp.body.getReader(), dec=new TextDecoder();
+    let buf='';
+    while(true){
+      const {done,value}=await reader.read(); if(done)break;
+      buf+=dec.decode(value,{stream:true});
+      const lines=buf.split('\n'); buf=lines.pop();
+      for(const line of lines){
+        if(!line.startsWith('data: ')) continue;
+        let ev; try{ev=JSON.parse(line.slice(6));}catch{continue;}
+        if(ev.type==='token'){
+          fullAnswer+=ev.data; ttsBuf+=ev.data;
+          updateMsgText(msgEl,fullAnswer);
+          ttsBuf=flushSentences(ttsBuf,false);  /* TTS starts on first complete sentence */
+        } else if(ev.type==='done'){
+          fullAnswer=ev.data||fullAnswer;
+          updateMsgText(msgEl,fullAnswer);
+          flushSentences(ttsBuf,true); ttsBuf='';
+        } else if(ev.type==='error'){
+          showToast('⚠ '+ev.data);
+        }
+      }
+    }
+    busy=false;
+    if(!ttsQueue.length && !ttsPlaying){
+      setState('idle'); setTrns('Tap orb to speak',false);
+      if(autoListen) scheduleNextListen();
+    }
+  }catch(err){
+    console.error(err); showTyping(false);
+    showToast('⚠ '+err.message);
+    setState('idle'); busy=false;
+  }
+}
+
+
+/* ── Stop everything ──────────────────────────────────────────── */
+function stopAll(){
+  stopRecording();
+  $player.pause();
+  $player.src='';
+  ttsQueue=[]; ttsPlaying=false; ttsBuf='';
+  clearTimeout(silTimer);
+  busy=false;
+  setState('idle');
+  setTrns('Tap orb to speak',false);
+  showTyping(false);
+}
+
+/* ── Auto-listen after AI speaks ─────────────────────────────── */
+function scheduleNextListen(){
+  setTimeout(()=>{
+    if(!busy && !recording) startRecording();
+  }, 900);
+}
+
+/* ── Conversation messages ───────────────────────────────────── */
+function addMsg(type, text){
+  if($empty) $empty.style.display='none';
+  msgCount++;
+  $convSub.textContent = msgCount+' message'+(msgCount>1?'s':'');
+
+  const d = document.createElement('div');
+  d.className = 'vm '+type;
+  const av  = type==='user'?'👤':'🤖';
+  const t   = new Date().toLocaleTimeString('en-US',{hour:'2-digit',minute:'2-digit',hour12:false});
+  const tAlign = type==='user'?'right':'left';
+  d.innerHTML = `
+    <div class="vm-av">${av}</div>
+    <div>
+      <div class="vm-bub" data-txt></div>
+      <div class="vm-time" style="text-align:${tAlign}">${t}</div>
+    </div>`;
+  updateMsgText(d, text);
+  $typing.parentNode.insertBefore(d, $typing);
+  $msgs.scrollTop = $msgs.scrollHeight;
+  return d;
+}
+
+function updateMsgText(el, text){
+  const b = el.querySelector('[data-txt]');
+  if(b) b.textContent = text;
+  $msgs.scrollTop = $msgs.scrollHeight;
+}
+
+function showTyping(v){
+  $typing.classList.toggle('show', v);
+  if(v) $msgs.scrollTop = $msgs.scrollHeight;
+}
+
+function clearConv(){
+  if(!confirm('Clear conversation?')) return;
+  document.querySelectorAll('.vm').forEach(e=>e.remove());
+  msgCount = 0;
+  $convSub.textContent = 'No messages yet';
+  if($empty) $empty.style.display='';
+  stopAll();
+}
+
+/* ── Hold-to-speak (mousedown/mouseup/touchstart/touchend) ──── */
+$micBtn.addEventListener('mousedown', e=>{
+  if(mode==='hold'){ e.preventDefault(); startRecording(); }
+});
+$micBtn.addEventListener('mouseup', ()=>{
+  if(mode==='hold' && recording) stopRecording();
+});
+$micBtn.addEventListener('touchstart', e=>{
+  if(mode==='hold'){ e.preventDefault(); startRecording(); }
+},{passive:false});
+$micBtn.addEventListener('touchend', ()=>{
+  if(mode==='hold' && recording) stopRecording();
+});
+
+/* ── Keyboard: Space to toggle ────────────────────────────────── */
+document.addEventListener('keydown', e=>{
+  if(e.code==='Space' && e.target.tagName!=='INPUT' && e.target.tagName!=='TEXTAREA'){
+    e.preventDefault();
+    toggleRecording();
+  }
+  if(e.code==='Escape') stopAll();
+});
+
+/* ── Init ──────────────────────────────────────────────────────── */
+setState('idle');
+toggleAutoListen(); toggleAutoListen(); /* ensure badge reflects default true */
+</script>
+{% endblock %}

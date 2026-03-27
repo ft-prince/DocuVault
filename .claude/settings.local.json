@@ -64,7 +64,30 @@
       "Bash(npm list:*)",
       "Bash(npm install:*)",
       "Bash(node generate_guide_v4.js)",
-      "Bash(python \"C:/Users/saiya/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/35ab4750-823a-49f0-ac4f-89d75c9bfb77/68c5bcb9-2abb-490e-b419-20e956d210cb/skills/docx/scripts/office/validate.py\" DocuVault_Client_Reference_Guide_v3.docx)"
+      "Bash(python \"C:/Users/saiya/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/35ab4750-823a-49f0-ac4f-89d75c9bfb77/68c5bcb9-2abb-490e-b419-20e956d210cb/skills/docx/scripts/office/validate.py\" DocuVault_Client_Reference_Guide_v3.docx)",
+      "Bash(env/Scripts/python -c \"from faster_whisper import WhisperModel; print\\(''faster-whisper OK''\\)\")",
+      "Bash(env/Scripts/python -c \"from faster_whisper import WhisperModel; print\\(''OK''\\)\")",
+      "Bash(where ffmpeg:*)",
+      "Bash(env/Scripts/python -c \"import scipy; print\\(''scipy OK''\\)\")",
+      "Bash(env/Scripts/python -c \"import numpy; print\\(''numpy OK''\\)\")",
+      "Bash(grep -v \"^$\\\\|UserWarning\\\\|FutureWarning\\\\|warnings\")",
+      "Bash(grep -v \"^$\\\\|UserWarning\\\\|FutureWarning\\\\|Torch\\\\|torch\\\\|Loading\\\\|loading\\\\|device\\\\|cpu\")",
+      "Bash(findstr /v \"Warning\\\\|torch\\\\|Loading\\\\|cpu\\\\|device\\\\|model\\\\|Initialized\\\\|Using\\\\|Processing\\\\|Collection\")",
+      "Bash(env/Scripts/python diag.py)",
+      "Bash(env/Scripts/python diag_rag.py)",
+      "Bash(env/Scripts/python -c \"import ast; ast.parse\\(open\\(''documents/rag_views.py'',encoding=''utf-8''\\).read\\(\\)\\); print\\(''OK''\\)\")",
+      "Bash(python manage.py check)",
+      "Bash(python -m pip show chromadb)",
+      "Bash(pip show:*)",
+      "Bash(where python:*)",
+      "Bash(pip list:*)",
+      "Bash(C:Userssaiyaanaconda3python.exe -m pip show chromadb)",
+      "Bash(C:Userssaiyaanaconda3python.exe -c \"import chromadb; print\\(''''chromadb ok''''\\)\")",
+      "Bash(cmd /c \"conda run -n base python -c \"\"import chromadb; print\\(''ok''\\)\"\"\")",
+      "Bash(cmd /c \"python -c \"\"import chromadb; print\\(''ok''\\)\"\"\")",
+      "Bash(cmd /c \"python --version && python -c \"\"import chromadb; print\\(''chromadb ok''\\)\"\"\")",
+      "Bash(cmd /c \"cd /d D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault && python manage.py shell -c \"\"import chromadb, os; db=os.path.join\\(''media'',''rag''\\); c=chromadb.PersistentClient\\(path=db\\); cols=c.list_collections\\(\\); print\\(''Collections:'', [x.name for x in cols]\\); [print\\(x.name, c.get_collection\\(x.name\\).count\\(\\)\\) for x in cols]\"\" 2>&1\")",
+      "Bash(python manage.py shell -c \":*)"
     ]
   }
 }

@@ -392,9 +392,158 @@ class RAGChatbot:
             self.conversation_memory[thread_id] = \
                 self.conversation_memory[thread_id][-self.config.MAX_HISTORY_TURNS * 2:]
     
+    # ── Hinglish word list (Latin-script Hindi stop/content words) ────
+    _HINDI_LATIN = frozenset([
+        # Postpositions / case markers
+        'ka','ki','ke','se','ko','par','mein','tak','liye','bina','saath',
+        # Pronouns
+        'main','hum','tum','aap','wo','woh','ye','yeh','isko','usko',
+        'inhe','unhe','mere','mera','meri','teri','tera','uska',
+        'uski','unka','unki','humara','humari','tumhara','tumhari',
+        # Verbs / verb forms
+        # NOTE: 'the' and 'to' removed — they are common English words and cause
+        # false-positive Hinglish detection on virtually every English sentence.
+        'hai','hain','tha','thi','hoga','hogi','hoge','hote','hoti',
+        'karna','karta','karti','karte','karo','kiya','karke',
+        'jana','jata','jati','jao','gaya','gayi','gaye',
+        'aana','aata','aati','aao','aya','ayi','aaye',
+        'lena','leta','leti','liya',
+        'dena','deta','deti','diya',
+        'bolna','bolta','bolti','bolo','bola','boli',
+        'dekhna','dekhta','dekhti','dekho','dekha','dekhi',
+        'rehna','rehta','rehti','raho','raha','rahi',
+        'milna','milta','milti','milo','mila','mili',
+        'chahna','chahta','chahti','chahiye',
+        'padhna','likhna','sunna','samajhna',
+        'lagta','lagti','laga','lagi',
+        'pata','nikla','nikli','bana','bani',
+        # Question words
+        'kya','kaun','kahan','kab','kaise','kyun','kyunki','kitna','kitne','kitni',
+        # Conjunctions / connectors
+        'aur','lekin','magar','toh','phir','isliye','warna',
+        'jabki','jabse','jaise','waisa',
+        # Adverbs / modifiers
+        'bhi','hi','nahi','nahin','mat','haan','ji','bilkul','zaroor',
+        'shayad','hamesha','kabhi','abhi','abtak','baad','pehle','sirf',
+        'bahut','zyada','jyada','thoda','kam','seedha','aksar',
+        # Common nouns (Hinglish context)
+        'kaam','kaamkaaj','khabar','baat','cheez','jagah','waqt','samay',
+        'paisa','kitab','ghar','desh','aadmi','aurat','baccha',
+        'raat','saal','mahina','hafta',
+        # Discourse / interjections
+        'acha','accha','theek','sahi','galat','matlab','samajh',
+        'batao','suno','suniye','samjhe',
+        'yahan','wahan','idhar','udhar','agar','jab','tab',
+    ])
+
+    # ── Multilingual helpers ────────────────────────────────────────────
+
+    _NON_ASCII_SCRIPTS = (
+        # Devanagari (Hindi, Marathi, Sanskrit)
+        (0x0900, 0x097F),
+        # Bengali
+        (0x0980, 0x09FF),
+        # Gujarati
+        (0x0A80, 0x0AFF),
+        # Gurmukhi (Punjabi)
+        (0x0A00, 0x0A7F),
+        # Tamil
+        (0x0B80, 0x0BFF),
+        # Telugu
+        (0x0C00, 0x0C7F),
+        # Kannada
+        (0x0C80, 0x0CFF),
+        # Malayalam
+        (0x0D00, 0x0D7F),
+        # Arabic / Urdu
+        (0x0600, 0x06FF),
+        # CJK / Chinese / Japanese / Korean
+        (0x4E00, 0x9FFF),
+    )
+
+    def _is_non_english(self, text: str) -> bool:
+        """Return True if more than 15 % of chars are from a non-Latin script."""
+        if not text:
+            return False
+        count = 0
+        for ch in text:
+            cp = ord(ch)
+            for lo, hi in self._NON_ASCII_SCRIPTS:
+                if lo <= cp <= hi:
+                    count += 1
+                    break
+        return count / max(len(text), 1) > 0.15
+
+    def _is_hinglish(self, text: str) -> bool:
+        """
+        Detect Hinglish: Latin-script Hindi words mixed with English.
+        e.g. 'AquaFlow ka CEO kaun hai' — all ASCII but contains Hindi tokens.
+        Returns True if ≥ 1 Hindi word found AND they form >10% of total words.
+        """
+        words = [w.strip('?.,!').lower() for w in text.split() if w.strip('?.,!')]
+        if not words:
+            return False
+        hindi_count = sum(1 for w in words if w in self._HINDI_LATIN)
+        return hindi_count >= 1 and (hindi_count / len(words)) > 0.10
+
+    @staticmethod
+    def _is_latin(text: str) -> bool:
+        """Return True if >70% of alphabetic chars are ASCII/Latin (i.e. the text is English)."""
+        alpha = [c for c in text if c.isalpha()]
+        if not alpha:
+            return True
+        ascii_count = sum(1 for c in alpha if ord(c) < 128)
+        return (ascii_count / len(alpha)) > 0.70
+
+    def _translate_for_retrieval(self, text: str) -> str:
+        """
+        Translate a non-English query to English for embedding/retrieval.
+        Uses a minimal LLM call — only translation, not answering.
+        If the result is not Latin-script (translation failed), falls back to
+        a keyword extraction approach so retrieval still gets something useful.
+        """
+        try:
+            msgs = [
+                {
+                    "role": "system",
+                    "content": (
+                        "Translate the following text to English. "
+                        "Output ONLY the English translation — no explanations, "
+                        "no punctuation changes, nothing else."
+                    ),
+                },
+                {"role": "user", "content": text},
+            ]
+            translated = self.llm_manager.generate(
+                messages=msgs,
+                max_new_tokens=120,
+                temperature=0.05,
+            )
+            result = translated.strip() if translated else ''
+            print(f"🌐 Translated for retrieval: '{result}'")
+            # Validate: result must be non-empty and in Latin script
+            if result and self._is_latin(result):
+                return result
+            # Translation returned non-Latin text (e.g. Devanagari) → fallback
+            print("⚠️  Translation output is non-Latin — using original text for retrieval")
+            return text
+        except Exception as e:
+            print(f"⚠️  Translation failed, using original: {e}")
+            return text
+
+    # ── Streaming query ────────────────────────────────────────────────
+
+    # Maps BCP-47 language codes → readable names for LLM translate instructions
+    _LANG_NAMES = {
+        'hi-IN': 'Hindi', 'ta-IN': 'Tamil', 'te-IN': 'Telugu',
+        'bn-IN': 'Bengali', 'mr-IN': 'Marathi', 'gu-IN': 'Gujarati',
+        'kn-IN': 'Kannada', 'ml-IN': 'Malayalam', 'pa-IN': 'Punjabi',
+        'ur-IN': 'Urdu', 'en-IN': 'English', 'en-US': 'English',
+    }
+
     def query_stream(self, question: str, thread_id: str = "default",
                     n_results: int = None, use_rewrite: bool = True,
-                    use_hybrid: bool = None):
+                    use_hybrid: bool = None, reply_lang: str = None):
         """
         Stream the response token by token using SSE-style generator.
 
@@ -412,16 +561,24 @@ class RAGChatbot:
             chat_history = self.conversation_memory.get(thread_id, [])
             original_question = question
 
-            # Rewrite follow-up questions
-            if use_rewrite and chat_history:
-                question = self.retriever.rewrite_query(question, chat_history)
+            # ── Multilingual / Hinglish: translate to English for retrieval ──
+            # _is_non_english detects Devanagari/Tamil/etc. (Unicode scripts)
+            # _is_hinglish  detects Latin-script Hindi ("ka CEO kaun hai")
+            is_multilingual = self._is_non_english(question) or self._is_hinglish(question)
+            retrieval_question = (
+                self._translate_for_retrieval(question) if is_multilingual else question
+            )
 
-            # Retrieve relevant chunks
+            # Rewrite follow-up questions (use translated version for retrieval)
+            if use_rewrite and chat_history:
+                retrieval_question = self.retriever.rewrite_query(retrieval_question, chat_history)
+
+            # Retrieve relevant chunks using the English form of the query
             n_results = n_results or self.config.N_RESULTS
             use_hybrid = use_hybrid if use_hybrid is not None else self.config.USE_HYBRID_SEARCH
 
             documents, metadatas, similarities = self.retriever.retrieve(
-                query=question, n_results=n_results, use_hybrid=use_hybrid
+                query=retrieval_question, n_results=n_results, use_hybrid=use_hybrid
             )
 
             # Filter by similarity threshold
@@ -441,16 +598,89 @@ class RAGChatbot:
             # Emit sources immediately so the client can display them right away
             yield {"type": "sources", "data": sources}
 
-            # Build LLM messages
+            # Build LLM messages — always use ORIGINAL question so response is in user's language
             system_prompt = self.config.get_active_system_prompt()
+
+            # Inject language instruction when query is non-English
+            if is_multilingual:
+                system_prompt = (
+                    "MULTILINGUAL INSTRUCTION — READ CAREFULLY:\n"
+                    "• The document context below is written in English.\n"
+                    "• The user has asked their question in Hindi, Hinglish, or another Indian language.\n"
+                    "• You MUST answer in the EXACT same language/script the user used.\n"
+                    "• You MUST extract facts from the English context and express them in the user's language.\n"
+                    "• NEVER say 'I don't know' or 'mujhe pata nahi' if the context contains the answer.\n"
+                    "• NEVER answer from general knowledge when English context is provided — "
+                    "translate and summarise the context facts instead.\n"
+                    "• CRITICAL: Do NOT confuse different characters or people in the context. "
+                    "Each person has their own role/attributes — do NOT apply one person's details to another.\n"
+                    "• CRITICAL: If the context does NOT contain the specific information asked, "
+                    "say so honestly in the user's language. Do NOT infer, guess, or hallucinate details "
+                    "that are not explicitly written in the context.\n\n"
+                ) + system_prompt
+
+            # ── Translate mode: user spoke English but wants reply in another language ──
+            elif reply_lang and reply_lang not in ('en-IN', 'en-US', 'en'):
+                target = self._LANG_NAMES.get(reply_lang, reply_lang)
+                system_prompt = (
+                    f"TRANSLATE MODE — CRITICAL INSTRUCTION:\n"
+                    f"• The user spoke in English.\n"
+                    f"• You MUST write your ENTIRE response in {target}.\n"
+                    f"• Do NOT include any English text in your response — translate everything to {target}.\n"
+                    f"• CRITICAL: Do NOT confuse different characters/people. "
+                    f"Each person has their own role — do NOT mix up attributes between different people.\n"
+                    f"• If document context is provided, summarise and translate ONLY what is explicitly "
+                    f"stated in the context — do NOT guess or add information not present.\n"
+                    f"• If the document context does NOT contain the answer, say clearly in {target} that "
+                    f"the information is not available in the provided documents.\n"
+                    f"• Answer naturally and conversationally in {target}.\n\n"
+                ) + system_prompt
+
+            # ── English mode: enforce English even if session history has other languages ──
+            elif not is_multilingual:
+                system_prompt = (
+                    "LANGUAGE INSTRUCTION: Reply in English only. "
+                    "Do NOT use Hindi or any other language, regardless of previous conversation.\n\n"
+                ) + system_prompt
+
             messages = [{"role": "system", "content": system_prompt}]
             messages.extend(chat_history[-self.config.MAX_HISTORY_TURNS:])
 
             if has_context:
                 context = self.retriever.format_context_enhanced(filtered_docs, filtered_metas)
-                user_msg = self.config.WITH_CONTEXT_TEMPLATE.format(
-                    context=context, question=original_question
-                )
+                if is_multilingual:
+                    # Explicit bilingual scaffold for Hindi/Hinglish answers
+                    user_msg = (
+                        "=== DOCUMENT CONTEXT (English) ===\n"
+                        f"{context}\n\n"
+                        "=== USER QUESTION ===\n"
+                        f"{original_question}\n\n"
+                        "TASK: Using ONLY the information explicitly written in the document context above, "
+                        "answer the question. Write your answer in the same language as the question "
+                        "(Hindi or Hinglish if the question is in those languages). "
+                        "If the context DOES contain the answer, extract it and translate it — do not "
+                        "add details not in the context. "
+                        "If the context does NOT contain the answer to the question, say clearly in the "
+                        "user's language that this specific information is not in the documents."
+                    )
+                elif reply_lang and reply_lang not in ('en-IN', 'en-US', 'en'):
+                    # Translate mode + context: strict bilingual scaffold
+                    target = self._LANG_NAMES.get(reply_lang, reply_lang)
+                    user_msg = (
+                        "=== DOCUMENT CONTEXT (English) ===\n"
+                        f"{context}\n\n"
+                        "=== USER QUESTION ===\n"
+                        f"{original_question}\n\n"
+                        f"TASK: Using ONLY the information explicitly written in the document context "
+                        f"above, answer the question. Write your ENTIRE answer in {target}. "
+                        f"Extract and translate facts from the context — do NOT add details not in the "
+                        f"context. If the context does NOT contain the answer, say clearly in {target} "
+                        f"that this information is not available in the documents."
+                    )
+                else:
+                    user_msg = self.config.WITH_CONTEXT_TEMPLATE.format(
+                        context=context, question=original_question
+                    )
             elif self.config.STRICT_DOCUMENT_MODE:
                 answer = self.config.STRICT_NO_CONTEXT_RESPONSE
                 yield {"type": "token", "data": answer}
@@ -458,7 +688,18 @@ class RAGChatbot:
                 self._update_conversation_memory(thread_id, original_question, answer)
                 return
             else:
-                user_msg = self.config.NO_CONTEXT_TEMPLATE.format(question=original_question)
+                if is_multilingual:
+                    # For multilingual no-context: refuse to hallucinate, ask to check documents
+                    user_msg = (
+                        f"The user asked: {original_question}\n\n"
+                        "No relevant information was found in the indexed documents for this query.\n"
+                        "Tell the user in the same language they used that this specific information "
+                        "was not found in the indexed documents. "
+                        "Do NOT make up, guess, or invent any answer. "
+                        "Suggest they verify the relevant document is uploaded and indexed."
+                    )
+                else:
+                    user_msg = self.config.NO_CONTEXT_TEMPLATE.format(question=original_question)
 
             messages.append({"role": "user", "content": user_msg})
 

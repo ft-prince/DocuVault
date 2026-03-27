@@ -139,6 +139,11 @@ STYLE:
 - Use bullet points or numbered lists when listing multiple items.
 - Keep answers focused — do not pad with filler sentences.
 
+LANGUAGE:
+- Always respond in the same language the user asked the question in.
+- If the user asks in Hindi, respond in Hindi. If Tamil, respond in Tamil. If English, respond in English.
+- Never switch to a different language than the one the user used.
+
 Remember: The documents the user has uploaded are your primary knowledge source. Always check the Context section first."""
 
     # Strict document-only mode prompt (when STRICT_DOCUMENT_MODE = True)
@@ -222,7 +227,7 @@ Please answer this question using your general knowledge. No specific document c
 
 Question: {question}
 
-Please answer the question. Use the context if relevant, and you may also use your general knowledge to provide a complete answer."""
+Answer ONLY using information explicitly stated in the context above. Do NOT add facts, inferences, or details that are not written in the context. If the context does not contain the specific information needed to answer the question, say so clearly — do not guess or use general knowledge."""
 
     # Template for strict mode with no context
     STRICT_NO_CONTEXT_RESPONSE = "I cannot find relevant information in the available documents to answer this question."
