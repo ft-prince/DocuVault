@@ -130,6 +130,7 @@ urlpatterns = [
     # ============================================================
     path('documents/<int:pk>/index/', rag_views.document_index_view, name='document_index'),
     path('documents/<int:pk>/reindex/', rag_views.reindex_document_api, name='document_reindex'),
+    path('documents/<int:pk>/index-status/', rag_views.document_index_status_view, name='document_index_status'),
     path('documents/bulk-index/', rag_views.bulk_index_documents_view, name='bulk_index_documents'),
     
     # ============================================================

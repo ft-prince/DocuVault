@@ -18,7 +18,7 @@
             </div>
         </div>
         
-        <div style="display: flex; gap: 0.75rem;">
+        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
             {% if can_edit %}
                 <a href="{% url 'document_edit' document.pk %}" class="btn-secondary btn btn-small">
                     Edit
@@ -37,12 +37,136 @@
                 </a>
             {% endif %}
             
-            <form method="post" action="{% url 'document_index' document.pk %}" style="display: inline;">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-small" style="background: #28a745; color: white;">
-                    <i class="fas fa-robot"></i> Index for AI
-                </button>
-            </form>
+            <!-- AI Indexing Status Widget -->
+            {% if document.file %}
+            <div id="indexWidget" style="display:inline-flex;align-items:center;gap:.5rem;">
+              {% if embedding %}
+                {% if embedding.index_status == 'completed' %}
+                <span id="idxBadge" style="display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .85rem;background:#f0fdf4;border:1px solid #86efac;border-radius:6px;font-size:.8rem;font-weight:600;color:#15803d;">
+                  <span id="idxSpinner" style="display:none;width:12px;height:12px;border:2px solid #86efac;border-top-color:#15803d;border-radius:50%;animation:idxSpin .7s linear infinite;"></span>
+                  <span id="idxIcon">✓</span> <span id="idxLabel">Indexed ({{ embedding.chunk_count }} chunks)</span>
+                </span>
+                {% elif embedding.index_status == 'processing' %}
+                <span id="idxBadge" style="display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .85rem;background:#fffbeb;border:1px solid #fcd34d;border-radius:6px;font-size:.8rem;font-weight:600;color:#92400e;">
+                  <span id="idxSpinner" style="width:12px;height:12px;border:2px solid #fcd34d;border-top-color:#b45309;border-radius:50%;animation:idxSpin .7s linear infinite;flex-shrink:0;"></span>
+                  <span id="idxIcon" style="display:none;">⏳</span> <span id="idxLabel">Indexing…</span>
+                </span>
+                {% elif embedding.index_status == 'failed' %}
+                <span id="idxBadge" style="display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .85rem;background:#fef2f2;border:1px solid #fca5a5;border-radius:6px;font-size:.8rem;font-weight:600;color:#dc2626;">
+                  <span id="idxSpinner" style="display:none;width:12px;height:12px;border:2px solid #fca5a5;border-top-color:#dc2626;border-radius:50%;animation:idxSpin .7s linear infinite;"></span>
+                  <span id="idxIcon">✗</span> <span id="idxLabel">Index failed</span>
+                </span>
+                {% else %}
+                <span id="idxBadge" style="display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .85rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;font-size:.8rem;font-weight:600;color:#64748b;">
+                  <span id="idxSpinner" style="width:12px;height:12px;border:2px solid #cbd5e1;border-top-color:#64748b;border-radius:50%;animation:idxSpin .7s linear infinite;flex-shrink:0;"></span>
+                  <span id="idxIcon" style="display:none;">⏳</span> <span id="idxLabel">Queued for indexing…</span>
+                </span>
+                {% endif %}
+              {% else %}
+                <span id="idxBadge" style="display:inline-flex;align-items:center;gap:.35rem;padding:.3rem .85rem;background:#f8fafc;border:1px solid #cbd5e1;border-radius:6px;font-size:.8rem;font-weight:600;color:#64748b;">
+                  <span id="idxSpinner" style="width:12px;height:12px;border:2px solid #cbd5e1;border-top-color:#64748b;border-radius:50%;animation:idxSpin .7s linear infinite;flex-shrink:0;"></span>
+                  <span id="idxIcon" style="display:none;">⏳</span> <span id="idxLabel">Queued for indexing…</span>
+                </span>
+              {% endif %}
+              <button id="idxReindexBtn" onclick="triggerReindex()" title="Force re-index"
+                style="display:none;padding:.3rem .7rem;background:#f1f5f9;border:1px solid #cbd5e1;border-radius:6px;font-size:.75rem;font-weight:600;color:#475569;cursor:pointer;">
+                ↺ Re-index
+              </button>
+            </div>
+            <style>@keyframes idxSpin{to{transform:rotate(360deg)}}</style>
+            <script>
+            (function(){
+              var docPk = {{ document.pk }};
+              var statusUrl = "{% url 'document_index_status' document.pk %}";
+              var reindexUrl = "{% url 'document_reindex' document.pk %}";
+              var csrfToken = "{{ csrf_token }}";
+              var pollTimer = null;
+
+              var badge  = document.getElementById('idxBadge');
+              var spinner= document.getElementById('idxSpinner');
+              var icon   = document.getElementById('idxIcon');
+              var label  = document.getElementById('idxLabel');
+              var reBtn  = document.getElementById('idxReindexBtn');
+
+              function setUI(status, chunks, errMsg){
+                var styles = {
+                  completed:  {bg:'#f0fdf4',bdr:'#86efac',col:'#15803d'},
+                  processing: {bg:'#fffbeb',bdr:'#fcd34d',col:'#92400e'},
+                  pending:    {bg:'#f8fafc',bdr:'#cbd5e1',col:'#64748b'},
+                  failed:     {bg:'#fef2f2',bdr:'#fca5a5',col:'#dc2626'},
+                  unsupported:{bg:'#f8fafc',bdr:'#e2e8f0',col:'#94a3b8'},
+                };
+                var s = styles[status] || styles.pending;
+                badge.style.background = s.bg;
+                badge.style.borderColor = s.bdr;
+                badge.style.color = s.col;
+                spinner.style.borderColor = s.bdr;
+                spinner.style.borderTopColor = s.col;
+
+                if(status === 'completed'){
+                  spinner.style.display='none'; icon.style.display=''; icon.textContent='✓';
+                  label.textContent = 'Indexed (' + chunks + ' chunks)';
+                  reBtn.style.display='inline-block';
+                  stopPoll();
+                } else if(status === 'processing'){
+                  spinner.style.display=''; icon.style.display='none';
+                  label.textContent = 'Indexing…';
+                  reBtn.style.display='none';
+                  startPoll();
+                } else if(status === 'pending'){
+                  spinner.style.display=''; icon.style.display='none';
+                  label.textContent = 'Queued for indexing…';
+                  reBtn.style.display='none';
+                  startPoll();
+                } else if(status === 'failed'){
+                  spinner.style.display='none'; icon.style.display=''; icon.textContent='✗';
+                  label.textContent = 'Index failed' + (errMsg ? ': '+errMsg.slice(0,60) : '');
+                  reBtn.style.display='inline-block';
+                  stopPoll();
+                } else if(status === 'unsupported'){
+                  spinner.style.display='none'; icon.style.display=''; icon.textContent='–';
+                  label.textContent = 'File type not supported for AI indexing';
+                  reBtn.style.display='none';
+                  stopPoll();
+                }
+              }
+
+              function poll(){
+                fetch(statusUrl)
+                  .then(function(r){ return r.json(); })
+                  .then(function(d){ setUI(d.status, d.chunk_count, d.error_message); })
+                  .catch(function(){});
+              }
+
+              function startPoll(){
+                if(!pollTimer) pollTimer = setInterval(poll, 3000);
+              }
+              function stopPoll(){
+                if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
+              }
+
+              window.triggerReindex = function(){
+                label.textContent='Starting re-index…';
+                spinner.style.display=''; icon.style.display='none';
+                reBtn.style.display='none';
+                fetch(reindexUrl, {
+                  method:'POST',
+                  headers:{'X-CSRFToken': csrfToken},
+                }).then(function(r){ return r.json(); })
+                  .then(function(d){
+                    if(d.success){ setUI('processing',0,''); startPoll(); }
+                    else{ label.textContent='Error: '+(d.error||'unknown'); }
+                  }).catch(function(){ label.textContent='Request failed'; });
+              };
+
+              // Initialize UI from server-rendered state on load
+              var initialStatus  = "{% if embedding %}{{ embedding.index_status }}{% else %}pending{% endif %}";
+              var initialChunks  = {% if embedding %}{{ embedding.chunk_count|default:0 }}{% else %}0{% endif %};
+              var initialError   = "{% if embedding %}{{ embedding.error_message|default:''|escapejs }}{% else %}{% endif %}";
+              setUI(initialStatus, initialChunks, initialError);
+            })();
+            </script>
+            {% endif %}
             
             <form method="post" action="{% url 'favorite_toggle' document.pk %}" style="display: inline;">
                 {% csrf_token %}

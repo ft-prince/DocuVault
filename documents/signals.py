@@ -58,7 +58,7 @@ def _load_text_file(file_path: str, document):
     Load a plain-text / markdown file as a list of LangChain Document objects.
     Each ~500-word block becomes one document to give the chunker good material.
     """
-    from langchain.schema import Document as LCDoc
+    from langchain_core.documents import Document as LCDoc
 
     with open(file_path, 'r', encoding='utf-8', errors='ignore') as fh:
         raw = fh.read()
@@ -98,7 +98,7 @@ def _load_docx_file(file_path: str, document):
     """Load a .docx file as LangChain Document objects (paragraph-by-paragraph)."""
     try:
         from docx import Document as DocxDoc
-        from langchain.schema import Document as LCDoc
+        from langchain_core.documents import Document as LCDoc
     except ImportError:
         logger.warning("[RAG] python-docx not installed — cannot index .docx files. "
                        "Run: pip install python-docx")

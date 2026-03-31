@@ -258,6 +258,13 @@ def document_detail_view(request, pk):
     # Get recent activity
     recent_activity = document.activity_logs.select_related('user')[:10]
     
+    # Get indexing status
+    try:
+        from .models import DocumentEmbedding
+        embedding = document.embedding
+    except Exception:
+        embedding = None
+
     context = {
         'document': document,
         'comments': comments,
@@ -266,6 +273,7 @@ def document_detail_view(request, pk):
         'recent_activity': recent_activity,
         'can_edit': document.can_edit(request.user),
         'can_delete': document.can_delete(request.user),
+        'embedding': embedding,
     }
     return render(request, 'documents/document_detail.html', context)
 
@@ -396,6 +404,18 @@ def document_edit_view(request, pk):
             else:
                 document.save()
                 form.save_m2m()
+
+            # Reset embedding so auto-indexing re-runs on file replace
+            if 'file' in request.FILES and request.FILES['file']:
+                try:
+                    from .models import DocumentEmbedding
+                    emb, _ = DocumentEmbedding.objects.get_or_create(document=document)
+                    emb.is_indexed = False
+                    emb.index_status = 'pending'
+                    emb.error_message = ''
+                    emb.save(update_fields=['is_indexed', 'index_status', 'error_message'])
+                except Exception:
+                    pass
 
             # Log activity
             ActivityLog.objects.create(

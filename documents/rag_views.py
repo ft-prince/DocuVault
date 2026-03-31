@@ -345,6 +345,34 @@ def reindex_document_api(request, pk):
 
 
 @login_required
+@require_http_methods(["GET"])
+def document_index_status_view(request, pk):
+    """
+    AJAX: return current indexing status for a document.
+    Returns JSON: { status, is_indexed, chunk_count, error_message }
+    """
+    document = get_object_or_404(Document, pk=pk, is_deleted=False)
+    if not document.can_view(request.user):
+        return JsonResponse({'error': 'Permission denied'}, status=403)
+
+    try:
+        emb = DocumentEmbedding.objects.get(document=document)
+        return JsonResponse({
+            'status': emb.index_status,
+            'is_indexed': emb.is_indexed,
+            'chunk_count': emb.chunk_count,
+            'error_message': emb.error_message or '',
+        })
+    except DocumentEmbedding.DoesNotExist:
+        # No embedding record — file may not be a supported type
+        from .signals import SUPPORTED_EXTENSIONS
+        ext = os.path.splitext(document.file.name)[1].lower() if document.file else ''
+        if ext in SUPPORTED_EXTENSIONS:
+            return JsonResponse({'status': 'pending', 'is_indexed': False, 'chunk_count': 0, 'error_message': ''})
+        return JsonResponse({'status': 'unsupported', 'is_indexed': False, 'chunk_count': 0, 'error_message': f'File type {ext} not supported'})
+
+
+@login_required
 @require_http_methods(["POST"])
 def clear_chat_view(request):
     """Clear conversation history"""
