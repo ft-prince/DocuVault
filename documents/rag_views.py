@@ -5,9 +5,20 @@ RAG-specific views only - works with existing models
 
 import json
 import os
+import sys
 import time
 import tempfile
 from typing import Optional, List, Dict
+
+
+def _safe_print(*args, **kwargs):
+    """Print with Unicode-safe fallback for Windows consoles."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        text = ' '.join(str(a) for a in args)
+        print(text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(
+            sys.stdout.encoding or 'utf-8', errors='replace'), **kwargs)
 
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
@@ -141,7 +152,7 @@ def chatbot_view(request):
     
     context = {
         'chat_session': chat_session,
-        'messages': messages_list,
+        'chat_messages': messages_list,
         'total_documents': user_documents.count(),
         'indexed_documents': indexed_count,
         'form': ChatQueryForm(),
@@ -219,24 +230,22 @@ def chatbot_query_api(request):
         filtered_sources = _enrich_sources(filtered_sources)
         
         # Enhanced logging
-        print(f"\n{'='*70}")
-        print(f"👤 User: {request.user.username}")
-        print(f"💬 Query: {question}")
-        print(f"🤖 Answer: {answer[:200]}...")
-        
+        _safe_print(f"\n{'='*70}")
+        _safe_print(f"User: {request.user.username}")
+        _safe_print(f"Query: {question}")
+        _safe_print(f"Answer: {answer[:200]}...")
+
         if filtered_sources:
-            print(f"\n📚 Sources ({len(filtered_sources)}):")
+            _safe_print(f"\nSources ({len(filtered_sources)}):")
             for i, source in enumerate(filtered_sources[:5], 1):
                 content_type = source.get('content_type', 'text')
                 similarity = source.get('similarity', 0)
-                icon = "📊" if content_type == 'table' else "🖼️" if content_type == 'image' else "📄"
-                quality = "🟢" if similarity > 0.3 else "🟡" if similarity > 0.15 else "🔴"
-                
-                print(f"   {i}. {icon} {quality} {source.get('source')} (Page {source.get('page')})")
-                print(f"      Type: {content_type} | Relevance: {similarity:.3f}")
-        
-        print(f"\n⏱️  Time: {retrieval_time:.2f}s")
-        print(f"{'='*70}\n")
+
+                _safe_print(f"   {i}. {source.get('source')} (Page {source.get('page')})")
+                _safe_print(f"      Type: {content_type} | Relevance: {similarity:.3f}")
+
+        _safe_print(f"\nTime: {retrieval_time:.2f}s")
+        _safe_print(f"{'='*70}\n")
         
         # Save AI response
         ai_message = ChatMessage.objects.create(
@@ -429,7 +438,7 @@ def document_index_view(request, pk):
         messages.success(
             request,
             f'Document "{document.title}" indexed successfully! '
-            f'Processed {stats.get("total_pages", 0)} pages.'
+            f'Processed {chunk_count} chunks.'
         )
         
     except Exception as e:

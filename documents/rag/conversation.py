@@ -4,9 +4,20 @@ Integrates all enhanced components for better document Q&A with flexible knowled
 """
 
 from typing import List, Dict, Tuple, Optional
+import sys
 import time
 
 from .config import RAGConfig
+
+
+def _safe_print(*args, **kwargs):
+    """Print with Unicode-safe fallback for Windows consoles."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        text = ' '.join(str(a) for a in args)
+        print(text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(
+            sys.stdout.encoding or 'utf-8', errors='replace'), **kwargs)
 from .document_processor import EnhancedDocumentProcessor
 from .embeddings import EnhancedEmbeddingManager
 from .vector_store import VectorStore
@@ -54,9 +65,9 @@ class RAGChatbot:
             db_path: Path for ChromaDB storage
             reset: Whether to reset the vector store
         """
-        print("\n" + "="*70)
-        print("🚀 Initializing Enhanced RAG System")
-        print("="*70)
+        _safe_print("\n" + "="*70)
+        _safe_print("🚀 Initializing Enhanced RAG System")
+        _safe_print("="*70)
         
         # Set ChromaDB path
         if db_path:
@@ -81,21 +92,21 @@ class RAGChatbot:
         
         self.is_initialized = True
         
-        print("\n✅ Enhanced RAG System initialized successfully!")
-        print(f"   📊 Table extraction: {'Enabled' if self.config.ENABLE_TABLE_EXTRACTION else 'Disabled'}")
-        print(f"   🔍 OCR: {'Enabled' if self.config.ENABLE_OCR else 'Disabled'}")
-        print(f"   🖼️  Image description: {'Enabled' if self.config.ENABLE_IMAGE_DESCRIPTION else 'Disabled'}")
-        print(f"   🔀 Hybrid search: {'Enabled' if self.config.USE_HYBRID_SEARCH else 'Disabled'}")
+        _safe_print("\n✅ Enhanced RAG System initialized successfully!")
+        _safe_print(f"   📊 Table extraction: {'Enabled' if self.config.ENABLE_TABLE_EXTRACTION else 'Disabled'}")
+        _safe_print(f"   🔍 OCR: {'Enabled' if self.config.ENABLE_OCR else 'Disabled'}")
+        _safe_print(f"   🖼️  Image description: {'Enabled' if self.config.ENABLE_IMAGE_DESCRIPTION else 'Disabled'}")
+        _safe_print(f"   🔀 Hybrid search: {'Enabled' if self.config.USE_HYBRID_SEARCH else 'Disabled'}")
         
         # Show knowledge mode
         if self.config.STRICT_DOCUMENT_MODE:
-            print(f"   📚 Mode: STRICT DOCUMENT-ONLY")
+            _safe_print(f"   📚 Mode: STRICT DOCUMENT-ONLY")
         elif self.config.INDICATE_KNOWLEDGE_SOURCE:
-            print(f"   📚 Mode: HYBRID (with source indication)")
+            _safe_print(f"   📚 Mode: HYBRID (with source indication)")
         else:
-            print(f"   📚 Mode: HYBRID (documents + general knowledge)")
+            _safe_print(f"   📚 Mode: HYBRID (documents + general knowledge)")
         
-        print("="*70 + "\n")
+        _safe_print("="*70 + "\n")
     
     def index_documents(self, pdf_path: str = None, documents: List = None,
                        extract_tables: bool = None,
@@ -115,28 +126,28 @@ class RAGChatbot:
         extract_tables = extract_tables if extract_tables is not None else self.config.ENABLE_TABLE_EXTRACTION
         describe_images = describe_images if describe_images is not None else self.config.ENABLE_IMAGE_DESCRIPTION
         
-        print("\n" + "="*70)
-        print("📚 Starting Document Indexing")
-        print("="*70)
+        _safe_print("\n" + "="*70)
+        _safe_print("📚 Starting Document Indexing")
+        _safe_print("="*70)
         
         start_time = time.time()
         
         # Process documents
         if pdf_path:
-            print(f"Processing PDF: {pdf_path}")
+            _safe_print(f"Processing PDF: {pdf_path}")
             chunks = self.document_processor.process_document_complete(
                 pdf_path=pdf_path,
                 extract_tables=extract_tables,
                 describe_images=describe_images
             )
         elif documents:
-            print(f"Processing {len(documents)} pre-loaded documents")
+            _safe_print(f"Processing {len(documents)} pre-loaded documents")
             chunks = self.document_processor.split_documents_smart(documents)
         else:
             raise ValueError("Either pdf_path or documents must be provided")
         
         if not chunks:
-            print("⚠️  No chunks created from documents")
+            _safe_print("⚠️  No chunks created from documents")
             return
         
         # Prepare for embedding
@@ -167,20 +178,20 @@ class RAGChatbot:
         
         processing_time = time.time() - start_time
         
-        print(f"\n✅ Indexing completed in {processing_time:.2f}s")
-        print(f"   📦 Total chunks in vector store: {self.vector_store.get_document_count()}")
+        _safe_print(f"\n✅ Indexing completed in {processing_time:.2f}s")
+        _safe_print(f"   📦 Total chunks in vector store: {self.vector_store.get_document_count()}")
         
         # Show processing stats
         stats = self.document_processor.get_processing_stats()
         if stats['total_pages'] > 0:
-            print(f"\n📊 Processing Statistics:")
-            print(f"   Total pages: {stats['total_pages']}")
-            print(f"   Text pages: {stats['text_pages']}")
-            print(f"   OCR pages: {stats['ocr_pages']}")
-            print(f"   Tables extracted: {stats['tables_extracted']}")
-            print(f"   Images processed: {stats['images_processed']}")
+            _safe_print(f"\n📊 Processing Statistics:")
+            _safe_print(f"   Total pages: {stats['total_pages']}")
+            _safe_print(f"   Text pages: {stats['text_pages']}")
+            _safe_print(f"   OCR pages: {stats['ocr_pages']}")
+            _safe_print(f"   Tables extracted: {stats['tables_extracted']}")
+            _safe_print(f"   Images processed: {stats['images_processed']}")
         
-        print("="*70 + "\n")
+        _safe_print("="*70 + "\n")
     
     def query(self, question: str, 
              thread_id: str = "default",
@@ -207,9 +218,9 @@ class RAGChatbot:
         if not self.is_initialized:
             raise RuntimeError("System not initialized. Call initialize() first.")
         
-        print("\n" + "="*70)
-        print(f"💬 Query: {question}")
-        print("="*70)
+        _safe_print("\n" + "="*70)
+        _safe_print(f"💬 Query: {question}")
+        _safe_print("="*70)
         
         start_time = time.time()
         
@@ -245,7 +256,7 @@ class RAGChatbot:
         if use_rewrite and chat_history:
             question = self.retriever.rewrite_query(question, chat_history)
             if question != original_question:
-                print(f"🔄 Rewritten query: {question}")
+                _safe_print(f"🔄 Rewritten query: {question}")
         
         # Retrieve relevant documents
         n_results = n_results or self.config.N_RESULTS
@@ -270,7 +281,7 @@ class RAGChatbot:
             system_prompt = self.config.SYSTEM_PROMPT
             mode_label = "HYBRID"
         
-        print(f"🎯 Query mode: {mode_label}")
+        _safe_print(f"🎯 Query mode: {mode_label}")
         
         # Prepare messages for LLM
         messages = [
@@ -300,7 +311,7 @@ class RAGChatbot:
         # Build user message based on context availability and mode
         if has_relevant_context:
             # We have relevant documents
-            print(f"📄 Retrieved {len(filtered_docs)} relevant chunks (threshold: {self.config.SIMILARITY_THRESHOLD})")
+            _safe_print(f"📄 Retrieved {len(filtered_docs)} relevant chunks (threshold: {self.config.SIMILARITY_THRESHOLD})")
             
             # Format context
             context = self.retriever.format_context_enhanced(filtered_docs, filtered_metas)
@@ -319,11 +330,11 @@ class RAGChatbot:
             
         else:
             # No relevant context found
-            print("⚠️  No relevant documents found")
+            _safe_print("⚠️  No relevant documents found")
             
             if use_strict_mode or not use_general_knowledge:
                 # Strict mode or general knowledge disabled - cannot answer
-                print("❌ Cannot answer without document context (strict mode)")
+                _safe_print("❌ Cannot answer without document context (strict mode)")
                 
                 # Still update conversation memory
                 self._update_conversation_memory(
@@ -336,7 +347,7 @@ class RAGChatbot:
             
             else:
                 # Use general knowledge
-                print("💡 Using general knowledge")
+                _safe_print("💡 Using general knowledge")
                 
                 user_message = self.config.NO_CONTEXT_TEMPLATE.format(
                     question=original_question
@@ -360,11 +371,11 @@ class RAGChatbot:
         # Update conversation memory
         self._update_conversation_memory(thread_id, original_question, answer)
         
-        print(f"\n⏱️  Timing:")
-        print(f"   Retrieval: {retrieval_time:.2f}s")
-        print(f"   Generation: {generation_time:.2f}s")
-        print(f"   Total: {total_time:.2f}s")
-        print("="*70 + "\n")
+        _safe_print(f"\n⏱️  Timing:")
+        _safe_print(f"   Retrieval: {retrieval_time:.2f}s")
+        _safe_print(f"   Generation: {generation_time:.2f}s")
+        _safe_print(f"   Total: {total_time:.2f}s")
+        _safe_print("="*70 + "\n")
         
         return answer, sources
     
@@ -520,15 +531,15 @@ class RAGChatbot:
                 temperature=0.05,
             )
             result = translated.strip() if translated else ''
-            print(f"🌐 Translated for retrieval: '{result}'")
+            _safe_print(f"🌐 Translated for retrieval: '{result}'")
             # Validate: result must be non-empty and in Latin script
             if result and self._is_latin(result):
                 return result
             # Translation returned non-Latin text (e.g. Devanagari) → fallback
-            print("⚠️  Translation output is non-Latin — using original text for retrieval")
+            _safe_print("⚠️  Translation output is non-Latin — using original text for retrieval")
             return text
         except Exception as e:
-            print(f"⚠️  Translation failed, using original: {e}")
+            _safe_print(f"⚠️  Translation failed, using original: {e}")
             return text
 
     # ── Streaming query ────────────────────────────────────────────────
@@ -772,10 +783,10 @@ class RAGChatbot:
         if thread_id:
             if thread_id in self.conversation_memory:
                 del self.conversation_memory[thread_id]
-                print(f"🗑️  Cleared memory for thread: {thread_id}")
+                _safe_print(f"🗑️  Cleared memory for thread: {thread_id}")
         else:
             self.conversation_memory.clear()
-            print("🗑️  Cleared all conversation memory")
+            _safe_print("🗑️  Cleared all conversation memory")
     
     def get_conversation_history(self, thread_id: str = "default") -> List[Dict]:
         """Get conversation history for a thread"""
@@ -851,12 +862,12 @@ class RAGChatbot:
         """
         results = []
         
-        print(f"\n🔍 Processing {len(questions)} questions in batch...")
+        _safe_print(f"\n🔍 Processing {len(questions)} questions in batch...")
         if mode:
-            print(f"   Mode: {mode}")
+            _safe_print(f"   Mode: {mode}")
         
         for i, question in enumerate(questions, 1):
-            print(f"\n[{i}/{len(questions)}]")
+            _safe_print(f"\n[{i}/{len(questions)}]")
             
             if mode:
                 answer, sources = self.query(question, thread_id=thread_id, force_mode=mode)
@@ -874,18 +885,18 @@ class RAGChatbot:
         Args:
             thread_id: Conversation thread ID
         """
-        print("\n" + "="*70)
-        print("🤖 Interactive RAG Chat Mode")
-        print("="*70)
-        print(f"Current mode: {self.get_current_mode()}")
-        print("\nCommands:")
-        print("  'exit' or 'quit' - Exit interactive mode")
-        print("  'clear' - Clear conversation memory")
-        print("  'mode strict' - Switch to strict document-only mode")
-        print("  'mode hybrid' - Switch to hybrid mode")
-        print("  'mode indicated' - Switch to indicated mode")
-        print("  'info' - Show system information")
-        print("="*70 + "\n")
+        _safe_print("\n" + "="*70)
+        _safe_print("🤖 Interactive RAG Chat Mode")
+        _safe_print("="*70)
+        _safe_print(f"Current mode: {self.get_current_mode()}")
+        _safe_print("\nCommands:")
+        _safe_print("  'exit' or 'quit' - Exit interactive mode")
+        _safe_print("  'clear' - Clear conversation memory")
+        _safe_print("  'mode strict' - Switch to strict document-only mode")
+        _safe_print("  'mode hybrid' - Switch to hybrid mode")
+        _safe_print("  'mode indicated' - Switch to indicated mode")
+        _safe_print("  'info' - Show system information")
+        _safe_print("="*70 + "\n")
         
         while True:
             try:
@@ -896,7 +907,7 @@ class RAGChatbot:
                 
                 # Handle commands
                 if user_input.lower() in ['exit', 'quit']:
-                    print("\n👋 Goodbye!")
+                    _safe_print("\n👋 Goodbye!")
                     break
                 
                 elif user_input.lower() == 'clear':
@@ -908,35 +919,35 @@ class RAGChatbot:
                     try:
                         self.set_mode(mode)
                     except ValueError as e:
-                        print(f"❌ {e}")
+                        _safe_print(f"❌ {e}")
                     continue
                 
                 elif user_input.lower() == 'info':
                     info = self.get_system_info()
-                    print("\n📊 System Information:")
-                    print(f"   Mode: {info['current_mode']}")
-                    print(f"   Documents in store: {info['vector_store']['total_documents']}")
-                    print(f"   Active threads: {info['active_threads']}")
-                    print(f"   LLM: {info['llm'].get('model_name', 'Unknown')}")
+                    _safe_print("\n📊 System Information:")
+                    _safe_print(f"   Mode: {info['current_mode']}")
+                    _safe_print(f"   Documents in store: {info['vector_store']['total_documents']}")
+                    _safe_print(f"   Active threads: {info['active_threads']}")
+                    _safe_print(f"   LLM: {info['llm'].get('model_name', 'Unknown')}")
                     continue
                 
                 # Process as question
                 answer, sources = self.query(user_input, thread_id=thread_id)
                 
-                print(f"\n🤖 Assistant: {answer}")
+                _safe_print(f"\n🤖 Assistant: {answer}")
                 
                 if sources:
-                    print(f"\n📚 Sources ({len(sources)}):")
+                    _safe_print(f"\n📚 Sources ({len(sources)}):")
                     for i, source in enumerate(sources[:3], 1):
-                        print(f"   {i}. {source['source']} (page {source['page']}) - {source['content_type']}")
+                        _safe_print(f"   {i}. {source['source']} (page {source['page']}) - {source['content_type']}")
                 
-                print()
+                _safe_print()
                 
             except KeyboardInterrupt:
-                print("\n\n👋 Goodbye!")
+                _safe_print("\n\n👋 Goodbye!")
                 break
             except Exception as e:
-                print(f"\n❌ Error: {e}")
+                _safe_print(f"\n❌ Error: {e}")
                 continue
     
     def export_conversation(self, thread_id: str = "default", format: str = "text") -> str:

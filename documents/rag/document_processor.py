@@ -3,6 +3,7 @@ Enhanced Document Processing Module for RAG System
 Supports: PDF text, tables (pdfplumber/Camelot), OCR (Tesseract), and image understanding (BLIP-2)
 """
 
+import sys
 import os
 import io
 import base64
@@ -28,6 +29,16 @@ from langchain_core.documents import Document
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from .config import RAGConfig
+
+
+def _safe_print(*args, **kwargs):
+    """Print with Unicode-safe fallback for Windows consoles."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        text = ' '.join(str(a) for a in args)
+        print(text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(
+            sys.stdout.encoding or 'utf-8', errors='replace'), **kwargs)
 
 
 class EnhancedDocumentProcessor:
@@ -71,7 +82,7 @@ class EnhancedDocumentProcessor:
     def load_image_model(self):
         """Lazy load BLIP-2 model for image understanding"""
         if self.blip_model is None:
-            print("🔄 Loading BLIP-2 model for image understanding...")
+            _safe_print("🔄 Loading BLIP-2 model for image understanding...")
             
             model_name = "Salesforce/blip2-opt-2.7b"  # Smaller model for efficiency
             
@@ -82,7 +93,7 @@ class EnhancedDocumentProcessor:
                 device_map="auto"
             )
             
-            print(f"✅ BLIP-2 model loaded on {self.device}")
+            _safe_print(f"✅ BLIP-2 model loaded on {self.device}")
     
     def is_page_scanned(self, page) -> bool:
         """
@@ -133,7 +144,7 @@ class EnhancedDocumentProcessor:
                 needs_ocr = self.is_page_scanned(page)
                 
                 if needs_ocr or not text or len(text.strip()) < 20:
-                    print(f"   Page {page_num}: Applying OCR (scanned/low text)")
+                    _safe_print(f"   Page {page_num}: Applying OCR (scanned/low text)")
                     text = self.ocr_page(pdf_path, page_num)
                     self.stats['ocr_pages'] += 1
                 else:
@@ -186,7 +197,7 @@ class EnhancedDocumentProcessor:
             return text.strip()
             
         except Exception as e:
-            print(f"      OCR failed for page {page_num}: {e}")
+            _safe_print(f"      OCR failed for page {page_num}: {e}")
             return ""
     
     def extract_tables_camelot(self, pdf_path: str, page_num: int) -> List[str]:
@@ -308,7 +319,7 @@ class EnhancedDocumentProcessor:
             self.stats['images_processed'] += 1
             
         except Exception as e:
-            print(f"      Image processing failed for page {page_num}: {e}")
+            _safe_print(f"      Image processing failed for page {page_num}: {e}")
         
         return image_descriptions
     
@@ -327,7 +338,7 @@ class EnhancedDocumentProcessor:
         Returns:
             List of page dictionaries with enhanced content
         """
-        print(f"\n📄 Processing: {source_name}")
+        _safe_print(f"\n📄 Processing: {source_name}")
         
         # Reset stats
         self.stats = {k: 0 for k in self.stats}
@@ -373,11 +384,11 @@ class EnhancedDocumentProcessor:
                 })
         
         # Print statistics
-        print(f"✅ Processed {self.stats['total_pages']} pages")
-        print(f"   📝 Text pages: {self.stats['text_pages']}")
-        print(f"   🔍 OCR pages: {self.stats['ocr_pages']}")
-        print(f"   📊 Tables extracted: {self.stats['tables_extracted']}")
-        print(f"   🖼️  Images processed: {self.stats['images_processed']}")
+        _safe_print(f"✅ Processed {self.stats['total_pages']} pages")
+        _safe_print(f"   📝 Text pages: {self.stats['text_pages']}")
+        _safe_print(f"   🔍 OCR pages: {self.stats['ocr_pages']}")
+        _safe_print(f"   📊 Tables extracted: {self.stats['tables_extracted']}")
+        _safe_print(f"   🖼️  Images processed: {self.stats['images_processed']}")
         
         return enhanced_pages
     
@@ -455,7 +466,7 @@ class EnhancedDocumentProcessor:
                     chunk.metadata['chunk_index'] = i
                     chunks.append(chunk)
         
-        print(f"📦 Created {len(chunks)} smart chunks from {len(documents)} pages")
+        _safe_print(f"📦 Created {len(chunks)} smart chunks from {len(documents)} pages")
         
         return chunks
     

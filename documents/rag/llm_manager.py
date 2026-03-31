@@ -3,12 +3,23 @@ LLM management module
 Handles loading and inference with quantized models using LangChain wrappers.
 """
 
+import sys
 import torch
 from typing import List, Dict, Optional
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig, pipeline
 import os
 from dotenv import load_dotenv
 load_dotenv()
+
+
+def _safe_print(*args, **kwargs):
+    """Print with Unicode-safe fallback for Windows consoles."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        text = ' '.join(str(a) for a in args)
+        print(text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(
+            sys.stdout.encoding or 'utf-8', errors='replace'), **kwargs)
 
 # Modern LangChain Imports
 from langchain_huggingface import ChatHuggingFace, HuggingFacePipeline
@@ -32,11 +43,11 @@ class LLMManager:
     def load_model(self):
         """Load the LLM model with 8-bit quantization and wrap it in LangChain."""
         if self.llm is not None:
-            print("LLM model already loaded")
+            _safe_print("LLM model already loaded")
             return
         
-        print(f"Loading LLM: {self.config.LLM_MODEL}")
-        print("This may take a few minutes...")
+        _safe_print(f"Loading LLM: {self.config.LLM_MODEL}")
+        _safe_print("This may take a few minutes...")
         
         # # 1. Configure Quantization (Kept from your original logic)
         # bnb_config = BitsAndBytesConfig(
@@ -94,7 +105,7 @@ class LLMManager:
             max_tokens=self.config.MAX_NEW_TOKENS,
             # api_key=os.getenv("GROQ_API_KEY") # Optional if set in env
         )
-        print(f"✅ Model loaded")
+        _safe_print(f"✅ Model loaded")
         #memory_footprint = self.model.get_memory_footprint() / 1e9
         #print(f"✅ Model loaded & wrapped! Memory footprint: {memory_footprint:.2f} GB")
     
@@ -204,10 +215,10 @@ class LLMManager:
         
         # Validation
         if (len(rewritten) > 250 or len(rewritten) < 5 or "assistant" in rewritten.lower()):
-            print(f"⚠️ Rewrite validation failed, using original")
+            _safe_print(f"⚠️ Rewrite validation failed, using original")
             return question
             
-        print(f"🔄 Rewritten: {rewritten}")
+        _safe_print(f"🔄 Rewritten: {rewritten}")
         return rewritten
 
     def get_model_info(self) -> Dict:

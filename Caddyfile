@@ -1,0 +1,24 @@
+:80 {
+    # Serve static files directly (CSS, JS, images)
+    handle /static/* {
+        root * D:/AI_Model_Renata/Document-management/Group/V2/DocuVault
+        file_server
+    }
+
+    # Serve uploaded media files directly (PDFs, docs, etc.)
+    handle /media/* {
+        root * D:/AI_Model_Renata/Document-management/Group/V2/DocuVault
+        file_server
+    }
+
+    # Everything else → Django
+    handle {
+        reverse_proxy 127.0.0.1:8000
+    }
+
+    encode gzip
+
+    log {
+        output file D:/AI_Model_Renata/Document-management/Group/V2/DocuVault/caddy_access.log
+    }
+}

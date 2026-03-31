@@ -178,6 +178,27 @@
 .vb-send:hover{opacity:.65;}
 .vbar.listening .vb-send{display:inline-block;}
 
+/* ── Toast Notifications ── */
+.toast-container{position:fixed;top:16px;left:50%;transform:translateX(-50%);z-index:20001;display:flex;flex-direction:column;align-items:center;gap:.5rem;pointer-events:none;width:auto;max-width:520px;}
+.toast{pointer-events:auto;display:flex;align-items:center;gap:.6rem;padding:.7rem 1.2rem;border-radius:12px;font-size:.85rem;font-weight:500;box-shadow:0 8px 30px rgba(0,0,0,.15);animation:toastIn .35s cubic-bezier(.34,1.56,.64,1);backdrop-filter:blur(12px);white-space:nowrap;cursor:pointer;transition:opacity .2s,transform .2s;}
+.toast.hiding{animation:toastOut .3s ease-in forwards;}
+@keyframes toastIn{from{opacity:0;transform:translateY(-18px) scale(.92)}to{opacity:1;transform:translateY(0) scale(1)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-14px) scale(.92)}}
+.toast-success{background:rgba(240,253,244,.96);border:1px solid #86efac;color:#15803d;}
+.toast-error{background:rgba(254,242,242,.96);border:1px solid #fca5a5;color:#dc2626;}
+.toast-warning{background:rgba(255,251,235,.96);border:1px solid #fcd34d;color:#b45309;}
+.toast-info{background:rgba(239,246,255,.96);border:1px solid #93c5fd;color:#1d4ed8;}
+.toast-icon{font-size:1rem;flex-shrink:0;}
+.toast-text{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;}
+.toast-close{background:none;border:none;color:inherit;opacity:.5;cursor:pointer;font-size:.85rem;padding:0 0 0 .3rem;flex-shrink:0;transition:opacity .15s;}
+.toast-close:hover{opacity:1;}
+.toast-progress{position:absolute;bottom:0;left:0;height:2.5px;border-radius:0 0 12px 12px;animation:toastProg linear forwards;}
+.toast-success .toast-progress{background:#22c55e;}
+.toast-error .toast-progress{background:#ef4444;}
+.toast-warning .toast-progress{background:#f59e0b;}
+.toast-info .toast-progress{background:#3b82f6;}
+@keyframes toastProg{from{width:100%}to{width:0}}
+
 /* responsive */
 @media(max-width:900px){.cs{width:210px;}}
 @media(max-width:720px){
@@ -282,6 +303,9 @@
 {% endblock %}
 
 {% block content %}
+<!-- Toast Container -->
+<div class="toast-container" id="toastContainer"></div>
+
 <div class="cw">
 
   <!-- sidebar -->
@@ -298,7 +322,7 @@
         <div class="sgrid">
           <div class="scard"><div class="sv">{{ total_documents }}</div><div class="sl">Documents</div></div>
           <div class="scard"><div class="sv">{{ indexed_documents }}</div><div class="sl">Indexed</div></div>
-          <div class="scard"><div class="sv" id="msgCount">{{ messages|length }}</div><div class="sl">Messages</div></div>
+          <div class="scard"><div class="sv" id="msgCount">{{ chat_messages|length }}</div><div class="sl">Messages</div></div>
           <div class="scard"><div class="sv">✓</div><div class="sl">RAG On</div></div>
         </div>
       </div>
@@ -341,8 +365,8 @@
     </div>
 
     <div class="cmsgs" id="chatMsgs">
-      {% if messages %}
-        {% for msg in messages %}
+      {% if chat_messages %}
+        {% for msg in chat_messages %}
         <div class="mr {{ msg.message_type }}">
           <div class="mav">{% if msg.message_type == 'human' %}👤{% else %}🤖{% endif %}</div>
           <div class="mbody">
@@ -462,6 +486,31 @@
 
 {% block extra_js %}
 <script>
+/* ── Toast Notification System ── */
+function showToast(message, type='info', duration=3500) {
+  const container = document.getElementById('toastContainer');
+  const icons = {success:'&#10003;', error:'&#10007;', warning:'&#9888;', info:'&#8505;'};
+  const toast = document.createElement('div');
+  toast.className = 'toast toast-' + type;
+  toast.style.position = 'relative';
+  toast.innerHTML = '<span class="toast-icon">' + (icons[type]||icons.info) + '</span>'
+    + '<span class="toast-text">' + message + '</span>'
+    + '<button class="toast-close" onclick="dismissToast(this.parentElement)">&times;</button>'
+    + '<div class="toast-progress" style="animation-duration:' + duration + 'ms"></div>';
+  container.appendChild(toast);
+  toast.addEventListener('click', function(e) { if(e.target.className!=='toast-close') dismissToast(toast); });
+  const timer = setTimeout(function() { dismissToast(toast); }, duration);
+  toast._timer = timer;
+  return toast;
+}
+function dismissToast(el) {
+  if(!el || el._dismissed) return;
+  el._dismissed = true;
+  clearTimeout(el._timer);
+  el.classList.add('hiding');
+  setTimeout(function() { if(el.parentElement) el.parentElement.removeChild(el); }, 300);
+}
+
 /* ── DOM refs ── */
 const $msgs   = document.getElementById('chatMsgs');
 const $vmod   = document.getElementById('vmod');
@@ -570,7 +619,7 @@ async function sendQuery(override){
     fd.append('query',q);fd.append('session_id',sid);fd.append('csrfmiddlewaretoken','{{ csrf_token }}');
     fd.append('reply_lang',replyLang); /* always send: en-IN enforces English, hi-IN triggers translate */
     const resp=await fetch('{% url "chatbot_query_stream" %}',{method:'POST',body:fd,signal:streamAbort.signal});
-    if(!resp.ok)throw new Error('HTTP '+resp.status);
+    if(!resp.ok){showToast('Server error (HTTP '+resp.status+')','error',4000);throw new Error('HTTP '+resp.status);}
     $typRow.classList.remove('show');
     $t.appendChild(cur);
     const reader=resp.body.getReader(),dec=new TextDecoder();
@@ -605,12 +654,13 @@ async function sendQuery(override){
           if(voiceActive&&!ttsBusy&&!ttsQ.length)scheduleNextListen();
         }else if(ev.type==='error'){
           cur.remove();$t.textContent='❌ '+ev.data;
+          showToast('Error: '+(ev.data||'Something went wrong'),'error',5000);
         }
       }
     }
   }catch(e){
     $typRow.classList.remove('show');cur.remove();
-    if(e.name!=='AbortError')$t.textContent='❌ Failed to get response.';
+    if(e.name!=='AbortError'){$t.textContent='❌ Failed to get response.';showToast('Failed to get AI response — check your connection','error',5000);}
     console.error(e);
   }finally{
     streamAbort=null;
@@ -626,7 +676,25 @@ async function clearChat(){
   if(!confirm('Clear this conversation?'))return;
   stopSpeak();
   const fd=new FormData();fd.append('session_id',sid);fd.append('csrfmiddlewaretoken','{{ csrf_token }}');
-  try{const r=await fetch('{% url "clear_chat" %}',{method:'POST',body:fd});const d=await r.json();if(d.success)location.reload();}catch{alert('Failed.');}
+  try{
+    const r=await fetch('{% url "clear_chat" %}',{method:'POST',body:fd});
+    const d=await r.json();
+    if(d.success){
+      /* Remove all messages from DOM without full reload */
+      document.querySelectorAll('.mr').forEach(el=>el.remove());
+      $msgCnt.textContent='0';
+      /* Recreate empty state if not present */
+      let emp=document.getElementById('emptyS');
+      if(!emp){
+        emp=document.createElement('div');emp.className='emp';emp.id='emptyS';
+        emp.innerHTML='<div class="emp-ico">💬</div><div class="emp-ttl">Ask anything about your documents</div><div class="emp-sub">Summarize, compare, explain and answer questions from your PDFs — or use general knowledge.</div><div class="sugs"><div class="sug" onclick="useSug(\'What are the key findings?\')"><div class="sug-ic">🔍</div><div class="sug-tx">What are the key findings?</div></div><div class="sug" onclick="useSug(\'Summarize the main points\')"><div class="sug-ic">📝</div><div class="sug-tx">Summarize the main points</div></div><div class="sug" onclick="useSug(\'What are the recommendations?\')"><div class="sug-ic">💡</div><div class="sug-tx">What are the recommendations?</div></div></div>';
+        $typRow.parentElement.insertBefore(emp,$typRow);
+      } else { emp.style.display=''; }
+      showToast('Chat history cleared successfully','success');
+    } else {
+      showToast(d.error||'Failed to clear chat','error');
+    }
+  }catch{showToast('Failed to clear chat — network error','error');}
 }
 
 /* ════════════════════════════════════
@@ -745,6 +813,7 @@ function changeLang(code){
   if(sel) sel.value=code;
   /* Restart SR with new STT language if mid-session */
   if(isListening&&voiceActive){_killRecog();accumulated='';startSR();}
+  showToast('Language changed to '+(curLang.label||code),'info',2500);
 }
 
 function buildLangUI(){
@@ -829,6 +898,7 @@ function toggleTTS(){
   $ttsLbl.textContent=ttsOn?'Voice On':'Voice Off';
   $ttsBtn.classList.toggle('on',ttsOn);
   if(!ttsOn)stopSpeak();
+  showToast(ttsOn?'Voice replies enabled — AI will speak responses':'Voice replies disabled','info',2500);
 }
 
 function ttsFlush(buf){
@@ -896,7 +966,7 @@ function toggleVoice(){
 }
 
 async function startVoice(){
-  if(!SR){setVBarState('error');setVBarTxt('⚠ Voice input not supported in this browser');$vBar.classList.add('show');return;}
+  if(!SR){setVBarState('error');setVBarTxt('⚠ Voice input not supported in this browser');$vBar.classList.add('show');showToast('Voice input not supported in this browser','warning',4000);return;}
   voiceActive=true;
   $micBtn.classList.add('live');
   setVBarState('listening');
@@ -911,6 +981,7 @@ async function startVoice(){
     voiceActive=false;$micBtn.classList.remove('live');
     setVBarState('');
     const reason=(err.name==='NotFoundError'||err.name==='DevicesNotFoundError')?'notfound':'blocked';
+    showToast(reason==='notfound'?'No microphone found':'Microphone access blocked','error',4000);
     showMicPermModal(reason);
   }
 }

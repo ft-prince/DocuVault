@@ -3,12 +3,23 @@ Enhanced Embedding Module with Multi-Modal Support
 Handles text, tables, and structured content differently for better retrieval
 """
 
+import sys
 import numpy as np
 import torch
 from typing import List, Dict, Optional
 from sentence_transformers import SentenceTransformer
 
 from .config import RAGConfig
+
+
+def _safe_print(*args, **kwargs):
+    """Print with Unicode-safe fallback for Windows consoles."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        text = ' '.join(str(a) for a in args)
+        print(text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(
+            sys.stdout.encoding or 'utf-8', errors='replace'), **kwargs)
 
 
 class EnhancedEmbeddingManager:
@@ -31,16 +42,16 @@ class EnhancedEmbeddingManager:
     def _detect_device(self) -> str:
         """Detect available device (CUDA or CPU)"""
         device = 'cuda' if torch.cuda.is_available() else 'cpu'
-        print(f"Using device: {device}")
+        _safe_print(f"Using device: {device}")
         return device
     
     def load_model(self):
         """Load the embedding model"""
         if self.model is not None:
-            print("Embedding model already loaded")
+            _safe_print("Embedding model already loaded")
             return
         
-        print(f"🔄 Loading embedding model: {self.config.EMBEDDING_MODEL}")
+        _safe_print(f"🔄 Loading embedding model: {self.config.EMBEDDING_MODEL}")
         
         self.model = SentenceTransformer(
             self.config.EMBEDDING_MODEL,
@@ -49,8 +60,8 @@ class EnhancedEmbeddingManager:
         )
         
         embedding_dim = self.model.get_sentence_embedding_dimension()
-        print(f"✅ Embedding model loaded: {self.config.EMBEDDING_MODEL}")
-        print(f"   Dimension: {embedding_dim}")
+        _safe_print(f"✅ Embedding model loaded: {self.config.EMBEDDING_MODEL}")
+        _safe_print(f"   Dimension: {embedding_dim}")
     
     def preprocess_text_for_embedding(self, text: str, chunk_type: str = 'text') -> str:
         """
@@ -110,7 +121,7 @@ class EnhancedEmbeddingManager:
         else:
             processed_texts = texts
         
-        print(f"\n🔄 Generating embeddings for {len(texts)} chunks...")
+        _safe_print(f"\n🔄 Generating embeddings for {len(texts)} chunks...")
         
         embeddings = self.model.encode(
             processed_texts,
@@ -120,7 +131,7 @@ class EnhancedEmbeddingManager:
             convert_to_numpy=True
         )
         
-        print(f"✅ Embeddings generated! Shape: {embeddings.shape}")
+        _safe_print(f"✅ Embeddings generated! Shape: {embeddings.shape}")
         return embeddings
     
     def generate_query_embedding(self, query: str) -> np.ndarray:

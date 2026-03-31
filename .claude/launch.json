@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "docuvault",
+      "runtimeExecutable": "D:\\AI_Model_Renata\\Document-management\\Group\\V2\\DocuVault\\env\\Scripts\\python.exe",
+      "runtimeArgs": ["manage.py", "runserver", "8001"],
+      "port": 8001
+    }
+  ]
+}

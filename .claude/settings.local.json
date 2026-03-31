@@ -87,7 +87,14 @@
       "Bash(cmd /c \"python -c \"\"import chromadb; print\\(''ok''\\)\"\"\")",
       "Bash(cmd /c \"python --version && python -c \"\"import chromadb; print\\(''chromadb ok''\\)\"\"\")",
       "Bash(cmd /c \"cd /d D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault && python manage.py shell -c \"\"import chromadb, os; db=os.path.join\\(''media'',''rag''\\); c=chromadb.PersistentClient\\(path=db\\); cols=c.list_collections\\(\\); print\\(''Collections:'', [x.name for x in cols]\\); [print\\(x.name, c.get_collection\\(x.name\\).count\\(\\)\\) for x in cols]\"\" 2>&1\")",
-      "Bash(python manage.py shell -c \":*)"
+      "Bash(python manage.py shell -c \":*)",
+      "Bash(find /d/AI_Model_Renata/Document-management/Group/V2/DocuVault/static -type f -name *.js)",
+      "mcp__Claude_Preview__preview_start",
+      "Bash(python manage.py runserver 8001)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://127.0.0.1:8001/login/)",
+      "Bash(python -c \"import django; print\\(django.get_version\\(\\)\\)\")",
+      "Bash(env/Scripts/python.exe manage.py shell -c \"from documents.models import User; print\\([\\(u.username, u.is_staff\\) for u in User.objects.all\\(\\)[:5]]\\)\")",
+      "Bash(env/Scripts/python.exe manage.py shell -c \"from documents.models import User; u=User.objects.get\\(username=''prince''\\); u.set_password\\(''test1234''\\); u.save\\(\\); print\\(''done''\\)\")"
     ]
   }
 }

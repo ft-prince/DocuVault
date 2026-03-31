@@ -2,6 +2,7 @@
 Enhanced Retriever Module with Hybrid Search and Better Context Formatting
 """
 
+import sys
 from typing import List, Dict, Tuple, Optional
 import re
 
@@ -9,6 +10,16 @@ from .config import RAGConfig
 from .embeddings import EnhancedEmbeddingManager
 from .vector_store import VectorStore
 from .llm_manager import LLMManager
+
+
+def _safe_print(*args, **kwargs):
+    """Print with Unicode-safe fallback for Windows consoles."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        text = ' '.join(str(a) for a in args)
+        print(text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(
+            sys.stdout.encoding or 'utf-8', errors='replace'), **kwargs)
 
 
 class EnhancedRetriever:
@@ -127,9 +138,9 @@ class EnhancedRetriever:
         final_metadatas = [metadatas[i] for i in sorted_indices]
         final_scores = [combined_scores[i] for i in sorted_indices]
         
-        print(f"🔍 Hybrid search: Retrieved {len(final_docs)} chunks")
-        print(f"   Keywords: {keywords}")
-        print(f"   Top scores: {[f'{s:.3f}' for s in final_scores[:3]]}")
+        _safe_print(f"🔍 Hybrid search: Retrieved {len(final_docs)} chunks")
+        _safe_print(f"   Keywords: {keywords}")
+        _safe_print(f"   Top scores: {[f'{s:.3f}' for s in final_scores[:3]]}")
         
         return final_docs, final_metadatas, final_scores
     

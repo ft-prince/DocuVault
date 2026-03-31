@@ -3,11 +3,22 @@ Vector store management using ChromaDB
 Handles storage, retrieval, and similarity search
 """
 
+import sys
 import chromadb
 from typing import List, Dict, Tuple
 from chromadb.config import Settings
 
 from .config import RAGConfig
+
+
+def _safe_print(*args, **kwargs):
+    """Print with Unicode-safe fallback for Windows consoles."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        text = ' '.join(str(a) for a in args)
+        print(text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(
+            sys.stdout.encoding or 'utf-8', errors='replace'), **kwargs)
 
 
 class VectorStore:
@@ -37,7 +48,7 @@ class VectorStore:
         elif not self.config.CHROMA_DB_PATH:
             raise ValueError("ChromaDB path must be set either in config or as parameter")
         
-        print(f"Initializing ChromaDB at: {self.config.CHROMA_DB_PATH}")
+        _safe_print(f"Initializing ChromaDB at: {self.config.CHROMA_DB_PATH}")
         
         self.client = chromadb.PersistentClient(path=self.config.CHROMA_DB_PATH)
         
@@ -45,9 +56,9 @@ class VectorStore:
         if reset:
             try:
                 self.client.delete_collection(name=self.config.COLLECTION_NAME)
-                print(f"Deleted existing collection: {self.config.COLLECTION_NAME}")
+                _safe_print(f"Deleted existing collection: {self.config.COLLECTION_NAME}")
             except Exception as e:
-                print(f"No existing collection to delete: {e}")
+                _safe_print(f"No existing collection to delete: {e}")
         
         # Create or get collection
         try:
@@ -55,9 +66,9 @@ class VectorStore:
                 name=self.config.COLLECTION_NAME,
                 metadata={"description": "DocuVault document embeddings"}
             )
-            print(f"✅ Collection '{self.config.COLLECTION_NAME}' ready")
+            _safe_print(f"✅ Collection '{self.config.COLLECTION_NAME}' ready")
         except Exception as e:
-            print(f"Error creating collection: {e}")
+            _safe_print(f"Error creating collection: {e}")
             raise
     
     def add_documents(self, embeddings: List[List[float]], texts: List[str], 
@@ -77,7 +88,7 @@ class VectorStore:
         if ids is None:
             ids = [f"chunk_{i}" for i in range(len(texts))]
         
-        print(f"Adding {len(texts)} documents to vector store...")
+        _safe_print(f"Adding {len(texts)} documents to vector store...")
         
         self.collection.add(
             embeddings=embeddings,
@@ -86,7 +97,7 @@ class VectorStore:
             ids=ids
         )
         
-        print(f"✅ Added {self.collection.count()} total chunks to vector store")
+        _safe_print(f"✅ Added {self.collection.count()} total chunks to vector store")
     
     def query(self, query_embedding: List[float], n_results: int = None, 
              where: Dict = None) -> Dict:
@@ -127,7 +138,7 @@ class VectorStore:
             raise RuntimeError("Collection not initialized. Call initialize() first.")
         
         self.collection.delete(ids=ids)
-        print(f"Deleted {len(ids)} documents from vector store")
+        _safe_print(f"Deleted {len(ids)} documents from vector store")
     
     def get_document_count(self) -> int:
         """
@@ -161,7 +172,7 @@ class VectorStore:
         # Convert distances to similarities
         similarities = [1 - dist for dist in distances]
         
-        print(f"DEBUG: Top {len(similarities)} raw similarities: {[round(s, 3) for s in similarities]}")
+        _safe_print(f"DEBUG: Top {len(similarities)} raw similarities: {[round(s, 3) for s in similarities]}")
         
         return retrieved_docs, retrieved_metadata, similarities
     
@@ -170,12 +181,12 @@ class VectorStore:
         if self.client:
             try:
                 self.client.delete_collection(name=self.config.COLLECTION_NAME)
-                print(f"Deleted collection: {self.config.COLLECTION_NAME}")
+                _safe_print(f"Deleted collection: {self.config.COLLECTION_NAME}")
             except Exception as e:
-                print(f"Error deleting collection: {e}")
+                _safe_print(f"Error deleting collection: {e}")
             
             self.collection = self.client.create_collection(
                 name=self.config.COLLECTION_NAME,
                 metadata={"description": "DocuVault document embeddings"}
             )
-            print(f"✅ Collection recreated: {self.config.COLLECTION_NAME}")
+            _safe_print(f"✅ Collection recreated: {self.config.COLLECTION_NAME}")

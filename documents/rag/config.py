@@ -3,8 +3,19 @@ Enhanced Configuration Settings for Multi-Modal RAG System
 With support for general knowledge alongside document retrieval
 """
 
+import sys
 import os
 from pathlib import Path
+
+
+def _safe_print(*args, **kwargs):
+    """Print with Unicode-safe fallback for Windows consoles."""
+    try:
+        print(*args, **kwargs)
+    except UnicodeEncodeError:
+        text = ' '.join(str(a) for a in args)
+        print(text.encode(sys.stdout.encoding or 'utf-8', errors='replace').decode(
+            sys.stdout.encoding or 'utf-8', errors='replace'), **kwargs)
 
 
 class RAGConfig:
@@ -283,7 +294,7 @@ Answer ONLY using information explicitly stated in the context above. Do NOT add
         cls.CHUNK_SIZE = 512
         cls.ALLOW_GENERAL_KNOWLEDGE = True
         cls.STRICT_DOCUMENT_MODE = False
-        print("✅ All multi-modal features enabled")
+        _safe_print("✅ All multi-modal features enabled")
     
     @classmethod
     def set_lightweight_mode(cls):
@@ -295,7 +306,7 @@ Answer ONLY using information explicitly stated in the context above. Do NOT add
         cls.CHUNK_SIZE = 256
         cls.EMBEDDING_BATCH_SIZE = 16
         cls.ALLOW_GENERAL_KNOWLEDGE = True
-        print("✅ Lightweight mode enabled")
+        _safe_print("✅ Lightweight mode enabled")
     
     @classmethod
     def enable_strict_mode(cls):
@@ -303,8 +314,8 @@ Answer ONLY using information explicitly stated in the context above. Do NOT add
         cls.STRICT_DOCUMENT_MODE = True
         cls.ALLOW_GENERAL_KNOWLEDGE = False
         cls.INDICATE_KNOWLEDGE_SOURCE = False
-        print("✅ Strict document-only mode enabled")
-        print("   System will only answer questions based on document content")
+        _safe_print("✅ Strict document-only mode enabled")
+        _safe_print("   System will only answer questions based on document content")
     
     @classmethod
     def enable_hybrid_mode(cls):
@@ -312,8 +323,8 @@ Answer ONLY using information explicitly stated in the context above. Do NOT add
         cls.STRICT_DOCUMENT_MODE = False
         cls.ALLOW_GENERAL_KNOWLEDGE = True
         cls.INDICATE_KNOWLEDGE_SOURCE = False
-        print("✅ Hybrid mode enabled")
-        print("   System will use both documents and general knowledge")
+        _safe_print("✅ Hybrid mode enabled")
+        _safe_print("   System will use both documents and general knowledge")
     
     @classmethod
     def enable_indicated_mode(cls):
@@ -321,8 +332,8 @@ Answer ONLY using information explicitly stated in the context above. Do NOT add
         cls.STRICT_DOCUMENT_MODE = False
         cls.ALLOW_GENERAL_KNOWLEDGE = True
         cls.INDICATE_KNOWLEDGE_SOURCE = True
-        print("✅ Indicated mode enabled")
-        print("   System will indicate when using general knowledge vs documents")
+        _safe_print("✅ Indicated mode enabled")
+        _safe_print("   System will indicate when using general knowledge vs documents")
     
     @classmethod
     def set_similarity_threshold(cls, threshold: float):
@@ -337,12 +348,12 @@ Answer ONLY using information explicitly stated in the context above. Do NOT add
             raise ValueError("Threshold must be between 0.0 and 1.0")
         
         cls.SIMILARITY_THRESHOLD = threshold
-        print(f"✅ Similarity threshold set to {threshold}")
+        _safe_print(f"✅ Similarity threshold set to {threshold}")
         
         if threshold < 0.3:
-            print("   ⚠️  Very lenient - may include less relevant results")
+            _safe_print("   ⚠️  Very lenient - may include less relevant results")
         elif threshold > 0.7:
-            print("   ⚠️  Very strict - may miss some relevant results")
+            _safe_print("   ⚠️  Very strict - may miss some relevant results")
     
     @classmethod
     def configure_for_use_case(cls, use_case: str):
@@ -360,7 +371,7 @@ Answer ONLY using information explicitly stated in the context above. Do NOT add
             cls.SIMILARITY_THRESHOLD = 0.3
             cls.N_RESULTS = 6
             cls.TEMPERATURE = 0.3
-            print("📋 Configured for: General Q&A")
+            _safe_print("📋 Configured for: General Q&A")
             
         elif use_case == 'strict_compliance':
             # Strict mode for compliance/legal documents
@@ -368,7 +379,7 @@ Answer ONLY using information explicitly stated in the context above. Do NOT add
             cls.SIMILARITY_THRESHOLD = 0.5
             cls.N_RESULTS = 8
             cls.TEMPERATURE = 0.1
-            print("📋 Configured for: Strict Compliance")
+            _safe_print("📋 Configured for: Strict Compliance")
             
         elif use_case == 'research':
             # Research mode with source indication
@@ -377,7 +388,7 @@ Answer ONLY using information explicitly stated in the context above. Do NOT add
             cls.N_RESULTS = 10
             cls.TEMPERATURE = 0.2
             cls.ENABLE_RERANKING = True
-            print("📋 Configured for: Research")
+            _safe_print("📋 Configured for: Research")
             
         elif use_case == 'customer_support':
             # Customer support with helpful general knowledge
@@ -385,8 +396,8 @@ Answer ONLY using information explicitly stated in the context above. Do NOT add
             cls.SIMILARITY_THRESHOLD = 0.25
             cls.N_RESULTS = 5
             cls.TEMPERATURE = 0.4
-            print("📋 Configured for: Customer Support")
+            _safe_print("📋 Configured for: Customer Support")
             
         else:
-            print(f"❌ Unknown use case: {use_case}")
-            print("   Available: 'general_qa', 'strict_compliance', 'research', 'customer_support'")
+            _safe_print(f"❌ Unknown use case: {use_case}")
+            _safe_print("   Available: 'general_qa', 'strict_compliance', 'research', 'customer_support'")

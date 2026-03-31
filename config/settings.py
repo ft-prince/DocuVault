@@ -25,11 +25,7 @@ SECRET_KEY = "django-insecure-8ruczd1(ui8+6io7@!9ms16k$k*3l(mn=&#q9rv0znww@%n$oq
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['*']
-
-
-# Application definition
-
+ALLOWED_HOSTS = ['*']  # allow everything for now
 INSTALLED_APPS = [
     "django.contrib.admin",
     "django.contrib.auth",
@@ -81,7 +77,8 @@ DATABASES = {
 }
 
 CSRF_TRUSTED_ORIGINS = [
-    "https://3452-43-251-93-127.ngrok-free.app",
+    'https://*.trycloudflare.com',
+    'https://docuvault.nexren.ai',
 ]
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
