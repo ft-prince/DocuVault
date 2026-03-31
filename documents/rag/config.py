@@ -52,10 +52,10 @@ class RAGConfig:
     # ==================== Retrieval Settings ====================
     
     # Number of chunks to retrieve
-    N_RESULTS = 8  # Increased for better coverage
+    N_RESULTS = 8  # Balanced: enough coverage without too much noise
     
     # Minimum similarity threshold
-    SIMILARITY_THRESHOLD = 0.05  # Low threshold, let hybrid search handle it
+    SIMILARITY_THRESHOLD = -1.0  # Accept all retrieved docs (scores are negative after 1-dist conversion)
     
     # Hybrid search weights
     SEMANTIC_WEIGHT = 0.7  # 70% semantic, 30% keyword
@@ -238,7 +238,7 @@ Please answer this question using your general knowledge. No specific document c
 
 Question: {question}
 
-Answer ONLY using information explicitly stated in the context above. Do NOT add facts, inferences, or details that are not written in the context. If the context does not contain the specific information needed to answer the question, say so clearly — do not guess or use general knowledge."""
+Answer the question. Use the context above if it contains relevant information. If the context only briefly mentions a term without explaining it, or if the context is not directly relevant, use your general knowledge to give a helpful answer. Respond in the same language the user used."""
 
     # Template for strict mode with no context
     STRICT_NO_CONTEXT_RESPONSE = "I cannot find relevant information in the available documents to answer this question."
