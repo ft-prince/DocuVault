@@ -748,6 +748,7 @@ def shared_link_create_view(request, document_pk):
     if not document.can_edit(request.user):
         raise PermissionDenied()
     
+    created_link = None
     if request.method == 'POST':
         form = SharedLinkForm(request.POST)
         if form.is_valid():
@@ -755,15 +756,15 @@ def shared_link_create_view(request, document_pk):
             link.document = document
             link.created_by = request.user
             link.save()
-            
-            messages.success(request, 'Shareable link created successfully!')
-            return redirect('document_detail', pk=document_pk)
+            created_link = link
+            form = SharedLinkForm()  # reset form
     else:
         form = SharedLinkForm()
-    
+
     return render(request, 'documents/shared_link_form.html', {
         'form': form,
-        'document': document
+        'document': document,
+        'created_link': created_link,
     })
 
 

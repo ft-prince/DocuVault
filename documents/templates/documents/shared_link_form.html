@@ -11,6 +11,22 @@
         For: <strong>{{ document.title }}</strong>
     </p>
 
+    {% if created_link %}
+    <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:1.25rem 1.5rem;margin-bottom:1.5rem;">
+        <p style="font-weight:600;color:#15803d;margin-bottom:.75rem;">✓ Share link created!</p>
+        <div style="display:flex;gap:.5rem;align-items:center;">
+            <input id="shareLinkUrl" readonly value="{{ request.scheme }}://{{ request.get_host }}{% url 'shared_link_access' created_link.token %}"
+                   style="flex:1;padding:.5rem .75rem;border:1px solid #86efac;border-radius:6px;font-size:.875rem;background:#fff;color:#374151;">
+            <button type="button" onclick="(function(){var el=document.getElementById('shareLinkUrl');el.select();document.execCommand('copy');this.textContent='Copied!';setTimeout(()=>this.textContent='Copy',2000);}).call(this)"
+                    style="padding:.5rem 1rem;background:#15803d;color:#fff;border:none;border-radius:6px;font-size:.875rem;cursor:pointer;white-space:nowrap;">
+                Copy
+            </button>
+        </div>
+        {% if created_link.expires_at %}<p style="font-size:.8rem;color:#4b7c59;margin-top:.5rem;">Expires: {{ created_link.expires_at|date:"M d, Y" }}</p>{% endif %}
+        <p style="margin-top:.75rem;"><a href="{% url 'document_detail' document.pk %}" style="color:#15803d;font-size:.875rem;">← Back to document</a></p>
+    </div>
+    {% endif %}
+
     <form method="post" class="card">
         {% csrf_token %}
         

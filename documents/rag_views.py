@@ -105,7 +105,7 @@ def get_rag_chatbot() -> RAGChatbot:
         config.ENABLE_IMAGE_DESCRIPTION = False
         config.USE_HYBRID_SEARCH = True
         config.N_RESULTS = 20          # retrieve 20 chunks so all story pages surface
-        config.SIMILARITY_THRESHOLD = -1.0  # accept all chromadb results (neg-sim ok); hybrid reranker handles quality
+        config.SIMILARITY_THRESHOLD = -0.2  # ChromaDB scores are (1-cosine_dist), all negative. -0.2 filters truly irrelevant docs while passing relevant ones. Allows GK fallback when no docs match.
         
         # Set storage path
         media_root = getattr(settings, 'MEDIA_ROOT', os.path.join(settings.BASE_DIR, 'media'))

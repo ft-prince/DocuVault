@@ -317,7 +317,12 @@
                     <a href="{% url 'document_list' %}">Documents</a>
                     <a href="{% url 'chatbot' %}">AI Assistant</a>
                     <a href="{% url 'favorites_list' %}">Favorites</a>
-                    <a href="{% url 'notifications_list' %}">Notifications</a>
+                    <a href="{% url 'notifications_list' %}" style="position:relative;display:inline-flex;align-items:center;gap:.3rem;">
+                        Notifications
+                        {% if unread_notifications_count %}
+                        <span style="background:#ef4444;color:#fff;font-size:.65rem;font-weight:700;line-height:1;padding:.2rem .4rem;border-radius:999px;min-width:16px;text-align:center;">{{ unread_notifications_count }}</span>
+                        {% endif %}
+                    </a>
                     
                     {% if user.is_admin %}
                         <a href="{% url 'admin_users_list' %}">Admin</a>

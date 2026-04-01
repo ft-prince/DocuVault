@@ -36,7 +36,13 @@
                     Download
                 </a>
             {% endif %}
-            
+
+            {% if can_edit %}
+                <a href="{% url 'shared_link_create' document.pk %}" class="btn-secondary btn btn-small" title="Create shareable link">
+                    🔗 Share
+                </a>
+            {% endif %}
+
             <!-- AI Indexing Status Widget -->
             {% if document.file %}
             <div id="indexWidget" style="display:inline-flex;align-items:center;gap:.5rem;">

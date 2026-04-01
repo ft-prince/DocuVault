@@ -310,23 +310,34 @@ class RAGChatbot:
         
         # Build user message based on context availability and mode
         if has_relevant_context:
-            # We have relevant documents
-            _safe_print(f"📄 Retrieved {len(filtered_docs)} relevant chunks (threshold: {self.config.SIMILARITY_THRESHOLD})")
-            
-            # Format context
-            context = self.retriever.format_context_enhanced(filtered_docs, filtered_metas)
-            
-            # Use template with context
-            user_message = self.config.WITH_CONTEXT_TEMPLATE.format(
-                context=context,
-                question=original_question
-            )
-            
-            sources = self.retriever.prepare_sources_enhanced(
-                filtered_docs,
-                filtered_metas,
-                filtered_sims
-            )
+            top_score = filtered_sims[0] if filtered_sims else self.config.SIMILARITY_THRESHOLD
+            strong = top_score >= self.config.STRONG_CONTEXT_THRESHOLD
+            _safe_print(f"📄 Retrieved {len(filtered_docs)} chunks (top score: {top_score:.3f}, strong: {strong})")
+
+            if strong or use_strict_mode:
+                # Context is directly on-topic — use it as the main source
+                context = self.retriever.format_context_enhanced(filtered_docs, filtered_metas)
+                user_message = self.config.WITH_CONTEXT_TEMPLATE.format(
+                    context=context,
+                    question=original_question
+                )
+                sources = self.retriever.prepare_sources_enhanced(
+                    filtered_docs, filtered_metas, filtered_sims
+                )
+            elif use_general_knowledge:
+                # Context is only tangentially relevant — drop it, answer from pure GK
+                _safe_print("⚠️  Weak context (top score below STRONG threshold) — switching to pure GK")
+                user_message = self.config.NO_CONTEXT_TEMPLATE.format(question=original_question)
+                sources = []
+            else:
+                context = self.retriever.format_context_enhanced(filtered_docs, filtered_metas)
+                user_message = self.config.WITH_CONTEXT_TEMPLATE.format(
+                    context=context,
+                    question=original_question
+                )
+                sources = self.retriever.prepare_sources_enhanced(
+                    filtered_docs, filtered_metas, filtered_sims
+                )
             
         else:
             # No relevant context found
@@ -601,6 +612,21 @@ class RAGChatbot:
                     filtered_sims.append(sim)
 
             has_context = len(filtered_docs) > 0
+
+            # Determine if context is strong (directly relevant) or weak (tangential)
+            if has_context:
+                top_score = filtered_sims[0]
+                strong_context = top_score >= self.config.STRONG_CONTEXT_THRESHOLD
+                _safe_print(f"[stream] top_score={top_score:.3f} strong={strong_context}")
+            else:
+                strong_context = False
+
+            # For weak context in hybrid mode, treat as no-context so GK is used cleanly
+            if has_context and not strong_context and self.config.ALLOW_GENERAL_KNOWLEDGE and not self.config.STRICT_DOCUMENT_MODE:
+                _safe_print("[stream] Weak context — dropping docs, using GK")
+                has_context = False
+                filtered_docs, filtered_metas, filtered_sims = [], [], []
+
             sources = (
                 self.retriever.prepare_sources_enhanced(filtered_docs, filtered_metas, filtered_sims)
                 if has_context else []
@@ -692,24 +718,15 @@ class RAGChatbot:
                     user_msg = self.config.WITH_CONTEXT_TEMPLATE.format(
                         context=context, question=original_question
                     )
-            elif self.config.STRICT_DOCUMENT_MODE:
-                answer = self.config.STRICT_NO_CONTEXT_RESPONSE
-                yield {"type": "token", "data": answer}
-                yield {"type": "done", "data": answer}
-                self._update_conversation_memory(thread_id, original_question, answer)
-                return
             else:
-                if is_multilingual:
-                    # For multilingual no-context: refuse to hallucinate, ask to check documents
-                    user_msg = (
-                        f"The user asked: {original_question}\n\n"
-                        "No relevant information was found in the indexed documents for this query.\n"
-                        "Tell the user in the same language they used that this specific information "
-                        "was not found in the indexed documents. "
-                        "Do NOT make up, guess, or invent any answer. "
-                        "Suggest they verify the relevant document is uploaded and indexed."
-                    )
+                if self.config.STRICT_DOCUMENT_MODE:
+                    answer = self.config.STRICT_NO_CONTEXT_RESPONSE
+                    yield {"type": "token", "data": answer}
+                    yield {"type": "done", "data": answer}
+                    self._update_conversation_memory(thread_id, original_question, answer)
+                    return
                 else:
+                    # No relevant docs (or weak context dropped) — answer from general knowledge
                     user_msg = self.config.NO_CONTEXT_TEMPLATE.format(question=original_question)
 
             messages.append({"role": "user", "content": user_msg})

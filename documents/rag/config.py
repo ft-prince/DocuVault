@@ -55,10 +55,15 @@ class RAGConfig:
     N_RESULTS = 8  # Balanced: enough coverage without too much noise
     
     # Minimum similarity threshold
-    SIMILARITY_THRESHOLD = -1.0  # Accept all retrieved docs (scores are negative after 1-dist conversion)
-    
+    SIMILARITY_THRESHOLD = -0.15  # Tighter filter: pure keyword-boosted false positives score ~-0.18, relevant docs score > -0.1
+
+    # Strong relevance threshold — above this, context is directly on-topic
+    # Below this but above SIMILARITY_THRESHOLD = tangentially mentioned, use GK
+    # Observed: SmartFactory features = -0.055 (should be strong), Digital Twin = -0.095 (should be weak)
+    STRONG_CONTEXT_THRESHOLD = -0.07
+
     # Hybrid search weights
-    SEMANTIC_WEIGHT = 0.7  # 70% semantic, 30% keyword
+    SEMANTIC_WEIGHT = 0.85  # 85% semantic, 15% keyword — reduces BM25 false-positive boosting
     USE_HYBRID_SEARCH = True
     
     # Re-ranking parameters
@@ -122,40 +127,28 @@ class RAGConfig:
     
     # ==================== System Prompts ====================
     
-    # Main system prompt — document-first, with general knowledge as a fallback
+    # Main system prompt — helpful assistant, uses docs when available, GK when needed
     SYSTEM_PROMPT = """You are a helpful AI assistant for DocuVault, a document management system.
-Your primary job is to answer questions using the content from the user's uploaded documents.
+You answer questions helpfully using document context when available, and general knowledge otherwise.
 
-PRIORITY ORDER:
-1. ALWAYS prefer information from the Context section (document content) when it is available.
-2. Only fall back to general knowledge if the Context section is empty or clearly does not cover the question.
+DOCUMENT CONTEXT RULES:
+- When the Context section has detailed, relevant information: use it as your main answer.
+- Do NOT say "According to the document", "the PDF says", "based on the context", or reference page numbers.
+- Just state the facts naturally and confidently.
 
-USING DOCUMENT CONTEXT:
-- When the Context section contains relevant information, use it as your main answer source.
-- Present the information naturally and confidently — do NOT mention "the document", "the PDF", "page numbers", or "the context" in your answer text.
-- Do NOT say "According to the document…", "The PDF shows…", or "Based on the context…".
-- Simply state the facts as direct, helpful answers.
-
-USING GENERAL KNOWLEDGE (fallback only):
-- Only use general knowledge when the Context section is empty or completely off-topic.
-- You may provide brief explanations or background information to make document answers clearer.
-- Do NOT override or contradict what is in the documents with general knowledge.
-
-IF YOU DON'T KNOW:
-- If the documents don't contain the answer and you don't know it from general knowledge, say so honestly.
-- Never fabricate information.
+GENERAL KNOWLEDGE RULES:
+- If the Context section is empty or contains no answer: answer from general knowledge immediately.
+- If the Context mentions a concept only briefly (e.g., as a feature name in a list): explain it using general knowledge. Do NOT say "not mentioned in documents."
+- If the Context is off-topic: ignore it and answer from general knowledge.
+- NEVER refuse to answer or say "not in documents" when you know the answer from general knowledge.
 
 STYLE:
 - Be concise, clear, and conversational.
-- Use bullet points or numbered lists when listing multiple items.
-- Keep answers focused — do not pad with filler sentences.
+- Use bullet points when listing multiple items.
 
 LANGUAGE:
-- Always respond in the same language the user asked the question in.
-- If the user asks in Hindi, respond in Hindi. If Tamil, respond in Tamil. If English, respond in English.
-- Never switch to a different language than the one the user used.
-
-Remember: The documents the user has uploaded are your primary knowledge source. Always check the Context section first."""
+- Always respond in the exact same language the user used — Hindi, Hinglish, English, etc.
+- Never switch languages."""
 
     # Strict document-only mode prompt (when STRICT_DOCUMENT_MODE = True)
     STRICT_SYSTEM_PROMPT = """You are a helpful AI assistant that provides information strictly based on the provided documents.
@@ -228,17 +221,36 @@ Rules:
     # ==================== Response Mode Templates ====================
     
     # Template for when no context is found
-    NO_CONTEXT_TEMPLATE = """Question: {question}
+    NO_CONTEXT_TEMPLATE = """The user's uploaded documents do not contain information about this topic.
 
-Please answer this question using your general knowledge. No specific document context is available for this query."""
+Answer the following question directly from your general knowledge. Give a clear, helpful, conversational answer. Do NOT say "I cannot find this in documents" or ask the user to upload anything — just answer the question.
 
-    # Template for when context is available
+Question: {question}"""
+
+    # Template for when context is directly relevant (top score >= STRONG_CONTEXT_THRESHOLD)
     WITH_CONTEXT_TEMPLATE = """Context from documents:
 {context}
 
 Question: {question}
 
-Answer the question. Use the context above if it contains relevant information. If the context only briefly mentions a term without explaining it, or if the context is not directly relevant, use your general knowledge to give a helpful answer. Respond in the same language the user used."""
+Instructions:
+- The context above is relevant — use it as your main answer source.
+- Do not reference "the document" or "the context" in your answer.
+- Respond in the same language the user used."""
+
+    # Template for when context is only tangentially relevant (SIMILARITY_THRESHOLD <= top score < STRONG_CONTEXT_THRESHOLD)
+    WEAK_CONTEXT_TEMPLATE = """The user's documents mention this topic only briefly or tangentially.
+
+Context from documents (for reference only):
+{context}
+
+Question: {question}
+
+Instructions:
+- Answer the question using your general knowledge — give a clear, complete answer.
+- If the document context contains something specifically relevant to the question, mention it naturally.
+- Do NOT say "not mentioned in documents" or ask the user to upload anything.
+- Respond in the same language the user used."""
 
     # Template for strict mode with no context
     STRICT_NO_CONTEXT_RESPONSE = "I cannot find relevant information in the available documents to answer this question."
