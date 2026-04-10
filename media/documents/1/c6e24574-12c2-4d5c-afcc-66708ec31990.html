@@ -1,0 +1,1112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servelens - AI Video Surveillance & Analytics Solutions</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@600;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #ffffff;
+            color: #1a1a1a;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 18px 0;
+        }
+
+        .logo {
+            font-family: 'Poppins', sans-serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: #ff6b35;
+        }
+
+        .nav-menu {
+            display: flex;
+            list-style: none;
+            gap: 35px;
+        }
+
+        .nav-menu a {
+            text-decoration: none;
+            color: #444;
+            font-weight: 500;
+            font-size: 15px;
+            transition: color 0.2s;
+        }
+
+        .nav-menu a:hover {
+            color: #ff6b35;
+        }
+
+        .cta-button {
+            background: #ff6b35;
+            color: white;
+            padding: 10px 24px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+
+        .cta-button:hover {
+            background: #e55a28;
+        }
+
+        /* Hero Section */
+        .hero {
+            padding: 80px 0 60px;
+            background: linear-gradient(to bottom, #fff9f6 0%, #ffffff 100%);
+        }
+
+        .hero-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .hero-text h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 48px;
+            line-height: 1.2;
+            color: #1a1a1a;
+            margin-bottom: 20px;
+        }
+
+        .hero-text h1 span {
+            color: #ff6b35;
+        }
+
+        .hero-text p {
+            font-size: 18px;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.7;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 15px;
+        }
+
+        .btn-primary {
+            background: #ff6b35;
+            color: white;
+            padding: 14px 32px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #e55a28;
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #ff6b35;
+            padding: 14px 32px;
+            border: 2px solid #ff6b35;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: 600;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary:hover {
+            background: #fff9f6;
+        }
+
+        .hero-image {
+            text-align: center;
+        }
+
+        .hero-image img {
+            max-width: 100%;
+            height: auto;
+        }
+
+        /* Stats Section */
+        .stats {
+            background: #1a1a1a;
+            color: white;
+            padding: 50px 0;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            text-align: center;
+        }
+
+        .stat-item h3 {
+            font-size: 42px;
+            color: #ff6b35;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .stat-item p {
+            font-size: 15px;
+            color: #ccc;
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 0;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-header h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 38px;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+        }
+
+        .section-header p {
+            font-size: 17px;
+            color: #666;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+        }
+
+        .feature-card {
+            background: #f8f9fa;
+            padding: 35px;
+            border-radius: 8px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s;
+        }
+
+        .feature-card:hover {
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+            transform: translateY(-4px);
+        }
+
+        .feature-icon {
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .feature-icon svg {
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 20px;
+            color: #1a1a1a;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .feature-card p {
+            color: #666;
+            font-size: 15px;
+            line-height: 1.6;
+        }
+
+        /* Use Cases */
+        .use-cases {
+            padding: 80px 0;
+            background: #f8f9fa;
+        }
+
+        .use-cases-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .use-case-item {
+            background: white;
+            padding: 25px;
+            border-radius: 6px;
+            border-left: 4px solid #ff6b35;
+            transition: all 0.2s;
+        }
+
+        .use-case-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+
+        .use-case-icon {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+
+        .use-case-icon svg {
+            display: block;
+        }
+
+        .use-case-item h4 {
+            font-size: 16px;
+            color: #1a1a1a;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .use-case-item p {
+            font-size: 14px;
+            color: #666;
+            line-height: 1.5;
+        }
+
+        /* Technology Section */
+        .technology {
+            padding: 80px 0;
+        }
+
+        .tech-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .tech-list {
+            list-style: none;
+        }
+
+        .tech-list li {
+            padding: 18px 0;
+            border-bottom: 1px solid #e9ecef;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .tech-list li:before {
+            content: "✓";
+            background: #ff6b35;
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .tech-image {
+            background: #f8f9fa;
+            padding: 40px;
+            border-radius: 8px;
+            text-align: center;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            padding: 80px 0;
+            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
+            color: white;
+            text-align: center;
+        }
+
+        .cta-section h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 38px;
+            margin-bottom: 20px;
+        }
+
+        .cta-section p {
+            font-size: 18px;
+            margin-bottom: 35px;
+            opacity: 0.95;
+        }
+
+        .cta-section .btn-primary {
+            background: white;
+            color: #ff6b35;
+        }
+
+        .cta-section .btn-primary:hover {
+            background: #f8f9fa;
+        }
+
+        /* Footer */
+        footer {
+            background: #1a1a1a;
+            color: #ccc;
+            padding: 60px 0 30px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 50px;
+            margin-bottom: 40px;
+        }
+
+        .footer-about h3 {
+            color: #ff6b35;
+            font-size: 24px;
+            margin-bottom: 15px;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        .footer-about p {
+            line-height: 1.7;
+            margin-bottom: 15px;
+        }
+
+        .footer-links h4 {
+            color: white;
+            font-size: 16px;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .footer-links ul {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 10px;
+        }
+
+        .footer-links a {
+            color: #ccc;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: #ff6b35;
+        }
+
+        .footer-bottom {
+            border-top: 1px solid #333;
+            padding-top: 25px;
+            text-align: center;
+            font-size: 14px;
+        }
+
+        /* Mobile Menu Toggle */
+        .menu-toggle {
+            display: none;
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 968px) {
+            .hero-content {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-text h1 {
+                font-size: 36px;
+            }
+
+            .features-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 30px;
+            }
+
+            .use-cases-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .tech-content {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr 1fr;
+                gap: 40px;
+            }
+        }
+
+        @media (max-width: 640px) {
+            .nav-menu {
+                display: none;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .hero-text h1 {
+                font-size: 32px;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+            }
+
+            .features-grid,
+            .use-cases-grid,
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .footer-content {
+                grid-template-columns: 1fr;
+            }
+
+            .section-header h2 {
+                font-size: 28px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header>
+        <div class="container">
+            <nav>
+                <div class="logo">Servelens</div>
+                <ul class="nav-menu">
+                    <li><a href="#home">Home</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#solutions">Solutions</a></li>
+                    <li><a href="#technology">Technology</a></li>
+                    <li><a href="#contact">Contact</a></li>
+                </ul>
+                <a href="#contact" class="cta-button">Get Started</a>
+                <button class="menu-toggle">☰</button>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="hero" id="home">
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h1>AI-Powered <span>Video Surveillance</span> Solutions</h1>
+                    <p>Transform your security operations with intelligent video analytics. Our AI-based system provides real-time monitoring, automated alerts, and advanced threat detection with minimal human intervention.</p>
+                    <div class="hero-buttons">
+                        <a href="#contact" class="btn-primary">Request Demo</a>
+                        <a href="#features" class="btn-secondary">Learn More</a>
+                    </div>
+                </div>
+                <div class="hero-image">
+                    <svg width="550" height="450" viewBox="0 0 550 450" fill="none">
+                        <!-- Main Monitor Frame -->
+                        <rect x="25" y="25" width="500" height="350" rx="12" fill="#fff" stroke="#ff6b35" stroke-width="3"/>
+                        
+                        <!-- Status Indicators -->
+                        <circle cx="80" cy="70" r="12" fill="#4CAF50"/>
+                        <circle cx="470" cy="70" r="12" fill="#4CAF50"/>
+                        
+                        <!-- Central AI Detection Zone -->
+                        <circle cx="275" cy="200" r="80" fill="#ff6b35" opacity="0.05"/>
+                        <circle cx="275" cy="200" r="60" fill="#ff6b35" opacity="0.1"/>
+                        <circle cx="275" cy="200" r="40" fill="#ff6b35" opacity="0.15"/>
+                        <circle cx="275" cy="200" r="20" fill="#ff6b35" opacity="0.3"/>
+                        <circle cx="275" cy="200" r="10" fill="#ff6b35"/>
+                        
+                        <!-- Detection Box -->
+                        <rect x="200" y="125" width="150" height="150" rx="4" fill="none" stroke="#ff6b35" stroke-width="2" stroke-dasharray="8,4"/>
+                        
+                        <!-- Camera Feed Thumbnails -->
+                        <rect x="60" y="300" width="100" height="60" rx="4" fill="#f8f9fa" stroke="#ddd" stroke-width="2"/>
+                        <rect x="180" y="300" width="100" height="60" rx="4" fill="#f8f9fa" stroke="#ddd" stroke-width="2"/>
+                        <rect x="300" y="300" width="100" height="60" rx="4" fill="#f8f9fa" stroke="#ddd" stroke-width="2"/>
+                        <rect x="420" y="300" width="100" height="60" rx="4" fill="#f8f9fa" stroke="#ddd" stroke-width="2"/>
+                        
+                        <!-- Small cameras in thumbnails -->
+                        <circle cx="110" cy="330" r="8" fill="#ff6b35" opacity="0.3"/>
+                        <circle cx="230" cy="330" r="8" fill="#ff6b35" opacity="0.3"/>
+                        <circle cx="350" cy="330" r="8" fill="#ff6b35" opacity="0.3"/>
+                        <circle cx="470" cy="330" r="8" fill="#ff6b35" opacity="0.3"/>
+                        
+                        <!-- Recording indicators -->
+                        <circle cx="65" cy="305" r="4" fill="#f44336"/>
+                        <circle cx="185" cy="305" r="4" fill="#f44336"/>
+                        <circle cx="305" cy="305" r="4" fill="#f44336"/>
+                        <circle cx="425" cy="305" r="4" fill="#f44336"/>
+                        
+                        <!-- AI Label -->
+                        <text x="275" y="245" text-anchor="middle" fill="#ff6b35" font-size="14" font-weight="600">AI ACTIVE</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats Section -->
+    <section class="stats">
+        <div class="container">
+            <div class="stats-grid">
+                <div class="stat-item">
+                    <h3>99.5%</h3>
+                    <p>Detection Accuracy</p>
+                </div>
+                <div class="stat-item">
+                    <h3>24/7</h3>
+                    <p>Real-Time Monitoring</p>
+                </div>
+                <div class="stat-item">
+                    <h3>&lt;500ms</h3>
+                    <p>Response Time</p>
+                </div>
+                <div class="stat-item">
+                    <h3>100+</h3>
+                    <p>Enterprise Clients</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <h2>Intelligent Features</h2>
+                <p>Our AI-powered platform delivers comprehensive surveillance capabilities designed for modern security needs.</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="50" height="50" viewBox="0 0 50 50">
+                            <circle cx="25" cy="25" r="20" fill="#ff6b35" opacity="0.1"/>
+                            <circle cx="25" cy="25" r="12" fill="#ff6b35" opacity="0.2"/>
+                            <circle cx="25" cy="25" r="6" fill="#ff6b35"/>
+                            <rect x="15" y="15" width="20" height="20" fill="none" stroke="#ff6b35" stroke-width="2" stroke-dasharray="2,2"/>
+                        </svg>
+                    </div>
+                    <h3>Object Detection</h3>
+                    <p>Advanced AI identifies and tracks objects, people, and vehicles in real-time with high precision.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="50" height="50" viewBox="0 0 50 50">
+                            <circle cx="25" cy="20" r="10" fill="#ff6b35" opacity="0.2"/>
+                            <ellipse cx="25" cy="38" rx="14" ry="8" fill="#ff6b35" opacity="0.2"/>
+                            <circle cx="25" cy="20" r="6" fill="#ff6b35"/>
+                            <rect x="12" y="8" width="26" height="26" fill="none" stroke="#ff6b35" stroke-width="2" rx="2"/>
+                        </svg>
+                    </div>
+                    <h3>Facial Recognition</h3>
+                    <p>Accurate facial recognition for access control, attendance tracking, and security monitoring.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="50" height="50" viewBox="0 0 50 50">
+                            <circle cx="25" cy="25" r="18" fill="none" stroke="#ff6b35" stroke-width="3" opacity="0.2"/>
+                            <circle cx="25" cy="25" r="12" fill="none" stroke="#ff6b35" stroke-width="3" opacity="0.3"/>
+                            <circle cx="25" cy="25" r="6" fill="#ff6b35"/>
+                            <path d="M 25 7 L 25 15" stroke="#ff6b35" stroke-width="2.5"/>
+                            <path d="M 25 35 L 25 43" stroke="#ff6b35" stroke-width="2.5"/>
+                            <path d="M 7 25 L 15 25" stroke="#ff6b35" stroke-width="2.5"/>
+                            <path d="M 35 25 L 43 25" stroke="#ff6b35" stroke-width="2.5"/>
+                        </svg>
+                    </div>
+                    <h3>Smart Alerts</h3>
+                    <p>Instant notifications for suspicious activities and custom-defined security events.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="50" height="50" viewBox="0 0 50 50">
+                            <rect x="8" y="12" width="34" height="26" rx="2" fill="none" stroke="#ff6b35" stroke-width="2.5"/>
+                            <line x1="16" y1="22" x2="28" y2="22" stroke="#ff6b35" stroke-width="2" opacity="0.4"/>
+                            <line x1="16" y1="28" x2="34" y2="28" stroke="#ff6b35" stroke-width="2" opacity="0.4"/>
+                            <rect x="32" y="16" width="6" height="8" fill="#ff6b35" opacity="0.3"/>
+                            <rect x="32" y="26" width="6" height="6" fill="#ff6b35" opacity="0.5"/>
+                        </svg>
+                    </div>
+                    <h3>Analytics Dashboard</h3>
+                    <p>Comprehensive dashboards with live streams, heatmaps, and behavioral analytics.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="50" height="50" viewBox="0 0 50 50">
+                            <rect x="10" y="10" width="30" height="30" fill="none" stroke="#ff6b35" stroke-width="2.5" stroke-dasharray="4,2"/>
+                            <circle cx="25" cy="25" r="8" fill="#ff6b35" opacity="0.3"/>
+                            <path d="M 25 17 L 28 20 L 25 23 L 22 20 Z" fill="#ff6b35"/>
+                            <circle cx="15" cy="15" r="3" fill="#ff6b35"/>
+                            <circle cx="35" cy="15" r="3" fill="#ff6b35"/>
+                            <circle cx="35" cy="35" r="3" fill="#ff6b35"/>
+                            <circle cx="15" cy="35" r="3" fill="#ff6b35"/>
+                        </svg>
+                    </div>
+                    <h3>Perimeter Security</h3>
+                    <p>Automated boundary detection with virtual fencing and intrusion alerts.</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg width="50" height="50" viewBox="0 0 50 50">
+                            <rect x="8" y="10" width="14" height="10" rx="1" fill="#ff6b35" opacity="0.2"/>
+                            <rect x="28" y="10" width="14" height="10" rx="1" fill="#ff6b35" opacity="0.3"/>
+                            <rect x="8" y="25" width="14" height="10" rx="1" fill="#ff6b35" opacity="0.4"/>
+                            <rect x="28" y="25" width="14" height="10" rx="1" fill="#ff6b35" opacity="0.5"/>
+                            <circle cx="15" cy="15" r="2" fill="#ff6b35"/>
+                            <circle cx="35" cy="15" r="2" fill="#ff6b35"/>
+                            <circle cx="15" cy="30" r="2" fill="#ff6b35"/>
+                            <circle cx="35" cy="30" r="2" fill="#ff6b35"/>
+                        </svg>
+                    </div>
+                    <h3>Multi-Camera Support</h3>
+                    <p>Centralized management of unlimited cameras across multiple locations.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Use Cases Section -->
+    <section class="use-cases" id="solutions">
+        <div class="container">
+            <div class="section-header">
+                <h2>Comprehensive Use Cases & Applications</h2>
+                <p>Our AI-powered video analytics platform supports 18+ specialized use cases designed for diverse security and operational needs.</p>
+            </div>
+            <div class="use-cases-grid">
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <circle cx="12" cy="12" r="4" fill="#ff6b35" opacity="0.3"/>
+                            <circle cx="20" cy="15" r="4" fill="#ff6b35" opacity="0.4"/>
+                            <circle cx="28" cy="12" r="4" fill="#ff6b35" opacity="0.3"/>
+                            <circle cx="15" cy="22" r="4" fill="#ff6b35" opacity="0.5"/>
+                            <circle cx="25" cy="22" r="4" fill="#ff6b35" opacity="0.4"/>
+                            <circle cx="12" cy="30" r="4" fill="#ff6b35" opacity="0.3"/>
+                            <circle cx="28" cy="30" r="4" fill="#ff6b35" opacity="0.3"/>
+                        </svg>
+                    </div>
+                    <h4>Crowd Detection & Crowd Counting</h4>
+                    <p>Real-time monitoring of crowd density and accurate people counting to prevent overcrowding and ensure public safety in events, malls, and public spaces.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <rect x="8" y="8" width="24" height="4" rx="2" fill="#ff6b35" opacity="0.2"/>
+                            <rect x="8" y="14" width="24" height="4" rx="2" fill="#ff6b35" opacity="0.3"/>
+                            <rect x="8" y="20" width="24" height="4" rx="2" fill="#ff6b35" opacity="0.4"/>
+                            <rect x="8" y="26" width="24" height="4" rx="2" fill="#ff6b35" opacity="0.5"/>
+                            <path d="M 5 32 L 35 32" stroke="#ff6b35" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h4>Queue Analysis & Queue Length Detection</h4>
+                    <p>Monitor queue lengths and wait times at checkout counters, service desks, and entry points to optimize customer experience and resource allocation.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <circle cx="20" cy="12" r="5" fill="#ff6b35" opacity="0.3"/>
+                            <path d="M 20 18 L 20 28" stroke="#ff6b35" stroke-width="3"/>
+                            <path d="M 14 22 L 20 18 L 26 22" stroke="#ff6b35" stroke-width="3"/>
+                            <rect x="12" y="28" width="16" height="8" fill="#ff6b35" opacity="0.2"/>
+                            <line x1="8" y1="20" x2="32" y2="20" stroke="#f44336" stroke-width="3" opacity="0.7"/>
+                        </svg>
+                    </div>
+                    <h4>No PPE Kit Detection</h4>
+                    <p>Automatically detect workers without proper Personal Protective Equipment like helmets, vests, masks, and gloves to ensure workplace safety compliance.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <rect x="6" y="6" width="28" height="28" fill="none" stroke="#ff6b35" stroke-width="2.5" stroke-dasharray="4,2"/>
+                            <circle cx="20" cy="20" r="6" fill="#f44336" opacity="0.3"/>
+                            <path d="M 16 20 L 20 24 L 24 16" stroke="#f44336" stroke-width="2.5" fill="none"/>
+                        </svg>
+                    </div>
+                    <h4>Perimeter / Intrusion Detection</h4>
+                    <p>Virtual fence monitoring with instant alerts for unauthorized entry into restricted areas, boundary breaches, and perimeter violations.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <rect x="5" y="15" width="30" height="20" fill="none" stroke="#ff6b35" stroke-width="2"/>
+                            <circle cx="20" cy="25" r="4" fill="#ff6b35" opacity="0.4"/>
+                            <path d="M 16 20 Q 20 16 24 20" stroke="#ff6b35" stroke-width="2" fill="none" opacity="0.3"/>
+                            <circle cx="12" cy="10" r="2" fill="#f44336"/>
+                            <circle cx="20" cy="8" r="2" fill="#f44336"/>
+                            <circle cx="28" cy="10" r="2" fill="#f44336"/>
+                        </svg>
+                    </div>
+                    <h4>Boundary Loitering Detection</h4>
+                    <p>Detect and alert when individuals spend excessive time near sensitive boundaries, entry points, or restricted zones indicating suspicious behavior.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <path d="M 5 35 L 10 20 L 15 35 M 15 35 L 20 15 L 25 35 M 25 35 L 30 25 L 35 35" stroke="#ff6b35" stroke-width="2.5" fill="none"/>
+                            <text x="20" y="12" text-anchor="middle" fill="#ff6b35" font-size="10" font-weight="600">247</text>
+                        </svg>
+                    </div>
+                    <h4>People Counting</h4>
+                    <p>Accurate footfall counting for retail analytics, occupancy management, and visitor tracking across entry/exit points with directional detection.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <rect x="10" y="15" width="12" height="16" rx="1" fill="#ff6b35" opacity="0.3"/>
+                            <rect x="12" y="17" width="8" height="3" fill="#666"/>
+                            <circle cx="28" cy="12" r="8" fill="#f44336" opacity="0.2"/>
+                            <path d="M 24 12 L 28 16 L 32 8" stroke="#f44336" stroke-width="2.5" fill="none"/>
+                        </svg>
+                    </div>
+                    <h4>Abandoned Object Detection</h4>
+                    <p>Identify unattended bags, packages, or objects left in public areas like airports, stations, and malls to prevent security threats.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <rect x="8" y="20" width="24" height="12" rx="2" fill="#ff6b35" opacity="0.2"/>
+                            <rect x="12" y="12" width="16" height="8" rx="1" fill="#ff6b35" opacity="0.3"/>
+                            <path d="M 8 8 L 32 32" stroke="#f44336" stroke-width="3"/>
+                            <circle cx="28" cy="10" r="6" fill="#f44336" opacity="0.3"/>
+                        </svg>
+                    </div>
+                    <h4>Object Removal Detection</h4>
+                    <p>Alert when valuable items, equipment, or assets are removed from designated locations without authorization in warehouses and facilities.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <rect x="8" y="12" width="24" height="18" rx="2" fill="#ff6b35" opacity="0.2"/>
+                            <circle cx="20" cy="21" r="5" fill="#ff6b35" opacity="0.4"/>
+                            <line x1="10" y1="10" x2="30" y2="30" stroke="#f44336" stroke-width="3"/>
+                            <line x1="30" y1="10" x2="10" y2="30" stroke="#f44336" stroke-width="3"/>
+                        </svg>
+                    </div>
+                    <h4>Camera Tampering Detection</h4>
+                    <p>Instantly detect when cameras are covered, moved, defocused, or vandalized to maintain continuous surveillance integrity.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <circle cx="20" cy="12" r="5" fill="#ff6b35" opacity="0.3"/>
+                            <path d="M 20 18 L 20 28" stroke="#ff6b35" stroke-width="3"/>
+                            <path d="M 14 22 L 20 18 L 26 22" stroke="#ff6b35" stroke-width="3"/>
+                            <path d="M 12 24 L 8 28 L 12 32" stroke="#f44336" stroke-width="2.5" fill="none"/>
+                            <rect x="18" y="22" width="8" height="3" fill="#666"/>
+                        </svg>
+                    </div>
+                    <h4>Armed Person Detection</h4>
+                    <p>Critical security feature to detect weapons like guns, knives, or rifles in real-time and trigger immediate emergency alerts.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <path d="M 20 28 Q 15 24 12 20 Q 10 16 12 12 Q 14 8 20 10" fill="#ff6b35" opacity="0.2"/>
+                            <path d="M 20 28 Q 25 24 28 20 Q 30 16 28 12 Q 26 8 20 10" fill="#ff6b35" opacity="0.3"/>
+                            <circle cx="20" cy="32" r="2" fill="#f44336"/>
+                            <path d="M 16 30 L 24 30" stroke="#ff6b35" stroke-width="2"/>
+                        </svg>
+                    </div>
+                    <h4>Video-Based Fire & Smoke Detection</h4>
+                    <p>Early detection of fire and smoke using AI video analysis for faster response than traditional sensors in large industrial areas.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <circle cx="20" cy="15" r="6" fill="#ff6b35" opacity="0.3"/>
+                            <path d="M 20 22 L 20 30" stroke="#ff6b35" stroke-width="3"/>
+                            <path d="M 14 26 L 20 22 L 26 26" stroke="#ff6b35" stroke-width="3"/>
+                            <path d="M 8 30 L 12 32 L 12 35 L 8 35 Z" fill="#ff6b35" opacity="0.4"/>
+                            <path d="M 28 30 L 32 32 L 32 35 L 28 35 Z" fill="#ff6b35" opacity="0.4"/>
+                        </svg>
+                    </div>
+                    <h4>Human Behavior & Pattern Recognition</h4>
+                    <p>Analyze behavioral patterns like running, fighting, falling, or unusual movements to detect potential security incidents or medical emergencies.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <rect x="6" y="12" width="28" height="16" rx="2" fill="#ff6b35" opacity="0.2"/>
+                            <rect x="10" y="16" width="20" height="8" rx="1" fill="#fff"/>
+                            <text x="20" y="23" text-anchor="middle" fill="#ff6b35" font-size="8" font-weight="600">ABC 1234</text>
+                            <circle cx="9" cy="24" r="3" fill="#333"/>
+                            <circle cx="31" cy="24" r="3" fill="#333"/>
+                        </svg>
+                    </div>
+                    <h4>Automatic Number Plate Recognition (ANPR/LPR)</h4>
+                    <p>Capture and recognize vehicle license plates for parking management, access control, toll collection, and vehicle tracking systems.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <rect x="8" y="16" width="24" height="12" rx="2" fill="#ff6b35" opacity="0.3"/>
+                            <circle cx="13" cy="28" r="3" fill="#333"/>
+                            <circle cx="27" cy="28" r="3" fill="#333"/>
+                            <rect x="12" y="18" width="16" height="6" rx="1" fill="#666"/>
+                            <circle cx="20" cy="10" r="6" fill="#f44336" opacity="0.3"/>
+                            <text x="20" y="13" text-anchor="middle" fill="#f44336" font-size="10" font-weight="700">!</text>
+                        </svg>
+                    </div>
+                    <h4>Stopped Vehicle Detection</h4>
+                    <p>Identify vehicles parked or stopped in no-parking zones, intersections, or critical areas for traffic management and security.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <path d="M 8 20 L 32 20" stroke="#ddd" stroke-width="2" stroke-dasharray="4,2"/>
+                            <rect x="18" y="8" width="16" height="10" rx="2" fill="#ff6b35" opacity="0.3"/>
+                            <circle cx="21" cy="18" r="2.5" fill="#333"/>
+                            <circle cx="31" cy="18" r="2.5" fill="#333"/>
+                            <path d="M 28 12 L 24 8" stroke="#f44336" stroke-width="2.5" fill="none"/>
+                            <path d="M 32 8 L 34 12" stroke="#f44336" stroke-width="2.5" fill="none"/>
+                        </svg>
+                    </div>
+                    <h4>Wrong Way Detection</h4>
+                    <p>Detect vehicles traveling in the wrong direction on one-way roads, highways, or parking lots to prevent accidents and improve traffic safety.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <rect x="10" y="14" width="20" height="12" rx="2" fill="#ff6b35" opacity="0.3"/>
+                            <circle cx="15" cy="26" r="2.5" fill="#333"/>
+                            <circle cx="25" cy="26" r="2.5" fill="#333"/>
+                            <path d="M 28 18 L 32 14 L 36 18" stroke="#f44336" stroke-width="2.5" fill="none"/>
+                            <text x="20" y="22" text-anchor="middle" fill="#f44336" font-size="10" font-weight="700">80</text>
+                        </svg>
+                    </div>
+                    <h4>Speed Violation Detection</h4>
+                    <p>Monitor and detect vehicles exceeding speed limits in restricted zones, school areas, and residential neighborhoods for traffic enforcement.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <circle cx="20" cy="16" r="6" fill="#ff6b35" opacity="0.3"/>
+                            <path d="M 20 23 L 20 30" stroke="#ff6b35" stroke-width="3"/>
+                            <circle cx="14" cy="28" r="1.5" fill="#333"/>
+                            <circle cx="26" cy="28" r="1.5" fill="#333"/>
+                            <line x1="10" y1="12" x2="30" y2="12" stroke="#f44336" stroke-width="3"/>
+                        </svg>
+                    </div>
+                    <h4>No Helmet Detection</h4>
+                    <p>Identify two-wheeler riders without helmets for traffic rule enforcement, construction site safety, and industrial area compliance monitoring.</p>
+                </div>
+
+                <div class="use-case-item">
+                    <div class="use-case-icon">
+                        <svg width="40" height="40" viewBox="0 0 40 40">
+                            <path d="M 8 30 L 32 30" stroke="#666" stroke-width="2"/>
+                            <rect x="12" y="22" width="6" height="8" fill="#ff6b35" opacity="0.3"/>
+                            <rect x="20" y="18" width="8" height="12" fill="#ff6b35" opacity="0.4"/>
+                            <circle cx="28" cy="24" r="4" fill="#ff6b35" opacity="0.3"/>
+                            <circle cx="30" cy="12" r="6" fill="#f44336" opacity="0.3"/>
+                            <text x="30" y="15" text-anchor="middle" fill="#f44336" font-size="10" font-weight="700">!</text>
+                        </svg>
+                    </div>
+                    <h4>Debris & Garbage Detection</h4>
+                    <p>Automatically detect accumulated garbage, debris, or waste in public areas, roads, and facilities for cleanliness monitoring and maintenance.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Technology Section -->
+    <section class="technology" id="technology">
+        <div class="container">
+            <div class="section-header">
+                <h2>Advanced Technology Stack</h2>
+                <p>Built on cutting-edge AI and machine learning frameworks for superior performance.</p>
+            </div>
+            <div class="tech-content">
+                <div>
+                    <ul class="tech-list">
+                        <li>Deep Learning Neural Networks</li>
+                        <li>Real-time Video Processing</li>
+                        <li>Cloud & Edge Computing Support</li>
+                        <li>Multi-camera Synchronization</li>
+                        <li>Secure Data Encryption</li>
+                        <li>API Integration Support</li>
+                        <li>Scalable Architecture</li>
+                        <li>Custom Model Training</li>
+                    </ul>
+                </div>
+                <div class="tech-image">
+                    <svg width="450" height="350" viewBox="0 0 450 350">
+                        <!-- Background -->
+                        <rect width="450" height="350" fill="#f8f9fa" rx="8"/>
+                        
+                        <!-- Neural Network Representation -->
+                        <!-- Input Layer -->
+                        <circle cx="80" cy="80" r="20" fill="#ff6b35" opacity="0.2"/>
+                        <circle cx="80" cy="175" r="20" fill="#ff6b35" opacity="0.2"/>
+                        <circle cx="80" cy="270" r="20" fill="#ff6b35" opacity="0.2"/>
+                        
+                        <!-- Hidden Layer 1 -->
+                        <circle cx="180" cy="60" r="18" fill="#ff6b35" opacity="0.3"/>
+                        <circle cx="180" cy="130" r="18" fill="#ff6b35" opacity="0.3"/>
+                        <circle cx="180" cy="200" r="18" fill="#ff6b35" opacity="0.3"/>
+                        <circle cx="180" cy="270" r="18" fill="#ff6b35" opacity="0.3"/>
+                        
+                        <!-- Hidden Layer 2 -->
+                        <circle cx="280" cy="80" r="18" fill="#ff6b35" opacity="0.4"/>
+                        <circle cx="280" cy="150" r="18" fill="#ff6b35" opacity="0.4"/>
+                        <circle cx="280" cy="220" r="18" fill="#ff6b35" opacity="0.4"/>
+                        
+                        <!-- Output Layer -->
+                        <circle cx="370" cy="115" r="20" fill="#ff6b35" opacity="0.6"/>
+                        <circle cx="370" cy="195" r="20" fill="#ff6b35" opacity="0.6"/>
+                        
+                        <!-- Connection Lines -->
+                        <line x1="100" y1="80" x2="162" y2="60" stroke="#ff6b35" opacity="0.15" stroke-width="1.5"/>
+                        <line x1="100" y1="80" x2="162" y2="130" stroke="#ff6b35" opacity="0.15" stroke-width="1.5"/>
+                        <line x1="100" y1="175" x2="162" y2="130" stroke="#ff6b35" opacity="0.15" stroke-width="1.5"/>
+                        <line x1="100" y1="175" x2="162" y2="200" stroke="#ff6b35" opacity="0.15" stroke-width="1.5"/>
+                        <line x1="100" y1="270" x2="162" y2="200" stroke="#ff6b35" opacity="0.15" stroke-width="1.5"/>
+                        <line x1="100" y1="270" x2="162" y2="270" stroke="#ff6b35" opacity="0.15" stroke-width="1.5"/>
+                        
+                        <line x1="198" y1="60" x2="262" y2="80" stroke="#ff6b35" opacity="0.2" stroke-width="1.5"/>
+                        <line x1="198" y1="130" x2="262" y2="150" stroke="#ff6b35" opacity="0.2" stroke-width="1.5"/>
+                        <line x1="198" y1="200" x2="262" y2="220" stroke="#ff6b35" opacity="0.2" stroke-width="1.5"/>
+                        
+                        <line x1="298" y1="80" x2="350" y2="115" stroke="#ff6b35" opacity="0.3" stroke-width="2"/>
+                        <line x1="298" y1="150" x2="350" y2="115" stroke="#ff6b35" opacity="0.3" stroke-width="2"/>
+                        <line x1="298" y1="150" x2="350" y2="195" stroke="#ff6b35" opacity="0.3" stroke-width="2"/>
+                        <line x1="298" y1="220" x2="350" y2="195" stroke="#ff6b35" opacity="0.3" stroke-width="2"/>
+                        
+                        <!-- Labels -->
+                        <text x="80" y="310" text-anchor="middle" fill="#666" font-size="12" font-weight="500">Input</text>
+                        <text x="180" y="310" text-anchor="middle" fill="#666" font-size="12" font-weight="500">Processing</text>
+                        <text x="280" y="310" text-anchor="middle" fill="#666" font-size="12" font-weight="500">Analysis</text>
+                        <text x="370" y="310" text-anchor="middle" fill="#666" font-size="12" font-weight="500">Output</text>
+                        
+                        <!-- AI Indicator -->
+                        <rect x="150" y="15" width="150" height="28" rx="14" fill="#ff6b35" opacity="0.15"/>
+                        <text x="225" y="33" text-anchor="middle" fill="#ff6b35" font-size="13" font-weight="600">AI Neural Network</text>
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section" id="contact">
+        <div class="container">
+            <h2>Ready to Enhance Your Security?</h2>
+            <p>Get started with Servelens today and experience the future of intelligent video surveillance.</p>
+            <a href="/cdn-cgi/l/email-protection#ccafa3a2b8adafb88cbfa9bebaa9a0a9a2bfe2a5a2" class="btn-primary">Request a Demo</a>
+            <a href="tel:+919810217013" class="btn-secondary" style="margin-left: 15px;">Call: +91-9810217013</a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-about">
+                    <h3>Servelens</h3>
+                    <p>Leading Video Surveillance Software Technology Company specializing in AI-Based Intelligent Surveillance Solutions.</p>
+                    <p>📧 <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="15767a7b6174766155667067637079707b663b7c7b">[email&#160;protected]</a><br>
+                    📞 +91-9810217013<br>
+                    📍 Paras Trinity, 10th Floor, Sector 63, Gurugram, Haryana, India</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Solutions</h4>
+                    <ul>
+                        <li><a href="#features">Video Analytics</a></li>
+                        <li><a href="#solutions">Use Cases</a></li>
+                        <li><a href="#technology">Technology</a></li>
+                        <li><a href="#contact">Integration</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#home">About Us</a></li>
+                        <li><a href="#contact">Contact</a></li>
+                        <li><a href="#contact">Careers</a></li>
+                        <li><a href="#contact">Partners</a></li>
+                    </ul>
+                </div>
+                <div class="footer-links">
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#contact">Documentation</a></li>
+                        <li><a href="#contact">Support</a></li>
+                        <li><a href="#contact">Blog</a></li>
+                        <li><a href="#contact">FAQ</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 Servelens.in. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth' });
+                }
+            });
+        });
+
+        // Mobile menu toggle
+        const menuToggle = document.querySele

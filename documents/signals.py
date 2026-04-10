@@ -1,9 +1,14 @@
 """
 Auto-indexing signals for RAG system.
 Supports PDF, TXT, MD, DOCX — indexes into ChromaDB on document save.
+
+Documents are queued and processed ONE AT A TIME by a single background
+worker thread — no concurrent indexing, no ChromaDB write collisions,
+no interleaved console output.
 """
 
 import os
+import queue
 import threading
 import logging
 
@@ -15,12 +20,56 @@ logger = logging.getLogger(__name__)
 # All file types the indexer can handle
 SUPPORTED_EXTENSIONS = {'.pdf', '.txt', '.md', '.text', '.docx', '.doc'}
 
+# ── Single-worker indexing queue ─────────────────────────────────────────────
+# All save signals drop a document_id into this queue.
+# One daemon worker thread drains it sequentially — zero concurrency issues.
+_index_queue  = queue.Queue()
+_worker_lock  = threading.Lock()
+_worker_alive = False
+
+
+def _ensure_worker():
+    """Start the background worker thread if not already running."""
+    global _worker_alive
+    if _worker_alive:
+        return
+    with _worker_lock:
+        if _worker_alive:          # re-check inside lock
+            return
+        t = threading.Thread(
+            target=_queue_worker,
+            daemon=True,
+            name='rag-index-worker',
+        )
+        t.start()
+        _worker_alive = True
+
+
+def _queue_worker():
+    """
+    Single daemon thread — drains the index queue one document at a time.
+    Never spawns sub-threads; all indexing is fully sequential.
+    """
+    while True:
+        document_id = _index_queue.get()
+        try:
+            _index_in_background(document_id)
+        except Exception as exc:
+            logger.error(
+                f"[RAG] Queue worker unhandled error for doc {document_id}: {exc}",
+                exc_info=True,
+            )
+        finally:
+            _index_queue.task_done()
+
+
+# ── Signal handler ────────────────────────────────────────────────────────────
 
 @receiver(post_save, sender='documents.Document')
 def auto_index_document(sender, instance, created, **kwargs):
     """
-    Automatically index any supported document into the RAG vector store.
-    Runs in a daemon background thread — never blocks the HTTP request.
+    Queue a document for indexing whenever it is saved.
+    Never blocks the HTTP request — the worker picks it up asynchronously.
     """
     if not instance.file:
         return
@@ -35,23 +84,24 @@ def auto_index_document(sender, instance, created, **kwargs):
         logger.debug(f"[RAG] Skipping unsupported file type: {ext}")
         return
 
-    # Skip if already successfully indexed
+    # Fast pre-check — skip if already successfully indexed
     try:
         from .models import DocumentEmbedding
         emb = DocumentEmbedding.objects.get(document=instance)
         if emb.is_indexed:
             return
     except Exception:
-        pass  # No record yet — thread will create one
+        pass  # No record yet — worker will create one
 
-    thread = threading.Thread(
-        target=_index_in_background,
-        args=(instance.id,),
-        daemon=True,
-        name=f"rag-index-{instance.id}",
+    _ensure_worker()
+    _index_queue.put(instance.id)
+    logger.debug(
+        f"[RAG] Doc {instance.id} queued for indexing "
+        f"(queue depth: {_index_queue.qsize()})"
     )
-    thread.start()
 
+
+# ── File loaders ──────────────────────────────────────────────────────────────
 
 def _load_text_file(file_path: str, document):
     """
@@ -66,7 +116,6 @@ def _load_text_file(file_path: str, document):
     if not raw.strip():
         return []
 
-    # Split on double newlines (paragraphs), re-join into ~500-word pages
     paragraphs = [p.strip() for p in raw.split('\n\n') if p.strip()]
     pages, current, word_count = [], [], 0
     for para in paragraphs:
@@ -84,11 +133,11 @@ def _load_text_file(file_path: str, document):
         docs.append(LCDoc(
             page_content=page_text,
             metadata={
-                'source': file_path,
-                'title': getattr(document, 'title', os.path.basename(file_path)),
-                'page': i,
+                'source':       file_path,
+                'title':        getattr(document, 'title', os.path.basename(file_path)),
+                'page':         i,
                 'content_type': 'text',
-                'file_type': os.path.splitext(file_path)[1].lower().lstrip('.'),
+                'file_type':    os.path.splitext(file_path)[1].lower().lstrip('.'),
             }
         ))
     return docs
@@ -100,8 +149,10 @@ def _load_docx_file(file_path: str, document):
         from docx import Document as DocxDoc
         from langchain_core.documents import Document as LCDoc
     except ImportError:
-        logger.warning("[RAG] python-docx not installed — cannot index .docx files. "
-                       "Run: pip install python-docx")
+        logger.warning(
+            "[RAG] python-docx not installed — cannot index .docx files. "
+            "Run: pip install python-docx"
+        )
         return []
 
     docx = DocxDoc(file_path)
@@ -125,18 +176,23 @@ def _load_docx_file(file_path: str, document):
         docs.append(LCDoc(
             page_content=page_text,
             metadata={
-                'source': file_path,
-                'title': getattr(document, 'title', os.path.basename(file_path)),
-                'page': i,
+                'source':       file_path,
+                'title':        getattr(document, 'title', os.path.basename(file_path)),
+                'page':         i,
                 'content_type': 'text',
-                'file_type': 'docx',
+                'file_type':    'docx',
             }
         ))
     return docs
 
 
+# ── Core indexer ──────────────────────────────────────────────────────────────
+
 def _index_in_background(document_id: int):
-    """Index one document in a background thread. Called by the post_save signal."""
+    """
+    Index one document. Called exclusively by the single queue worker thread
+    so there is never more than one indexing job running at a time.
+    """
     try:
         from .models import Document, DocumentEmbedding
         from .rag_views import get_rag_chatbot
@@ -151,19 +207,28 @@ def _index_in_background(document_id: int):
         if ext not in SUPPORTED_EXTENSIONS:
             return
 
-        embedding, _ = DocumentEmbedding.objects.get_or_create(document=document)
-        if embedding.is_indexed:
+        # Ensure an embedding record exists
+        DocumentEmbedding.objects.get_or_create(document=document)
+
+        # Atomic claim — guards against duplicate queue entries for the same doc
+        claimed = DocumentEmbedding.objects.filter(
+            document=document,
+            is_indexed=False,
+            index_status__in=['pending', 'failed'],
+        ).update(index_status='processing')
+
+        if not claimed:
+            # Already indexed or currently being processed
+            logger.debug(f"[RAG] Doc {document_id} already claimed — skipping")
             return
 
-        embedding.mark_processing()
+        embedding = DocumentEmbedding.objects.get(document=document)
         logger.info(f"[RAG] Indexing started ({ext}): {document.title!r}")
 
-        # get_rag_chatbot() is lock-protected: if initialization is still in
-        # progress on another thread this call blocks until it completes,
-        # so index_documents() is never called on an uninitialized system.
+        # get_rag_chatbot() blocks until initialization completes (lock-protected)
         chatbot = get_rag_chatbot()
 
-        # ── Route by file type ──────────────────────────────────────────
+        # ── Route by file type ────────────────────────────────────────────────
         if ext == '.pdf':
             chatbot.index_documents(
                 pdf_path=file_path,
@@ -197,10 +262,13 @@ def _index_in_background(document_id: int):
             chunk_count=chunk_count,
             embedding_model=chatbot.config.EMBEDDING_MODEL,
         )
-        logger.info(f"[RAG] Indexed {document.title!r} — {chunk_count} chunks ({ext})")
+        logger.info(f"[RAG] ✓ Indexed {document.title!r} — {chunk_count} chunks ({ext})")
 
     except Exception as exc:
-        logger.error(f"[RAG] Indexing failed for document {document_id}: {exc}", exc_info=True)
+        logger.error(
+            f"[RAG] Indexing failed for document {document_id}: {exc}",
+            exc_info=True,
+        )
         try:
             from .models import DocumentEmbedding
             emb = DocumentEmbedding.objects.get(document_id=document_id)
