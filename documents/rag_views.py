@@ -80,21 +80,33 @@ from .rag.document_processor import EnhancedDocumentProcessor
 # RAG SYSTEM VIEWS
 # ============================================================================
 
-# Global chatbot instance
+# Global chatbot instance + lock so only one thread ever calls initialize()
+import threading as _threading
 _rag_chatbot: Optional[RAGChatbot] = None
+_rag_init_lock = _threading.Lock()
 
 
 def get_rag_chatbot() -> RAGChatbot:
     """
-    Get or initialize the enhanced RAG chatbot instance
-    Lazy-loaded singleton pattern - same function name as original
+    Get or initialize the enhanced RAG chatbot instance.
+    Thread-safe: uses a lock so concurrent callers (e.g. background indexing
+    threads fired by post_save signals) never race through initialization.
     """
     global _rag_chatbot
-    
-    if _rag_chatbot is None:
+
+    # Fast path — already initialized, no lock needed
+    if _rag_chatbot is not None and _rag_chatbot.is_initialized:
+        return _rag_chatbot
+
+    # Slow path — one thread initializes, the rest wait
+    with _rag_init_lock:
+        # Re-check inside the lock (another thread may have finished while we waited)
+        if _rag_chatbot is not None and _rag_chatbot.is_initialized:
+            return _rag_chatbot
+
         # Configure enhanced RAG
         config = RAGConfig()
-        
+
         # Lightweight mode recommended for production
         config.set_lightweight_mode()
 
@@ -104,18 +116,18 @@ def get_rag_chatbot() -> RAGChatbot:
         config.ENABLE_OCR = True
         config.ENABLE_IMAGE_DESCRIPTION = False
         config.USE_HYBRID_SEARCH = True
-        config.N_RESULTS = 20          # retrieve 20 chunks so all story pages surface
-        config.SIMILARITY_THRESHOLD = -0.2  # ChromaDB scores are (1-cosine_dist), all negative. -0.2 filters truly irrelevant docs while passing relevant ones. Allows GK fallback when no docs match.
-        
+        config.N_RESULTS = 20
+        config.SIMILARITY_THRESHOLD = -0.2
+
         # Set storage path
         media_root = getattr(settings, 'MEDIA_ROOT', os.path.join(settings.BASE_DIR, 'media'))
         db_path = os.path.join(media_root, 'rag')
         config.set_chroma_path(db_path)
-        
-        # Initialize chatbot
+
+        # Initialize chatbot (slow — loads embedding model + LLM)
         _rag_chatbot = RAGChatbot(config=config)
         _rag_chatbot.initialize(reset=False)
-    
+
     return _rag_chatbot
 
 

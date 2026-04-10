@@ -158,6 +158,9 @@ def _index_in_background(document_id: int):
         embedding.mark_processing()
         logger.info(f"[RAG] Indexing started ({ext}): {document.title!r}")
 
+        # get_rag_chatbot() is lock-protected: if initialization is still in
+        # progress on another thread this call blocks until it completes,
+        # so index_documents() is never called on an uninitialized system.
         chatbot = get_rag_chatbot()
 
         # ── Route by file type ──────────────────────────────────────────

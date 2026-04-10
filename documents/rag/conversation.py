@@ -6,6 +6,7 @@ Integrates all enhanced components for better document Q&A with flexible knowled
 from typing import List, Dict, Tuple, Optional
 import sys
 import time
+import threading
 
 from .config import RAGConfig
 
@@ -53,9 +54,13 @@ class RAGChatbot:
         
         # Conversation memory by thread
         self.conversation_memory = {}
-        
+
         # System status
         self.is_initialized = False
+
+        # Serialize concurrent index_documents() calls so ChromaDB writes
+        # never overlap (ChromaDB is not thread-safe for concurrent writes)
+        self._index_lock = threading.Lock()
     
     def initialize(self, db_path: str = None, reset: bool = False):
         """
@@ -112,26 +117,24 @@ class RAGChatbot:
                        extract_tables: bool = None,
                        describe_images: bool = None):
         """
-        Index documents with enhanced processing
-        
-        Args:
-            pdf_path: Path to single PDF file
-            documents: Pre-loaded LangChain documents
-            extract_tables: Override config for table extraction
-            describe_images: Override config for image description
+        Index documents with enhanced processing.
+        Thread-safe: serialized with _index_lock so concurrent background
+        threads never corrupt the ChromaDB vector store.
         """
         if not self.is_initialized:
             raise RuntimeError("System not initialized. Call initialize() first.")
-        
+
         extract_tables = extract_tables if extract_tables is not None else self.config.ENABLE_TABLE_EXTRACTION
         describe_images = describe_images if describe_images is not None else self.config.ENABLE_IMAGE_DESCRIPTION
-        
+
+        # CPU-bound work (chunking, embedding) can run outside the lock;
+        # only the ChromaDB write needs serialization.
         _safe_print("\n" + "="*70)
         _safe_print("📚 Starting Document Indexing")
         _safe_print("="*70)
-        
+
         start_time = time.time()
-        
+
         # Process documents
         if pdf_path:
             _safe_print(f"Processing PDF: {pdf_path}")
@@ -145,39 +148,40 @@ class RAGChatbot:
             chunks = self.document_processor.split_documents_smart(documents)
         else:
             raise ValueError("Either pdf_path or documents must be provided")
-        
+
         if not chunks:
             _safe_print("⚠️  No chunks created from documents")
             return
-        
+
         # Prepare for embedding
         texts = [chunk.page_content for chunk in chunks]
         metadatas = [chunk.metadata for chunk in chunks]
         chunk_types = [meta.get('chunk_type', 'text') for meta in metadatas]
-        
-        # Generate embeddings with preprocessing
+
+        # Generate embeddings (slow, CPU-bound — fine to run concurrently)
         embeddings = self.embedding_manager.generate_embeddings_enhanced(
             texts=texts,
             chunk_types=chunk_types,
             show_progress=True
         )
-        
+
         # Generate unique IDs
         ids = [
             f"{meta.get('source', 'doc')}_{meta.get('page', 0)}_{meta.get('chunk_index', i)}"
             for i, meta in enumerate(metadatas)
         ]
-        
-        # Add to vector store
-        self.vector_store.add_documents(
-            embeddings=embeddings.tolist(),
-            texts=texts,
-            metadatas=metadatas,
-            ids=ids
-        )
-        
+
+        # Serialize the ChromaDB write — ChromaDB is not safe for concurrent writes
+        with self._index_lock:
+            self.vector_store.add_documents(
+                embeddings=embeddings.tolist(),
+                texts=texts,
+                metadatas=metadatas,
+                ids=ids
+            )
+
         processing_time = time.time() - start_time
-        
+
         _safe_print(f"\n✅ Indexing completed in {processing_time:.2f}s")
         _safe_print(f"   📦 Total chunks in vector store: {self.vector_store.get_document_count()}")
         
