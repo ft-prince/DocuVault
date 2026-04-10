@@ -446,3 +446,407 @@ Arguments: ()
 2026-04-10 11:54:03 [INFO] Authenticated as admin
 2026-04-10 11:54:03 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/docsss/NEW
 2026-04-10 11:54:03 [INFO] DocuVault Desktop Agent is running.
+2026-04-10 12:07:55 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-04-10 12:07:56 [INFO] Authenticated as admin
+2026-04-10 12:07:56 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/docsss/NEW
+2026-04-10 12:07:56 [INFO] DocuVault Desktop Agent is running.
+2026-04-10 12:12:03 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\2948648134 - Copy - Copy - Copy.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: '2948648134 - Copy - Copy - Copy' \u2192 v2 (id=323)"
+Arguments: ()
+2026-04-10 12:13:01 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\2948648134 - Copy - Copy - Copy - Copy.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 created: '2948648134 - Copy - Copy - Copy - Copy' \u2192 v1 (id=326)"
+Arguments: ()
+2026-04-10 12:13:36 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\2948648134 - Copy.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 created: '2948648134 - Copy' \u2192 v1 (id=330)"
+Arguments: ()
+2026-04-10 12:13:41 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\2948648134.pdf
+2026-04-10 12:13:43 [ERROR] Upload failed (502): <!DOCTYPE html>
+<!--[if lt IE 7]> <html class="no-js ie6 oldie" lang="en-US"> <![endif]-->
+<!--[if IE 7]>    <html class="no-js ie7 oldie" lang="en-US"> <![endif]-->
+<!--[if IE 8]>    <html class="no-
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2717' in position 32: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 309, in _flush_pending
+    self.logger.warning(f"  \u2717 Failed to sync: {path}")
+Message: '  \u2717 Failed to sync: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\\2948648134.pdf'
+Arguments: ()
+2026-04-10 12:15:48 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\2948648134 - Copy - Copy.pdf
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: '2948648134 - Copy - Copy' \u2192 v4 (id=105)"
+Arguments: ()
+2026-04-10 12:16:26 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\REACT.docx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 created: 'REACT' \u2192 v1 (id=335)"
+Arguments: ()
+2026-04-10 12:16:39 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\REACT.docx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: 'REACT' \u2192 v2 (id=335)"
+Arguments: ()
+2026-04-10 12:16:50 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\REACT.docx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: 'REACT' \u2192 v3 (id=335)"
+Arguments: ()
+2026-04-10 12:17:31 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\REACT.docx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: 'REACT' \u2192 v4 (id=335)"
+Arguments: ()
+2026-04-10 12:17:44 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\REACT.docx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: 'REACT' \u2192 v5 (id=335)"
+Arguments: ()
+2026-04-10 12:18:20 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\REACT - Copy.docx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 created: 'REACT - Copy' \u2192 v1 (id=341)"
+Arguments: ()
+2026-04-10 12:19:20 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\REACT - Copy.docx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: 'REACT - Copy' \u2192 v2 (id=341)"
+Arguments: ()
+2026-04-10 12:20:00 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\REACT - Copy.docx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: 'REACT - Copy' \u2192 v3 (id=341)"
+Arguments: ()
+2026-04-10 12:23:50 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\05 HOGO - BILL OF MATERIAL - FINAL ASSEMBLY.xlsx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 created: '05 HOGO - BILL OF MATERIAL - FINAL ASSEMBLY' \u2192 v1 (id=345)"
+Arguments: ()
+2026-04-10 12:24:20 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\05 HOGO - BILL OF MATERIAL - FINAL ASSEMBLY.xlsx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: '05 HOGO - BILL OF MATERIAL - FINAL ASSEMBLY' \u2192 v2 (id=345)"
+Arguments: ()
+2026-04-10 12:24:34 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\05 HOGO - BILL OF MATERIAL - FINAL ASSEMBLY.xlsx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: '05 HOGO - BILL OF MATERIAL - FINAL ASSEMBLY' \u2192 v3 (id=345)"
+Arguments: ()
+2026-04-10 12:25:13 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\05 HOGO - BILL OF MATERIAL - FINAL ASSEMBLY.xlsx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: '05 HOGO - BILL OF MATERIAL - FINAL ASSEMBLY' \u2192 v4 (id=345)"
+Arguments: ()
+2026-04-10 12:25:31 [INFO] Syncing: D:/AI_Model_Renata/Document-management/Group/docsss/NEW\05 HOGO - BILL OF MATERIAL - FINAL ASSEMBLY.xlsx
+--- Logging error ---
+Traceback (most recent call last):
+  File "C:\Python312\Lib\logging\__init__.py", line 1163, in emit
+    stream.write(msg + self.terminator)
+  File "C:\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 29: character maps to <undefined>
+Call stack:
+  File "C:\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 417, in _debounce_loop
+    handler._flush_pending()
+  File "D:\AI_Model_Renata\Document-management\Group\V2\DocuVault\desktop_agent\agent.py", line 305, in _flush_pending
+    self.logger.info(
+Message: "  \u2713 updated: '05 HOGO - BILL OF MATERIAL - FINAL ASSEMBLY' \u2192 v5 (id=345)"
+Arguments: ()
