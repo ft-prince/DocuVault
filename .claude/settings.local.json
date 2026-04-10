@@ -95,7 +95,21 @@
       "Bash(python -c \"import django; print\\(django.get_version\\(\\)\\)\")",
       "Bash(env/Scripts/python.exe manage.py shell -c \"from documents.models import User; print\\([\\(u.username, u.is_staff\\) for u in User.objects.all\\(\\)[:5]]\\)\")",
       "Bash(env/Scripts/python.exe manage.py shell -c \"from documents.models import User; u=User.objects.get\\(username=''prince''\\); u.set_password\\(''test1234''\\); u.save\\(\\); print\\(''done''\\)\")",
-      "Bash(curl -s \"http://127.0.0.1:8001/chatbot/\" -H \"Cookie: sessionid=\")"
+      "Bash(curl -s \"http://127.0.0.1:8001/chatbot/\" -H \"Cookie: sessionid=\")",
+      "Bash(env/Scripts/python.exe -c \"import django; import os; os.environ[''DJANGO_SETTINGS_MODULE'']=''config.settings''; django.setup\\(\\); from documents.models import User; users=User.objects.all\\(\\).values\\(''username'',''is_staff'',''is_superuser''\\); print\\(list\\(users\\)\\)\")",
+      "Bash(env/Scripts/python.exe -c \":*)",
+      "Bash(\"D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\\\\test_doc.txt\")",
+      "Bash(env/Scripts/python.exe -c \"import docx; print\\(''python-docx:'', docx.__version__\\)\")",
+      "Bash(env/Scripts/python.exe -c \"import docx; print\\(''OK:'', docx.__version__\\)\")",
+      "Bash(env/Scripts/python.exe -c \"import sys; print\\(sys.executable\\)\")",
+      "Bash(curl -s \"http://localhost:8001/documents/81/index-status/\")",
+      "Bash(env/Scripts/python.exe manage.py shell -c \":*)",
+      "Bash(env/Scripts/python.exe -c \"import docx; print\\(docx.__file__\\)\")",
+      "Bash(\"D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\\\\media\\\\test_upload.txt\")",
+      "Bash(\"D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\\\\test_feature_check.txt\")",
+      "Bash(xargs basename:*)",
+      "Bash(ls -la /d/AI_Model_Renata/Document-management/Group/V2/DocuVault/documents/*.py)",
+      "Bash(xargs -I {} basename {})"
     ]
   }
 }

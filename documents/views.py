@@ -1376,9 +1376,11 @@ def _agent_process_status():
         try:
             with open(pid_path) as f:
                 pid = int(f.read().strip())
+            # On Windows + Python 3.12, os.kill(pid, 0) can raise SystemError
+            # for zombie/inaccessible processes in addition to OSError.
             os.kill(pid, 0)   # signal 0 = check existence without killing
             return True, pid
-        except (ValueError, OSError):
+        except (ValueError, OSError, SystemError):
             # Stale PID file — remove it
             try:
                 os.remove(pid_path)
@@ -1701,6 +1703,69 @@ def agent_download_view(request):
     buf.seek(0)
     resp = HttpResponse(buf.read(), content_type='application/zip')
     resp['Content-Disposition'] = 'attachment; filename="DocuVaultAgent.zip"'
+    return resp
+
+
+# ── Download RunAgent.bat (Python-based launcher) ─────────────
+@login_required
+def agent_bat_download_view(request):
+    """
+    GET /workspace/agent/download/bat/
+    Serves a ZIP containing RunAgent.bat, StartAgentBackground.bat,
+    agent.py, setup_wizard.py, and requirements.txt — everything needed
+    to run the agent on a PC that already has Python installed.
+    The batch files are pre-configured with this server's URL.
+    """
+    import zipfile, io
+
+    server_url = request.build_absolute_uri('/').rstrip('/')
+
+    # Read the bat files from disk (they're already in desktop_agent/)
+    run_bat_path = os.path.join(_AGENT_DIR, 'RunAgent.bat')
+    bg_bat_path  = os.path.join(_AGENT_DIR, 'StartAgentBackground.bat')
+
+    run_bat_content = open(run_bat_path, 'r', encoding='utf-8').read() if os.path.exists(run_bat_path) else ''
+    bg_bat_content  = open(bg_bat_path,  'r', encoding='utf-8').read() if os.path.exists(bg_bat_path)  else ''
+
+    readme = (
+        'DocuVault Desktop Agent — Python Launcher\r\n'
+        '==========================================\r\n\r\n'
+        'Requirements: Python 3.10+ with packages installed.\r\n\r\n'
+        'QUICK START\r\n'
+        '-----------\r\n'
+        '1. Extract this ZIP somewhere (e.g. C:\\DocuVaultAgent\\)\r\n'
+        '2. Double-click RunAgent.bat\r\n'
+        '   - First run: setup wizard opens — enter server URL, login, watch folder\r\n'
+        '   - Next runs: status popup with Start / Stop controls\r\n\r\n'
+        'SILENT / BACKGROUND MODE\r\n'
+        '------------------------\r\n'
+        'Run:  StartAgentBackground.bat\r\n'
+        'Or:   RunAgent.bat --no-tray\r\n'
+        'This starts the agent with no window — logs go to desktop_agent.log\r\n\r\n'
+        'ADD TO WINDOWS STARTUP (auto-start on login)\r\n'
+        '--------------------------------------------\r\n'
+        '1. Press Win+R and type:  shell:startup\r\n'
+        '2. Copy a shortcut of StartAgentBackground.bat into that folder\r\n\r\n'
+        f'Your DocuVault server: {server_url}\r\n'
+    )
+
+    FILES_TO_INCLUDE = ['agent.py', 'setup_wizard.py', 'requirements.txt']
+
+    buf = io.BytesIO()
+    with zipfile.ZipFile(buf, 'w', zipfile.ZIP_DEFLATED) as zf:
+        for fname in FILES_TO_INCLUDE:
+            fpath = os.path.join(_AGENT_DIR, fname)
+            if os.path.exists(fpath):
+                zf.write(fpath, f'DocuVaultAgent/{fname}')
+        if run_bat_content:
+            zf.writestr('DocuVaultAgent/RunAgent.bat', run_bat_content)
+        if bg_bat_content:
+            zf.writestr('DocuVaultAgent/StartAgentBackground.bat', bg_bat_content)
+        zf.writestr('DocuVaultAgent/README.txt', readme)
+
+    buf.seek(0)
+    resp = HttpResponse(buf.read(), content_type='application/zip')
+    resp['Content-Disposition'] = 'attachment; filename="DocuVaultAgent-bat.zip"'
     return resp
 
 

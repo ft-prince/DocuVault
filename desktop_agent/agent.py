@@ -29,6 +29,10 @@ import requests
 from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 
+# PyInstaller: required on Windows for frozen multiprocessing-based libraries
+import multiprocessing
+multiprocessing.freeze_support()
+
 # ─── Optional tray support (skip gracefully on headless systems) ───────────────
 try:
     import pystray
@@ -117,6 +121,10 @@ def setup_logging(cfg):
     log_cfg = cfg.get('log', {})
     level = getattr(logging, log_cfg.get('level', 'INFO').upper(), logging.INFO)
     log_file = log_cfg.get('file', str(AGENT_DIR / 'desktop_agent.log'))
+    # Resolve relative paths against AGENT_DIR so detached processes write to
+    # the correct location regardless of the process's working directory.
+    if not os.path.isabs(log_file):
+        log_file = str(AGENT_DIR / log_file)
     max_bytes = int(log_cfg.get('max_size_mb', 10)) * 1024 * 1024
 
     logger = logging.getLogger('docuvault_agent')

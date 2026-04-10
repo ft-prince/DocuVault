@@ -27,6 +27,7 @@ urlpatterns = [
     path('workspace/agent/process/stop/',  views.agent_process_stop_view,     name='agent_process_stop'),
     path('workspace/agent/process/status/',views.agent_process_status_view,   name='agent_process_status'),
     path('workspace/agent/download/',      views.agent_download_view,          name='agent_download'),
+    path('workspace/agent/download/bat/',  views.agent_bat_download_view,      name='agent_bat_download'),
     path('workspace/agent/build/',         views.agent_build_exe_view,         name='agent_build_exe'),
     path('workspace/agent/build/log/',     views.agent_build_log_view,         name='agent_build_log'),
 

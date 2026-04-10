@@ -44,7 +44,8 @@ def _save_config(cfg):
 def _add_to_startup():
     try:
         if getattr(sys, 'frozen', False):
-            cmd = f'"{sys.executable}"'
+            # Run headless on login — no GUI popup every boot
+            cmd = f'"{sys.executable}" --no-tray'
         else:
             cmd = f'"{sys.executable}" "{AGENT_SCRIPT}" --no-tray'
         key = winreg.OpenKey(winreg.HKEY_CURRENT_USER,
@@ -403,7 +404,7 @@ def _read_pid():
         pid = int(PID_PATH.read_text().strip())
         os.kill(pid, 0)   # signal 0 = check existence only
         return pid
-    except Exception:
+    except (Exception, SystemError):
         return None
 
 

@@ -442,3 +442,7 @@ Call stack:
     self.logger.info(
 Message: "  \u2713 created: 'DocuVault reference guide v2 - Copy - Copy' \u2192 v1 (id=76)"
 Arguments: ()
+2026-04-10 11:54:03 [INFO] Starting DocuVault Desktop Agent (headless)…
+2026-04-10 11:54:03 [INFO] Authenticated as admin
+2026-04-10 11:54:03 [INFO] Watching: D:/AI_Model_Renata/Document-management/Group/docsss/NEW
+2026-04-10 11:54:03 [INFO] DocuVault Desktop Agent is running.

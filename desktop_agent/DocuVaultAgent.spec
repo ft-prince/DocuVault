@@ -1,12 +1,27 @@
 # -*- mode: python ; coding: utf-8 -*-
 
-
 a = Analysis(
     ['agent.py'],
     pathex=[],
     binaries=[],
-    datas=[],
-    hiddenimports=['setup_wizard', 'tkinter', 'tkinter.filedialog', 'pystray', 'PIL', 'watchdog', 'requests', 'dateutil', 'winreg'],
+    datas=[('setup_wizard.py', '.')],
+    hiddenimports=[
+        'setup_wizard',
+        'tkinter',
+        'tkinter.filedialog',
+        'pystray',
+        'PIL',
+        'PIL.Image',
+        'PIL.ImageDraw',
+        'watchdog',
+        'watchdog.observers',
+        'watchdog.observers.winapi',
+        'watchdog.events',
+        'requests',
+        'dateutil',
+        'winreg',
+        'multiprocessing',
+    ],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

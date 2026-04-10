@@ -4,7 +4,7 @@
   "password": "prince123",
   "watch_folders": [
     {
-      "path": "D:\\AI_Model_Renata\\Document-management\\Group\\Prince-docs",
+      "path": "D:\\AI_Model_Renata\\Document-management\\Group\\docsss\\NEW",
       "recursive": true,
       "category": "General",
       "extensions": [
@@ -14,9 +14,7 @@
         ".pptx",
         ".txt",
         ".csv"
-      ],
-      "folder_id": 3,
-      "folder_name": "demo"
+      ]
     }
   ],
   "sync": {
