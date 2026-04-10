@@ -91,113 +91,72 @@
   <div class="ag-card-head">
     <span>📦</span>
     <h2>Give the agent to your team</h2>
-    <span style="font-size:.75rem;font-weight:700;padding:.2rem .6rem;border-radius:20px;
-                 {% if exe_built %}background:#dcfce7;color:#16a34a{% else %}background:#fff3cd;color:#92400e{% endif %}">
-      {% if exe_built %}✓ DocuVaultAgent.exe ready{% else %}⚠ No .exe built yet{% endif %}
-    </span>
   </div>
   <div class="ag-card-body">
 
-    {% if exe_built %}
-    <!-- .exe exists — show .exe download + bat alternative -->
+    <!-- How it works: 3 steps -->
     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem">
       <div style="text-align:center;padding:1rem .5rem;border:1px solid #e5e7eb;border-radius:10px">
         <div style="font-size:1.6rem;margin-bottom:.4rem">⬇️</div>
         <div style="font-weight:700;font-size:.82rem;color:#111;margin-bottom:.25rem">1. Download</div>
-        <div style="font-size:.76rem;color:#6b7280">Click the button below to get DocuVaultAgent.exe</div>
+        <div style="font-size:.76rem;color:#6b7280">Click below — extract the ZIP anywhere on your PC</div>
       </div>
       <div style="text-align:center;padding:1rem .5rem;border:1px solid #e5e7eb;border-radius:10px">
         <div style="font-size:1.6rem;margin-bottom:.4rem">🖱️</div>
-        <div style="font-weight:700;font-size:.82rem;color:#111;margin-bottom:.25rem">2. Double-click</div>
-        <div style="font-size:.76rem;color:#6b7280">Setup wizard opens — enter server URL &amp; login</div>
+        <div style="font-weight:700;font-size:.82rem;color:#111;margin-bottom:.25rem">2. Double-click RunAgent.bat</div>
+        <div style="font-size:.76rem;color:#6b7280">Setup wizard opens — enter server URL, login &amp; watch folder</div>
       </div>
       <div style="text-align:center;padding:1rem .5rem;border:1px solid #e5e7eb;border-radius:10px">
         <div style="font-size:1.6rem;margin-bottom:.4rem">✅</div>
         <div style="font-weight:700;font-size:.82rem;color:#111;margin-bottom:.25rem">3. Done</div>
-        <div style="font-size:.76rem;color:#6b7280">Agent runs silently — no terminal, no Python needed</div>
+        <div style="font-size:.76rem;color:#6b7280">Agent runs silently, syncing your local folder to DocuVault</div>
       </div>
     </div>
 
-    <!-- Primary: .exe -->
-    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1rem">
-      <a href="{% url 'agent_download' %}"
-         style="display:inline-flex;align-items:center;gap:.5rem;background:#16a34a;color:#fff;
-                font-size:.9rem;font-weight:700;padding:.7rem 1.6rem;border-radius:8px;
-                text-decoration:none;box-shadow:0 2px 8px rgba(22,163,74,.25)">
-        ⬇ Download DocuVaultAgent.exe
-      </a>
-      <span style="font-size:.82rem;color:#6b7280">No installation or Python required.</span>
-    </div>
-
-    <!-- Secondary: bat / Python option -->
-    <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:.85rem 1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.8rem;font-weight:700;color:#374151;margin-bottom:.2rem">
-          🐍 Have Python installed?  Use the .bat launcher instead
-        </div>
-        <div style="font-size:.75rem;color:#6b7280">
-          More reliable on some PCs. Includes <code style="background:#e5e7eb;padding:.05rem .3rem;border-radius:3px">RunAgent.bat</code>
-          (GUI) and <code style="background:#e5e7eb;padding:.05rem .3rem;border-radius:3px">StartAgentBackground.bat</code> (silent/startup).
-        </div>
-      </div>
+    <!-- Download button -->
+    <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.25rem">
       <a href="{% url 'agent_bat_download' %}"
-         style="display:inline-flex;align-items:center;gap:.4rem;background:#fff;color:#374151;
-                font-size:.82rem;font-weight:600;padding:.5rem 1rem;border-radius:7px;
-                text-decoration:none;border:1px solid #d1d5db;white-space:nowrap;flex-shrink:0">
-        ⬇ Download .bat + scripts
+         style="display:inline-flex;align-items:center;gap:.55rem;background:#2563eb;color:#fff;
+                font-size:.95rem;font-weight:700;padding:.75rem 1.75rem;border-radius:9px;
+                text-decoration:none;box-shadow:0 2px 10px rgba(37,99,235,.28)">
+        ⬇ Download Agent (ZIP)
       </a>
+      <span style="font-size:.82rem;color:#6b7280">Requires Python 3.10+ — free from <a href="https://www.python.org/downloads/" target="_blank" style="color:#2563eb">python.org</a></span>
     </div>
 
-    {% else %}
-    <!-- No .exe yet — show build option (staff only) + bat alternative for everyone -->
-    <p style="font-size:.875rem;color:#6b7280;margin-bottom:1.25rem">
-      No standalone .exe has been built yet.
-      {% if user.is_staff %}
-        Build one below to give clients a simple double-click installer.
-      {% else %}
-        Ask your administrator to build the agent installer, or use the Python launcher below.
-      {% endif %}
-    </p>
+    <!-- What's inside -->
+    <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:.85rem 1.1rem">
+      <div style="font-size:.78rem;font-weight:700;color:#374151;margin-bottom:.55rem">📂 What's in the ZIP</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem .75rem">
+        <div style="font-size:.77rem;color:#374151"><code style="background:#e5e7eb;padding:.05rem .3rem;border-radius:3px;font-size:.73rem">RunAgent.bat</code> — double-click launcher (GUI)</div>
+        <div style="font-size:.77rem;color:#374151"><code style="background:#e5e7eb;padding:.05rem .3rem;border-radius:3px;font-size:.73rem">StartAgentBackground.bat</code> — silent/startup mode</div>
+        <div style="font-size:.77rem;color:#374151"><code style="background:#e5e7eb;padding:.05rem .3rem;border-radius:3px;font-size:.73rem">agent.py</code> — watchdog sync engine</div>
+        <div style="font-size:.77rem;color:#374151"><code style="background:#e5e7eb;padding:.05rem .3rem;border-radius:3px;font-size:.73rem">requirements.txt</code> — Python dependencies</div>
+      </div>
+    </div>
+
+    <!-- Watch folder explainer -->
+    <div style="margin-top:1rem;padding:.75rem 1rem;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;font-size:.78rem;color:#92400e;line-height:1.6">
+      <strong>ℹ️ About watch folders</strong> — Each team member picks <em>their own</em> local folder during setup.
+      It does not need to match anything on this page.
+      Files saved in that folder are automatically uploaded to DocuVault on this server.
+      The watch folders configured below (Connection settings) only apply to the agent running <em>on this server</em>.
+    </div>
 
     {% if user.is_staff %}
-    <div style="display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;margin-bottom:1rem">
-      <button id="btn-build" onclick="buildExe()"
-        style="background:#111;color:#fff;border:none;border-radius:8px;
-               padding:.6rem 1.3rem;font-size:.875rem;font-weight:600;cursor:pointer">
-        🔨 Build .exe now
-      </button>
-    </div>
-
-    <div id="build-log-wrap" style="display:none;margin-top:1rem">
-      <div style="display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem">
-        <span class="spinner" style="border-color:rgba(0,0,0,.15);border-top-color:#3b82f6"></span>
-        <span style="font-size:.82rem;font-weight:600;color:#374151" id="build-status-lbl">Building…</span>
-      </div>
-      <pre id="build-log"
-        style="background:#111;color:#d1d5db;font-size:.72rem;border-radius:8px;
-               padding:.75rem;max-height:180px;overflow-y:auto;white-space:pre-wrap;margin:0"></pre>
-    </div>
-    {% endif %}
-
-    <!-- .bat option — always visible, works as long as Python is installed -->
-    <div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:.85rem 1rem;display:flex;align-items:center;gap:1rem;flex-wrap:wrap;margin-top:1rem">
-      <div style="flex:1;min-width:0">
-        <div style="font-size:.8rem;font-weight:700;color:#1e40af;margin-bottom:.2rem">
-          🐍 Python launcher — works today, no build needed
-        </div>
-        <div style="font-size:.75rem;color:#3b82f6">
-          Download the .bat scripts + Python source. Requires Python 3.10+ on the target PC.
-          Includes <code style="background:#dbeafe;padding:.05rem .3rem;border-radius:3px">RunAgent.bat</code>
-          (GUI popup) and <code style="background:#dbeafe;padding:.05rem .3rem;border-radius:3px">StartAgentBackground.bat</code> (headless/startup).
-        </div>
-      </div>
-      <a href="{% url 'agent_bat_download' %}"
-         style="display:inline-flex;align-items:center;gap:.4rem;background:#2563eb;color:#fff;
-                font-size:.82rem;font-weight:700;padding:.55rem 1.1rem;border-radius:7px;
-                text-decoration:none;white-space:nowrap;flex-shrink:0">
-        ⬇ Download .bat + scripts
-      </a>
-    </div>
+    <!-- Staff-only: first-time install hint -->
+    <details style="margin-top:1rem">
+      <summary style="font-size:.78rem;color:#6b7280;cursor:pointer;user-select:none">
+        ⚙️ First-time setup on a new PC (click to expand)
+      </summary>
+      <ol style="font-size:.78rem;color:#374151;margin:.6rem 0 0 1.1rem;line-height:1.8">
+        <li>Install Python 3.10+ from <a href="https://www.python.org/downloads/" target="_blank" style="color:#2563eb">python.org</a> — tick <em>"Add Python to PATH"</em></li>
+        <li>Extract the ZIP, open the folder</li>
+        <li>Double-click <code style="background:#f3f4f6;padding:.05rem .3rem;border-radius:3px">RunAgent.bat</code> — it auto-installs packages on first run</li>
+        <li>In the popup: enter this server's URL (<strong>{{ server_url }}</strong>), login, and choose a folder to watch</li>
+        <li>Click <strong>Launch Agent</strong> — done. Optionally place a shortcut of <code style="background:#f3f4f6;padding:.05rem .3rem;border-radius:3px">StartAgentBackground.bat</code> in <code style="background:#f3f4f6;padding:.05rem .3rem;border-radius:3px">shell:startup</code> to auto-start on login.</li>
+      </ol>
+    </details>
     {% endif %}
 
   </div>

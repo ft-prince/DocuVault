@@ -1359,11 +1359,42 @@ def _write_agent_config(cfg):
         json.dump(cfg, f, indent=2)
 
 
+def _pid_is_running(pid):
+    """
+    Return True if a process with this PID is alive.
+    Uses a Windows-native OpenProcess check so we avoid the bugs in
+    os.kill(pid, 0) on Windows + Python 3.12 (WinError 87, SystemError, etc.).
+    Falls back to os.kill on non-Windows.
+    """
+    if not isinstance(pid, int) or pid <= 0:
+        return False
+    if os.name == 'nt':
+        import ctypes
+        PROCESS_QUERY_LIMITED_INFORMATION = 0x1000
+        handle = ctypes.windll.kernel32.OpenProcess(
+            PROCESS_QUERY_LIMITED_INFORMATION, False, pid)
+        if not handle:
+            return False
+        # Check exit code — if process finished, GetExitCodeProcess returns
+        # something other than STILL_ACTIVE (259).
+        exit_code = ctypes.c_ulong(0)
+        alive = False
+        if ctypes.windll.kernel32.GetExitCodeProcess(handle, ctypes.byref(exit_code)):
+            alive = (exit_code.value == 259)   # 259 = STILL_ACTIVE
+        ctypes.windll.kernel32.CloseHandle(handle)
+        return alive
+    else:
+        try:
+            os.kill(pid, 0)
+            return True
+        except OSError:
+            return False
+
+
 def _agent_process_status():
     """Return (is_running, pid_or_None).
     Checks both the web-UI pid file and the APPDATA pid file (written by the popup wizard).
     """
-    # Locations to check — web-UI writes to _AGENT_PID_PATH, popup wizard writes to APPDATA
     _appdata = os.environ.get('APPDATA', '')
     candidate_paths = [
         _AGENT_PID_PATH,
@@ -1376,16 +1407,21 @@ def _agent_process_status():
         try:
             with open(pid_path) as f:
                 pid = int(f.read().strip())
-            # On Windows + Python 3.12, os.kill(pid, 0) can raise SystemError
-            # for zombie/inaccessible processes in addition to OSError.
-            os.kill(pid, 0)   # signal 0 = check existence without killing
-            return True, pid
-        except (ValueError, OSError, SystemError):
-            # Stale PID file — remove it
+        except (ValueError, OSError):
             try:
                 os.remove(pid_path)
             except OSError:
                 pass
+            continue
+
+        if _pid_is_running(pid):
+            return True, pid
+
+        # Stale PID — clean up
+        try:
+            os.remove(pid_path)
+        except OSError:
+            pass
 
     return False, None
 
