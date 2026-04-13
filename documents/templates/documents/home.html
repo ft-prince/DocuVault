@@ -1,78 +1,104 @@
 {% extends 'documents/base.html' %}
-
 {% block title %}Home - Document Management System{% endblock %}
 
+{% block extra_css %}
+<style>
+.home-hero { text-align:center; padding:3rem 1rem; }
+.home-hero h1 { font-size:2.5rem; font-weight:600; margin-bottom:1rem; color:#2c2c2c; }
+.home-hero p  { font-size:1.125rem; color:#7c7c7c; margin-bottom:2rem; }
+.home-cta { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
+
+@media(max-width:768px){
+  .home-hero { padding:2rem 0; }
+  .home-hero h1 { font-size:1.75rem; }
+  .home-hero p  { font-size:1rem; }
+  .home-cta a   { flex:1; min-width:120px; text-align:center; }
+}
+@media(max-width:480px){
+  .home-hero h1 { font-size:1.5rem; }
+  .home-cta { flex-direction:column; }
+  .home-cta a { width:100%; }
+  .grid-3 { grid-template-columns: 1fr !important; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="text-align: center; padding: 3rem 0;">
-    <h1 style="font-size: 2.5rem; font-weight: 600; margin-bottom: 1rem; color: #2c2c2c;">
-        Document Management System
-    </h1>
-    <p style="font-size: 1.125rem; color: #7c7c7c; margin-bottom: 2rem;">
-        Secure, organized, and efficient document management
-    </p>
-    
+<div class="home-hero">
+    <h1>Document Management System</h1>
+    <p>Secure, organized, and efficient document management</p>
+
     {% if not user.is_authenticated %}
-        <div style="display: flex; gap: 1rem; justify-content: center;">
+        <div class="home-cta">
             <a href="{% url 'register' %}" class="btn">Get Started</a>
             <a href="{% url 'login' %}" class="btn-secondary btn">Sign In</a>
         </div>
     {% endif %}
 </div>
 
-{% if categories %}
+<!-- Features Section -->
 <div style="margin: 3rem 0;">
-    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; color: #2c2c2c;">
-        Categories
-    </h2>
-    <div class="grid grid-4">
-        {% for category in categories %}
-            <div class="card">
-                <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">
-                    {{ category.name }}
-                </h3>
-                <p style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.75rem;">
-                    {{ category.description|truncatewords:10 }}
-                </p>
-                <p style="font-size: 0.875rem; color: #5c5c5c;">
-                    {{ category.doc_count }} document{{ category.doc_count|pluralize }}
-                </p>
-            </div>
-        {% endfor %}
-    </div>
-</div>
-{% endif %}
-
-{% if public_documents %}
-<div style="margin: 3rem 0;">
-    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; color: #2c2c2c;">
-        Public Documents
+    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; color: #2c2c2c; text-align: center;">
+        Everything you need to manage documents
     </h2>
     <div class="grid grid-3">
-        {% for document in public_documents %}
-            <div class="card">
-                <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">
-                    <a href="{% url 'document_detail' document.pk %}" style="color: #2c2c2c; text-decoration: none;">
-                        {{ document.title }}
-                    </a>
-                </h3>
-                <p style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.75rem;">
-                    {{ document.description|truncatewords:15 }}
-                </p>
-                <div style="font-size: 0.875rem; color: #5c5c5c;">
-                    <p>By {{ document.owner.username }}</p>
-                    {% if document.category %}
-                        <p>{{ document.category.name }}</p>
-                    {% endif %}
-                </div>
-            </div>
-        {% endfor %}
-    </div>
-    
-    {% if user.is_authenticated %}
-        <div style="text-align: center; margin-top: 2rem;">
-            <a href="{% url 'document_list' %}" class="btn-secondary btn">View All Documents</a>
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 0.75rem;">📄</div>
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">Upload &amp; Organize</h3>
+            <p style="font-size: 0.875rem; color: #7c7c7c;">
+                Upload documents of any format, organize them into categories, and find what you need instantly with powerful search.
+            </p>
         </div>
-    {% endif %}
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 0.75rem;">🔒</div>
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">Secure Access Control</h3>
+            <p style="font-size: 0.875rem; color: #7c7c7c;">
+                Control who can view, edit, or share your documents with role-based permissions and secure sharing links.
+            </p>
+        </div>
+        <div class="card" style="text-align: center;">
+            <div style="font-size: 2rem; margin-bottom: 0.75rem;">🤖</div>
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">AI Assistant</h3>
+            <p style="font-size: 0.875rem; color: #7c7c7c;">
+                Ask questions about your documents and get instant answers powered by AI. Summarize, search, and extract insights effortlessly.
+            </p>
+        </div>
+    </div>
+</div>
+
+<!-- More Info Section -->
+<div style="margin: 3rem 0;">
+    <div class="grid grid-2">
+        <div class="card">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">🗂 Workspace</h3>
+            <p style="font-size: 0.875rem; color: #7c7c7c;">
+                A personal workspace to manage all your files in one place. Drag, drop, and organize with ease.
+            </p>
+        </div>
+        <div class="card">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">🔔 Notifications</h3>
+            <p style="font-size: 0.875rem; color: #7c7c7c;">
+                Stay informed with real-time notifications when documents are shared, updated, or commented on.
+            </p>
+        </div>
+        <div class="card">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">⭐ Favorites</h3>
+            <p style="font-size: 0.875rem; color: #7c7c7c;">
+                Bookmark frequently accessed documents for quick retrieval at any time.
+            </p>
+        </div>
+        <div class="card">
+            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">📊 Dashboard</h3>
+            <p style="font-size: 0.875rem; color: #7c7c7c;">
+                Get an overview of your activity, storage usage, recent uploads, and document statistics at a glance.
+            </p>
+        </div>
+    </div>
+</div>
+
+{% if user.is_authenticated %}
+<div style="text-align: center; margin: 2rem 0 3rem;">
+    <a href="{% url 'workspace' %}" class="btn">Go to Workspace</a>
 </div>
 {% endif %}
 {% endblock %}

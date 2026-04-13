@@ -122,12 +122,68 @@
 /* ── Toast ───────────────────────────────────── */
 #ws-toast{position:fixed;bottom:1.5rem;right:1.5rem;background:#111;color:#fff;padding:.6rem 1.1rem;border-radius:8px;font-size:.85rem;opacity:0;transition:opacity .25s;pointer-events:none;z-index:2000}
 #ws-toast.show{opacity:1}
+
+/* ── Responsive ──────────────────────────────── */
+/* Tablet: 769–1024px */
+@media(min-width:769px) and (max-width:1024px){
+  .ws-sidebar{width:220px;min-width:200px;}
+  .ws-main{padding:1.25rem 1.5rem;}
+  .doc-grid{grid-template-columns:repeat(auto-fill,minmax(200px,1fr));}
+}
+
+/* Mobile: ≤768px */
+@media(max-width:768px){
+  .ws-wrap{flex-direction:column;margin:-1rem -1rem 0;min-height:auto;}
+  .ws-sidebar{
+    width:100%;min-width:0;border-right:none;border-bottom:1px solid #e5e7eb;
+    display:none;position:fixed;top:61px;left:0;right:0;bottom:0;
+    z-index:300;overflow-y:auto;background:#fff;
+  }
+  .ws-sidebar.mob-open{display:flex;}
+  .ws-overlay{
+    display:none;position:fixed;inset:0;top:61px;
+    background:rgba(0,0,0,.35);z-index:299;
+  }
+  .ws-overlay.mob-open{display:block;}
+  .ws-mob-bar{
+    display:flex;align-items:center;gap:.625rem;
+    padding:.625rem 1rem;background:#fff;border-bottom:1px solid #e5e7eb;
+    position:sticky;top:0;z-index:10;
+  }
+  .ws-mob-btn{
+    background:none;border:1px solid #e5e7eb;border-radius:8px;
+    padding:.35rem .75rem;font-size:.825rem;cursor:pointer;color:#374151;
+    display:flex;align-items:center;gap:.35rem;transition:background .12s;
+  }
+  .ws-mob-btn:hover{background:#f3f4f6;}
+  .ws-main{padding:1rem;}
+  .ws-main-header{flex-direction:column;align-items:flex-start;}
+  .ws-actions{width:100%;justify-content:flex-end;}
+  .doc-grid{grid-template-columns:1fr;}
+  .version-who{display:none;}
+}
+@media(min-width:769px){
+  .ws-mob-bar{display:none;}
+  .ws-overlay{display:none!important;}
+}
 </style>
+
+<div id="ws-overlay" class="ws-overlay" onclick="toggleWsSidebar(false)"></div>
 
 <div class="ws-wrap">
 
+  <!-- ══ MOBILE BAR ══════════════════════════════════════════ -->
+  <div class="ws-mob-bar">
+    <button class="ws-mob-btn" onclick="toggleWsSidebar()" id="ws-mob-toggle">
+      ☰ Folders &amp; Nav
+    </button>
+    <span style="font-size:.85rem;font-weight:600;color:#111;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ panel_title }}</span>
+    <a href="{% url 'document_create' %}{% if current_folder %}?folder={{ current_folder.id }}{% endif %}"
+       class="btn-primary" style="text-decoration:none;font-size:.8rem;padding:.35rem .75rem;border-radius:8px;flex-shrink:0;">＋ New</a>
+  </div>
+
   <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
-  <nav class="ws-sidebar">
+  <nav class="ws-sidebar" id="ws-sidebar">
     <div class="ws-sidebar-header">
       <p class="ws-sidebar-title">My Workspace</p>
       <div class="ws-stat-row"><span>Documents</span><strong>{{ stats.total_docs }}</strong></div>
@@ -333,6 +389,22 @@
 <script>
 var CSRF = '{{ csrf_token }}';
 var moveDocId = null, moveTargetId = null;
+
+/* ── Mobile sidebar toggle ───────────────────── */
+function toggleWsSidebar(forceOpen) {
+  var sb = document.getElementById('ws-sidebar');
+  var ov = document.getElementById('ws-overlay');
+  var btn = document.getElementById('ws-mob-toggle');
+  if (!sb) return;
+  var open = forceOpen !== undefined ? forceOpen : !sb.classList.contains('mob-open');
+  sb.classList.toggle('mob-open', open);
+  ov.classList.toggle('mob-open', open);
+  if (btn) btn.textContent = open ? '✕ Close' : '☰ Folders & Nav';
+  document.body.style.overflow = open ? 'hidden' : '';
+}
+window.addEventListener('resize', function(){
+  if (window.innerWidth > 768) toggleWsSidebar(false);
+});
 
 /* ── Toast ─────────────────────────────────── */
 function toast(msg, err) {

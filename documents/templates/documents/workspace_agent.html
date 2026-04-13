@@ -82,6 +82,44 @@
 /* ── Spinner ─────────────────────────────────── */
 .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+/* ══ RESPONSIVE ══════════════════════════════ */
+
+/* Tablet: 769–900px (layout already stacks at 900px) */
+@media(max-width:900px){
+  .ag-banner{flex-wrap:wrap;}
+  .ag-banner-btns{margin-left:0;width:100%;}
+  .ag-banner-btns button{flex:1;}
+}
+
+/* Mobile: ≤768px */
+@media(max-width:768px){
+  /* 3-step "How it works" grid → single column */
+  .steps-grid{grid-template-columns:1fr !important;}
+
+  /* ZIP contents grid → single column */
+  .zip-grid{grid-template-columns:1fr !important;}
+
+  /* form-2col → single column */
+  .form-2col{grid-template-columns:1fr;}
+
+  /* Banner stack */
+  .ag-banner{flex-direction:column;align-items:flex-start;gap:.75rem;}
+  .ag-banner-btns{margin-left:0;width:100%;flex-direction:column;}
+  .ag-banner-btns button{width:100%;}
+
+  /* Save button row wraps */
+  .btn-row{flex-direction:column;}
+  .btn-row button{width:100%;}
+
+  /* Back link margin */
+  .ag-back{margin-bottom:.75rem;}
+}
+
+@media(max-width:480px){
+  .ag-card-head{flex-wrap:wrap;gap:.4rem;}
+  .sync-folder{display:none;}
+}
 </style>
 
 <a href="{% url 'workspace' %}" class="ag-back">← Back to Workspace</a>
@@ -95,7 +133,7 @@
   <div class="ag-card-body">
 
     <!-- How it works: 3 steps -->
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem">
+    <div class="steps-grid" style="display:grid;grid-template-columns:repeat(3,1fr);gap:1rem;margin-bottom:1.5rem">
       <div style="text-align:center;padding:1rem .5rem;border:1px solid #e5e7eb;border-radius:10px">
         <div style="font-size:1.6rem;margin-bottom:.4rem">⬇️</div>
         <div style="font-weight:700;font-size:.82rem;color:#111;margin-bottom:.25rem">1. Download</div>
@@ -127,7 +165,7 @@
     <!-- What's inside -->
     <div style="background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:.85rem 1.1rem">
       <div style="font-size:.78rem;font-weight:700;color:#374151;margin-bottom:.55rem">📂 What's in the ZIP</div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem .75rem">
+      <div class="zip-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:.35rem .75rem">
         <div style="font-size:.77rem;color:#374151"><code style="background:#e5e7eb;padding:.05rem .3rem;border-radius:3px;font-size:.73rem">RunAgent.bat</code> — double-click launcher (GUI)</div>
         <div style="font-size:.77rem;color:#374151"><code style="background:#e5e7eb;padding:.05rem .3rem;border-radius:3px;font-size:.73rem">StartAgentBackground.bat</code> — silent/startup mode</div>
         <div style="font-size:.77rem;color:#374151"><code style="background:#e5e7eb;padding:.05rem .3rem;border-radius:3px;font-size:.73rem">agent.py</code> — watchdog sync engine</div>
@@ -167,9 +205,9 @@
   <span id="ag-dot" class="ag-banner-dot {% if agent_online %}green{% elif agent_last %}yellow{% else %}grey{% endif %}"></span>
   <div class="ag-banner-text">
     <strong id="ag-status-text">
-      {% if agent_online %}Agent is running
-      {% elif agent_last %}Agent is offline
-      {% else %}Agent not started yet{% endif %}
+      {% if agent_online %}Desktop Agent Synchronizer is running
+      {% elif agent_last %}Desktop Agent Synchronizer is offline
+      {% else %}Desktop Agent Synchronizer not started yet{% endif %}
     </strong>
     <span id="ag-status-sub">
       {% if agent_online %}Connected &bull; PID {{ proc_pid|default:"—" }} &bull; heartbeat {{ agent_last|timesince }} ago
@@ -179,9 +217,9 @@
   </div>
   <div class="ag-banner-btns">
     <button id="btn-start" class="btn-success" onclick="startAgent()"
-      {% if proc_running %}style="display:none"{% endif %}>▶ Start Agent</button>
+      {% if proc_running %}style="display:none"{% endif %}>▶ Start Desktop Agent Synchronizer</button>
     <button id="btn-stop" class="btn-danger" onclick="stopAgent()"
-      {% if not proc_running %}style="display:none"{% endif %}>■ Stop Agent</button>
+      {% if not proc_running %}style="display:none"{% endif %}>■ Stop Desktop Agent Synchronizer</button>
   </div>
 </div>
 

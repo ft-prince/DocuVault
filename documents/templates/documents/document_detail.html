@@ -2,23 +2,45 @@
 
 {% block title %}{{ document.title }} - DMS{% endblock %}
 
+{% block extra_css %}
+<style>
+.doc-hdr { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:1rem; gap:1rem; flex-wrap:wrap; }
+.doc-hdr-left { flex:1; min-width:0; }
+.doc-hdr-title { font-size:2rem; font-weight:600; color:#2c2c2c; margin-bottom:.5rem; word-break:break-word; }
+.doc-hdr-meta { display:flex; gap:1.5rem; font-size:.95rem; color:#7c7c7c; flex-wrap:wrap; }
+.doc-hdr-actions { display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; }
+
+@media(max-width:768px){
+  .doc-hdr { flex-direction:column; }
+  .doc-hdr-title { font-size:1.5rem; }
+  .doc-hdr-meta { gap:.75rem; font-size:.875rem; }
+  .doc-hdr-actions { width:100%; }
+  .doc-hdr-actions .btn, .doc-hdr-actions .btn-secondary { flex:1; text-align:center; }
+  .version-timeline-line { display:none; }
+  .version-commit-card { margin-left:0!important; }
+  .version-commit-dot { display:none; }
+}
+@media(max-width:480px){
+  .doc-hdr-actions .btn, .doc-hdr-actions .btn-secondary { font-size:.8rem; padding:.5rem .75rem; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
 <!-- Document Header -->
 <div style="margin-bottom: 2rem;">
-    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
-        <div style="flex: 1;">
-            <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 0.5rem;">
-                {{ document.title }}
-            </h1>
-            <div style="display: flex; gap: 1.5rem; font-size: 0.95rem; color: #7c7c7c;">
+    <div class="doc-hdr">
+        <div class="doc-hdr-left">
+            <h1 class="doc-hdr-title">{{ document.title }}</h1>
+            <div class="doc-hdr-meta">
                 <span>By {{ document.owner.username }}</span>
                 <span>Version {{ document.version }}</span>
                 <span>{{ document.views_count }} views</span>
                 <span>{{ document.downloads_count }} downloads</span>
             </div>
         </div>
-        
-        <div style="display: flex; gap: 0.75rem; flex-wrap: wrap; align-items: center;">
+
+        <div class="doc-hdr-actions">
             {% if can_edit %}
                 <a href="{% url 'document_edit' document.pk %}" class="btn-secondary btn btn-small">
                     Edit

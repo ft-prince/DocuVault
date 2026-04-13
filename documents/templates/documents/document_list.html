@@ -2,30 +2,45 @@
 
 {% block title %}Documents - DMS{% endblock %}
 
+{% block extra_css %}
+<style>
+.doc-filter-form { display:flex; gap:1rem; flex-wrap:wrap; }
+.doc-filter-search { flex:1; min-width:200px; }
+.doc-filter-select { flex:0 0 auto; width:100%; max-width:200px; }
+.doc-filter-btns   { display:flex; gap:.5rem; flex-shrink:0; }
+
+.doc-list-hdr { display:flex; justify-content:space-between; align-items:center; margin-bottom:2rem; flex-wrap:wrap; gap:.75rem; }
+
+@media(max-width:768px){
+  .doc-filter-select { max-width:100%; }
+  .doc-filter-btns   { width:100%; }
+  .doc-filter-btns .btn { flex:1; text-align:center; }
+  .doc-list-hdr h1 { font-size:1.5rem; }
+  /* Hide lower-priority table columns on mobile */
+  table th:nth-child(3), table td:nth-child(3),
+  table th:nth-child(5), table td:nth-child(5) { display:none; }
+}
+@media(max-width:480px){
+  table th:nth-child(4), table td:nth-child(4) { display:none; }
+}
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c;">
-        Documents
-    </h1>
-    <a href="{% url 'document_create' %}" class="btn">
-        Create Document
-    </a>
+<div class="doc-list-hdr">
+    <h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c;">Documents</h1>
+    <a href="{% url 'document_create' %}" class="btn">Create Document</a>
 </div>
 
 <!-- Search and Filters -->
 <div class="card" style="margin-bottom: 2rem;">
-    <form method="get" style="display: flex; gap: 1rem; flex-wrap: wrap;">
-        <div style="flex: 1; min-width: 250px;">
-            <input 
-                type="text" 
-                name="q" 
-                class="form-control" 
-                placeholder="Search documents..." 
-                value="{{ search_query }}"
-            >
+    <form method="get" class="doc-filter-form">
+        <div class="doc-filter-search">
+            <input type="text" name="q" class="form-control"
+                   placeholder="Search documents..." value="{{ search_query }}">
         </div>
-        
-        <select name="category" class="form-control" style="flex: 0 0 200px;">
+
+        <select name="category" class="form-control doc-filter-select">
             <option value="">All Categories</option>
             {% for category in categories %}
                 <option value="{{ category.id }}" {% if request.GET.category == category.id|stringformat:"s" %}selected{% endif %}>
@@ -33,22 +48,19 @@
                 </option>
             {% endfor %}
         </select>
-        
-        <select name="access_level" class="form-control" style="flex: 0 0 200px;">
+
+        <select name="access_level" class="form-control doc-filter-select">
             <option value="">All Access Levels</option>
-            <option value="public" {% if request.GET.access_level == "public" %}selected{% endif %}>Public</option>
+            <option value="public"  {% if request.GET.access_level == "public"  %}selected{% endif %}>Public</option>
             <option value="private" {% if request.GET.access_level == "private" %}selected{% endif %}>Private</option>
-            <option value="role" {% if request.GET.access_level == "role" %}selected{% endif %}>Role-Based</option>
-            <option value="custom" {% if request.GET.access_level == "custom" %}selected{% endif %}>Custom</option>
+            <option value="role"    {% if request.GET.access_level == "role"    %}selected{% endif %}>Role-Based</option>
+            <option value="custom"  {% if request.GET.access_level == "custom"  %}selected{% endif %}>Custom</option>
         </select>
-        
-        <button type="submit" class="btn" style="flex: 0 0 auto;">
-            Search
-        </button>
-        
-        <a href="{% url 'document_list' %}" class="btn-secondary btn" style="flex: 0 0 auto;">
-            Clear
-        </a>
+
+        <div class="doc-filter-btns">
+            <button type="submit" class="btn">Search</button>
+            <a href="{% url 'document_list' %}" class="btn-secondary btn">Clear</a>
+        </div>
     </form>
 </div>
 
