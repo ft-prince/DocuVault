@@ -1,104 +1,408 @@
 {% extends 'documents/base.html' %}
-{% block title %}Home - Document Management System{% endblock %}
+{% block title %}DocuVault – Document Management System{% endblock %}
 
 {% block extra_css %}
 <style>
-.home-hero { text-align:center; padding:3rem 1rem; }
-.home-hero h1 { font-size:2.5rem; font-weight:600; margin-bottom:1rem; color:#2c2c2c; }
-.home-hero p  { font-size:1.125rem; color:#7c7c7c; margin-bottom:2rem; }
-.home-cta { display:flex; gap:1rem; justify-content:center; flex-wrap:wrap; }
-
-@media(max-width:768px){
-  .home-hero { padding:2rem 0; }
-  .home-hero h1 { font-size:1.75rem; }
-  .home-hero p  { font-size:1rem; }
-  .home-cta a   { flex:1; min-width:120px; text-align:center; }
+/* ── Hero ─────────────────────────────────────── */
+.home-hero {
+    border-bottom: 1px solid #e5e5e5;
+    padding: 4rem 0 3.5rem;
+    text-align: center;
+    background: #fafafa;
+    margin: -2rem -2rem 0;
+    padding-left: 2rem;
+    padding-right: 2rem;
 }
-@media(max-width:480px){
-  .home-hero h1 { font-size:1.5rem; }
-  .home-cta { flex-direction:column; }
-  .home-cta a { width:100%; }
-  .grid-3 { grid-template-columns: 1fr !important; }
+.home-hero h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #2c2c2c;
+    letter-spacing: -0.03em;
+    line-height: 1.15;
+    margin-bottom: 1rem;
+}
+.home-hero p {
+    font-size: 1.05rem;
+    color: #7c7c7c;
+    max-width: 520px;
+    margin: 0 auto 2rem;
+    line-height: 1.7;
+}
+.home-cta {
+    display: flex;
+    gap: 0.75rem;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+/* ── Section ──────────────────────────────────── */
+.home-section {
+    padding: 3rem 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+.home-section:last-child { border-bottom: none; }
+.home-section-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: #9c9c9c;
+    margin-bottom: 0.5rem;
+}
+.home-section-title {
+    font-size: 1.35rem;
+    font-weight: 700;
+    color: #2c2c2c;
+    margin-bottom: 0.5rem;
+    letter-spacing: -0.01em;
+}
+.home-section-sub {
+    font-size: 0.9rem;
+    color: #7c7c7c;
+    margin-bottom: 2rem;
+    line-height: 1.65;
+}
+
+/* ── Feature cards ────────────────────────────── */
+.feat-card {
+    background: #ffffff;
+    border: 1px solid #e5e5e5;
+    padding: 1.5rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    transition: border-color 0.2s;
+}
+.feat-card:hover { border-color: #2c2c2c; }
+.feat-icon {
+    font-size: 1.5rem;
+    line-height: 1;
+    margin-bottom: 0.25rem;
+}
+.feat-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2c2c2c;
+    margin: 0;
+}
+.feat-desc {
+    font-size: 0.875rem;
+    color: #7c7c7c;
+    line-height: 1.65;
+    margin: 0;
+}
+
+/* ── Steps ────────────────────────────────────── */
+.steps-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+    border: 1px solid #e5e5e5;
+}
+.step-item {
+    padding: 1.75rem 1.5rem;
+    border-right: 1px solid #e5e5e5;
+    position: relative;
+}
+.step-item:last-child { border-right: none; }
+.step-num {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: #2c2c2c;
+    color: #fff;
+    font-size: 0.8rem;
+    font-weight: 700;
+    margin-bottom: 1rem;
+}
+.step-title {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #2c2c2c;
+    margin-bottom: 0.4rem;
+}
+.step-desc {
+    font-size: 0.85rem;
+    color: #7c7c7c;
+    line-height: 1.6;
+    margin: 0;
+}
+
+/* ── Capabilities list ────────────────────────── */
+.cap-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1px;
+    background: #e5e5e5;
+    border: 1px solid #e5e5e5;
+}
+.cap-item {
+    background: #ffffff;
+    padding: 1.25rem 1.5rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.875rem;
+    transition: background 0.15s;
+}
+.cap-item:hover { background: #fafafa; }
+.cap-icon { font-size: 1.1rem; flex-shrink: 0; margin-top: 0.1rem; }
+.cap-title { font-size: 0.875rem; font-weight: 600; color: #2c2c2c; margin: 0 0 0.2rem; }
+.cap-desc  { font-size: 0.8rem; color: #7c7c7c; line-height: 1.55; margin: 0; }
+
+/* ── CTA strip ────────────────────────────────── */
+.cta-strip {
+    border: 1px solid #e5e5e5;
+    padding: 2.5rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    background: #fafafa;
+    flex-wrap: wrap;
+}
+.cta-strip-text h2 {
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: #2c2c2c;
+    margin: 0 0 0.35rem;
+}
+.cta-strip-text p {
+    font-size: 0.875rem;
+    color: #7c7c7c;
+    margin: 0;
+    line-height: 1.55;
+}
+.cta-strip-actions {
+    display: flex;
+    gap: 0.75rem;
+    flex-shrink: 0;
+    flex-wrap: wrap;
+}
+
+/* ── Auth welcome strip ───────────────────────── */
+.auth-strip {
+    border: 1px solid #e5e5e5;
+    padding: 1.75rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+    background: #fafafa;
+}
+.auth-strip-text {
+    font-size: 0.95rem;
+    color: #2c2c2c;
+    font-weight: 500;
+}
+.auth-strip-text span { color: #7c7c7c; font-weight: 400; }
+
+/* ══ RESPONSIVE ════════════════════════════════ */
+
+/* Tablet: 769–1024px */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .home-hero { padding: 3rem 1.5rem 2.5rem; margin: -1.5rem -1.5rem 0; }
+    .home-hero h1 { font-size: 2rem; }
+    .cap-grid { grid-template-columns: repeat(2, 1fr); }
+    .cta-strip { flex-direction: column; align-items: flex-start; }
+}
+
+/* Mobile: ≤768px */
+@media (max-width: 768px) {
+    .home-hero { padding: 2.5rem 1rem 2rem; margin: -1rem -1rem 0; }
+    .home-hero h1 { font-size: 1.65rem; }
+    .home-hero p { font-size: 0.95rem; }
+    .home-cta { flex-direction: column; align-items: center; }
+    .home-cta .btn { width: 100%; max-width: 320px; text-align: center; }
+
+    .home-section { padding: 2rem 0; }
+    .home-section-title { font-size: 1.15rem; }
+
+    .steps-row { grid-template-columns: 1fr; }
+    .step-item { border-right: none; border-bottom: 1px solid #e5e5e5; }
+    .step-item:last-child { border-bottom: none; }
+
+    .cap-grid { grid-template-columns: 1fr; }
+
+    .cta-strip { flex-direction: column; align-items: flex-start; padding: 1.75rem 1.25rem; }
+    .cta-strip-actions { width: 100%; flex-direction: column; }
+    .cta-strip-actions .btn { text-align: center; }
+
+    .auth-strip { flex-direction: column; align-items: flex-start; padding: 1.25rem; }
+}
+
+/* Small: ≤480px */
+@media (max-width: 480px) {
+    .home-hero h1 { font-size: 1.45rem; }
+    .steps-row { border: none; gap: 1px; background: #e5e5e5; }
+    .step-item { border: none; }
 }
 </style>
 {% endblock %}
 
 {% block content %}
-<div class="home-hero">
-    <h1>Document Management System</h1>
-    <p>Secure, organized, and efficient document management</p>
 
-    {% if not user.is_authenticated %}
-        <div class="home-cta">
-            <a href="{% url 'register' %}" class="btn">Get Started</a>
-            <a href="{% url 'login' %}" class="btn-secondary btn">Sign In</a>
-        </div>
+<!-- ══ HERO ══════════════════════════════════════════════════════ -->
+<div class="home-hero">
+    <h1>Secure Document Management<br>for Teams &amp; Individuals</h1>
+    <p>Upload, organise, and search your documents. Collaborate with your team, track versions, and get instant answers from your files with built-in AI.</p>
+
+    {% if user.is_authenticated %}
+    <div class="home-cta">
+        <a href="{% url 'chatbot' %}" class="btn">Open AI Assistant</a>
+        <a href="{% url 'workspace' %}" class="btn btn-secondary">Go to Workspace</a>
+    </div>
+    {% else %}
+    <div class="home-cta">
+        <a href="{% url 'register' %}" class="btn">Get Started</a>
+        <a href="{% url 'login' %}" class="btn btn-secondary">Sign In</a>
+    </div>
     {% endif %}
 </div>
 
-<!-- Features Section -->
-<div style="margin: 3rem 0;">
-    <h2 style="font-size: 1.5rem; font-weight: 600; margin-bottom: 1.5rem; color: #2c2c2c; text-align: center;">
-        Everything you need to manage documents
-    </h2>
+<!-- ══ FEATURES ══════════════════════════════════════════════════ -->
+<div class="home-section">
+    <p class="home-section-label">Features</p>
+    <h2 class="home-section-title">Everything you need to manage documents</h2>
+    <p class="home-section-sub">A complete document platform — from uploading and organising to AI-powered search and automated desktop sync.</p>
+
     <div class="grid grid-3">
-        <div class="card" style="text-align: center;">
-            <div style="font-size: 2rem; margin-bottom: 0.75rem;">📄</div>
-            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">Upload &amp; Organize</h3>
-            <p style="font-size: 0.875rem; color: #7c7c7c;">
-                Upload documents of any format, organize them into categories, and find what you need instantly with powerful search.
-            </p>
+        <div class="feat-card">
+            <div class="feat-icon">📄</div>
+            <h3 class="feat-title">Upload &amp; Organise</h3>
+            <p class="feat-desc">Upload any file format. Organise into folders and categories. Find anything instantly with full-text search across your entire library.</p>
         </div>
-        <div class="card" style="text-align: center;">
-            <div style="font-size: 2rem; margin-bottom: 0.75rem;">🔒</div>
-            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">Secure Access Control</h3>
-            <p style="font-size: 0.875rem; color: #7c7c7c;">
-                Control who can view, edit, or share your documents with role-based permissions and secure sharing links.
-            </p>
+        <div class="feat-card">
+            <div class="feat-icon">🤖</div>
+            <h3 class="feat-title">AI Assistant</h3>
+            <p class="feat-desc">Ask questions about your documents in plain language. Summarise, search, and extract insights powered by AI — no manual reading required.</p>
         </div>
-        <div class="card" style="text-align: center;">
-            <div style="font-size: 2rem; margin-bottom: 0.75rem;">🤖</div>
-            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">AI Assistant</h3>
-            <p style="font-size: 0.875rem; color: #7c7c7c;">
-                Ask questions about your documents and get instant answers powered by AI. Summarize, search, and extract insights effortlessly.
-            </p>
+        <div class="feat-card">
+            <div class="feat-icon">🔒</div>
+            <h3 class="feat-title">Secure Access Control</h3>
+            <p class="feat-desc">Role-based permissions, secure share links, and per-document access levels. You decide exactly who can view, edit, or download.</p>
         </div>
-    </div>
-</div>
-
-<!-- More Info Section -->
-<div style="margin: 3rem 0;">
-    <div class="grid grid-2">
-        <div class="card">
-            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">🗂 Workspace</h3>
-            <p style="font-size: 0.875rem; color: #7c7c7c;">
-                A personal workspace to manage all your files in one place. Drag, drop, and organize with ease.
-            </p>
+        <div class="feat-card">
+            <div class="feat-icon">🔄</div>
+            <h3 class="feat-title">Desktop Agent Synchronizer</h3>
+            <p class="feat-desc">Automatically sync local folders to DocuVault in the background. Save a file on your PC and it appears in your workspace instantly.</p>
         </div>
-        <div class="card">
-            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">🔔 Notifications</h3>
-            <p style="font-size: 0.875rem; color: #7c7c7c;">
-                Stay informed with real-time notifications when documents are shared, updated, or commented on.
-            </p>
+        <div class="feat-card">
+            <div class="feat-icon">📂</div>
+            <h3 class="feat-title">Version History</h3>
+            <p class="feat-desc">Every edit is tracked automatically. Browse, compare, and download any previous version of a document at any time.</p>
         </div>
-        <div class="card">
-            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">⭐ Favorites</h3>
-            <p style="font-size: 0.875rem; color: #7c7c7c;">
-                Bookmark frequently accessed documents for quick retrieval at any time.
-            </p>
-        </div>
-        <div class="card">
-            <h3 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">📊 Dashboard</h3>
-            <p style="font-size: 0.875rem; color: #7c7c7c;">
-                Get an overview of your activity, storage usage, recent uploads, and document statistics at a glance.
-            </p>
+        <div class="feat-card">
+            <div class="feat-icon">👥</div>
+            <h3 class="feat-title">Team Collaboration</h3>
+            <p class="feat-desc">Share documents with teammates, receive notifications on updates and comments, and see all shared files in a dedicated workspace tab.</p>
         </div>
     </div>
 </div>
 
-{% if user.is_authenticated %}
-<div style="text-align: center; margin: 2rem 0 3rem;">
-    <a href="{% url 'workspace' %}" class="btn">Go to Workspace</a>
+<!-- ══ HOW IT WORKS ══════════════════════════════════════════════ -->
+<div class="home-section">
+    <p class="home-section-label">How It Works</p>
+    <h2 class="home-section-title">Up and running in minutes</h2>
+    <p class="home-section-sub">Three simple steps to a fully organised document workspace.</p>
+
+    <div class="steps-row">
+        <div class="step-item">
+            <div class="step-num">1</div>
+            <div class="step-title">Create your account</div>
+            <p class="step-desc">Sign up, set up your profile, and access your personal workspace immediately — no credit card required.</p>
+        </div>
+        <div class="step-item">
+            <div class="step-num">2</div>
+            <div class="step-title">Upload your documents</div>
+            <p class="step-desc">Drag and drop files or sync a local folder automatically. DocuVault indexes everything for instant AI-powered search.</p>
+        </div>
+        <div class="step-item">
+            <div class="step-num">3</div>
+            <div class="step-title">Search, ask &amp; collaborate</div>
+            <p class="step-desc">Use the AI Assistant to ask questions, share documents with teammates, and track every change with version history.</p>
+        </div>
+    </div>
 </div>
-{% endif %}
+
+<!-- ══ CAPABILITIES ══════════════════════════════════════════════ -->
+<div class="home-section">
+    <p class="home-section-label">All Capabilities</p>
+    <h2 class="home-section-title">One platform, fully integrated</h2>
+    <p class="home-section-sub">Every tool you need lives inside a single, unified interface.</p>
+
+    <div class="cap-grid">
+        <div class="cap-item">
+            <span class="cap-icon">🗂</span>
+            <div>
+                <p class="cap-title">Unified Workspace</p>
+                <p class="cap-desc">Folder tree, document grid, favourites, shared files, and your profile — all accessible in one page with tabbed navigation.</p>
+            </div>
+        </div>
+        <div class="cap-item">
+            <span class="cap-icon">⭐</span>
+            <div>
+                <p class="cap-title">Favourites</p>
+                <p class="cap-desc">Bookmark frequently accessed documents for one-click retrieval directly inside your workspace.</p>
+            </div>
+        </div>
+        <div class="cap-item">
+            <span class="cap-icon">🔔</span>
+            <div>
+                <p class="cap-title">Notifications</p>
+                <p class="cap-desc">Stay informed when documents are shared, updated, or commented on. Mark individual or all notifications as read.</p>
+            </div>
+        </div>
+        <div class="cap-item">
+            <span class="cap-icon">🕐</span>
+            <div>
+                <p class="cap-title">Version Control</p>
+                <p class="cap-desc">Full version history on every document. Download or restore any past version with a single click.</p>
+            </div>
+        </div>
+        <div class="cap-item">
+            <span class="cap-icon">🖥️</span>
+            <div>
+                <p class="cap-title">Desktop Agent Synchronizer</p>
+                <p class="cap-desc">Lightweight desktop agent watches your local folders and uploads changes to DocuVault automatically in the background.</p>
+            </div>
+        </div>
+        <div class="cap-item">
+            <span class="cap-icon">🔍</span>
+            <div>
+                <p class="cap-title">Advanced Search</p>
+                <p class="cap-desc">Filter by category, owner, date range, and file type. Find any document in your library in seconds.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══ BOTTOM CTA ════════════════════════════════════════════════ -->
+<div class="home-section" style="border-bottom:none;padding-bottom:1rem">
+    {% if user.is_authenticated %}
+    <div class="auth-strip">
+        <div class="auth-strip-text">
+            Welcome back, <strong>{{ user.username }}</strong>. <span>Where would you like to go?</span>
+        </div>
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap">
+            <a href="{% url 'chatbot' %}" class="btn">Open AI Assistant</a>
+            <a href="{% url 'workspace' %}" class="btn btn-secondary">Go to Workspace</a>
+        </div>
+    </div>
+    {% else %}
+    <div class="cta-strip">
+        <div class="cta-strip-text">
+            <h2>Ready to get started?</h2>
+            <p>Create a free account and take control of your documents today. No credit card required.</p>
+        </div>
+        <div class="cta-strip-actions">
+            <a href="{% url 'register' %}" class="btn">Create Free Account</a>
+            <a href="{% url 'login' %}" class="btn btn-secondary">Sign In</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
 {% endblock %}

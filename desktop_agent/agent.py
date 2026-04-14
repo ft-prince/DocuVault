@@ -183,8 +183,16 @@ class DocuVaultClient:
                 time.sleep(10)
         return False
 
-    def upload(self, file_path, watch_path, category='', change_note='', folder_id=None):
-        """Upload or update a file in DocuVault."""
+    def upload(self, file_path, watch_path, category='', change_note='', folder_id=None,
+               change_type='modified'):
+        """Upload or update a file in DocuVault.
+
+        Args:
+            change_type: One of 'created', 'modified', 'initial_sync'.
+                         Stored in the version history so the document detail
+                         page can display meaningful labels instead of bare
+                         version numbers.
+        """
         if not os.path.exists(file_path):
             return None
 
@@ -197,6 +205,7 @@ class DocuVaultClient:
             'file_path':   file_path,   # full path — unique dedup key per file
             'watch_path':  watch_path,  # folder path — kept for reference
             'change_note': change_note or 'Updated via Desktop Agent',
+            'change_type': change_type, # 'created' | 'modified' | 'initial_sync'
             'category':    category,
         }
         if folder_id:
@@ -218,6 +227,95 @@ class DocuVaultClient:
         except Exception as exc:
             self.logger.error(f"Upload error for {file_path}: {exc}")
             return None
+
+    def initial_sync_folder(self, folder_cfg, logger, extensions=None):
+        """Walk a folder and upload every matching file as 'initial_sync'.
+
+        This is called once when the agent starts (or when a new folder is
+        added) so the server always has a full snapshot of the local folder
+        before the live watchdog takes over.
+
+        Returns (uploaded, skipped) counts.
+        """
+        folder_path = folder_cfg.get('path', '')
+        if not folder_path or not os.path.isdir(folder_path):
+            logger.warning(f"[initial_sync] Folder not found: {folder_path}")
+            return 0, 0
+
+        allowed_exts = [e.lower() for e in (extensions or folder_cfg.get('extensions', []))]
+        folder_id    = folder_cfg.get('folder_id')
+        category     = folder_cfg.get('category', '')
+        recursive    = folder_cfg.get('recursive', True)
+
+        uploaded = 0
+        skipped  = 0
+
+        walk_root = Path(folder_path)
+        if recursive:
+            all_files = list(walk_root.rglob('*'))
+        else:
+            all_files = list(walk_root.iterdir())
+
+        pdf_files = [
+            p for p in all_files
+            if p.is_file()
+            and not p.name.startswith('~$')
+            and not p.name.startswith('.')
+            and (not allowed_exts or p.suffix.lower() in allowed_exts)
+        ]
+
+        logger.info(f"[initial_sync] Found {len(pdf_files)} file(s) in {folder_path}")
+
+        # Notify server that initial sync has started so it can show a
+        # progress indicator on the frontend.
+        try:
+            self.session.post(
+                self._url('/agent/sync/start/'),
+                json={
+                    'folder_path': folder_path,
+                    'total_files': len(pdf_files),
+                },
+                timeout=5,
+            )
+        except Exception:
+            pass  # non-critical
+
+        for idx, file_path in enumerate(pdf_files, 1):
+            result = self.upload(
+                file_path=str(file_path),
+                watch_path=folder_path,
+                category=category,
+                change_note='Initial sync via Desktop Agent',
+                folder_id=folder_id,
+                change_type='initial_sync',
+            )
+            if result:
+                action  = result.get('action', 'synced')
+                version = result.get('version', '?')
+                logger.info(
+                    f"  [{idx}/{len(pdf_files)}] ✓ {action}: '{result.get('title')}' → v{version}"
+                )
+                uploaded += 1
+            else:
+                logger.warning(f"  [{idx}/{len(pdf_files)}] ✗ Failed: {file_path}")
+                skipped += 1
+
+        # Notify server that initial sync finished.
+        try:
+            self.session.post(
+                self._url('/agent/sync/done/'),
+                json={
+                    'folder_path': folder_path,
+                    'uploaded':    uploaded,
+                    'skipped':     skipped,
+                },
+                timeout=5,
+            )
+        except Exception:
+            pass
+
+        logger.info(f"[initial_sync] Done — {uploaded} uploaded, {skipped} skipped.")
+        return uploaded, skipped
 
     def heartbeat(self):
         """Send heartbeat to server."""
@@ -257,7 +355,8 @@ class DocuVaultSyncHandler(FileSystemEventHandler):
         self.logger = logger
 
         # Debounce: avoid uploading the same file multiple times during a save
-        self._pending = {}   # path → scheduled time
+        self._pending = {}        # path → scheduled time
+        self._pending_type = {}   # path → 'created' | 'modified'
         self._lock = threading.Lock()
         self._debounce_secs = 3
 
@@ -273,10 +372,13 @@ class DocuVaultSyncHandler(FileSystemEventHandler):
             return ext in self.extensions
         return True
 
-    def _schedule(self, src_path):
+    def _schedule(self, src_path, change_type='modified'):
         """Schedule an upload with debounce to handle rapid save events."""
         with self._lock:
+            # Preserve 'created' if first event for this path was a creation
+            existing_type = self._pending_type.get(src_path, change_type)
             self._pending[src_path] = time.time() + self._debounce_secs
+            self._pending_type[src_path] = 'created' if 'created' in (existing_type, change_type) else 'modified'
 
     def _flush_pending(self):
         """Called by a background thread to upload due files."""
@@ -285,18 +387,19 @@ class DocuVaultSyncHandler(FileSystemEventHandler):
         with self._lock:
             for path, due_at in list(self._pending.items()):
                 if now >= due_at:
-                    due.append(path)
+                    due.append((path, self._pending_type.pop(path, 'modified')))
                     del self._pending[path]
 
-        for path in due:
+        for path, change_type in due:
             if self._should_sync(path):
-                self.logger.info(f"Syncing: {path}")
+                self.logger.info(f"Syncing [{change_type}]: {path}")
                 result = self.client.upload(
                     file_path=path,
                     watch_path=self.watch_path,
                     category=self.category,
                     folder_id=self.folder_id,
-                    change_note=f'Auto-synced: {os.path.basename(path)}',
+                    change_note=f'Auto-synced ({change_type}): {os.path.basename(path)}',
+                    change_type=change_type,
                 )
                 if result:
                     action = result.get('action', 'synced')
@@ -310,15 +413,15 @@ class DocuVaultSyncHandler(FileSystemEventHandler):
 
     def on_created(self, event):
         if not event.is_directory:
-            self._schedule(event.src_path)
+            self._schedule(event.src_path, change_type='created')
 
     def on_modified(self, event):
         if not event.is_directory:
-            self._schedule(event.src_path)
+            self._schedule(event.src_path, change_type='modified')
 
     def on_moved(self, event):
         if not event.is_directory:
-            self._schedule(event.dest_path)
+            self._schedule(event.dest_path, change_type='created')
 
 
 # ──────────────────────────────────────────────────────────────
@@ -385,7 +488,15 @@ class DocuVaultAgent:
             self.logger.error("Authentication failed. Agent will not start.")
             return False
 
-        # Start folder watchers
+        # ── Phase 1: Initial sync — upload every existing file once ──
+        for folder_cfg in self.cfg.get('watch_folders', []):
+            folder_path = folder_cfg.get('path', '')
+            if not folder_path or not os.path.isdir(folder_path):
+                continue
+            self.logger.info(f"[initial_sync] Starting for: {folder_path}")
+            self.client.initial_sync_folder(folder_cfg, self.logger)
+
+        # ── Phase 2: Start live folder watchers ───────────────────
         for folder_cfg in self.cfg.get('watch_folders', []):
             folder_path = folder_cfg.get('path', '')
             if not folder_path or not os.path.isdir(folder_path):
@@ -466,7 +577,7 @@ def run_setup():
 # ──────────────────────────────────────────────────────────────
 
 def main():
-    parser = argparse.ArgumentParser(description='DocuVault Desktop Agent')
+    parser = argparse.ArgumentParser(description='Desktop Agent Synchronizer for DocuVault')
     parser.add_argument('--setup',    action='store_true', help='Force the setup wizard')
     parser.add_argument('--no-tray',  action='store_true', help='Run headless (no tray icon)')
     args = parser.parse_args()
@@ -479,7 +590,7 @@ def main():
             print("No config found. Run agent.py without --no-tray to set up.")
             sys.exit(1)
         logger = setup_logging(cfg)
-        logger.info("Starting DocuVault Desktop Agent (headless)…")
+        logger.info("Starting Desktop Agent Synchronizer (headless)…")
         agent = DocuVaultAgent(cfg, logger)
         if not agent.start():
             sys.exit(1)
@@ -517,7 +628,7 @@ def main():
         try:
             import tkinter as _tk, tkinter.messagebox as _mb
             _r = _tk.Tk(); _r.withdraw()
-            _mb.showerror('DocuVault Agent',
+            _mb.showerror('Desktop Agent Synchronizer',
                           f'Could not open the status window.\n\n{str(_e)[:400]}\n\nSee: {_crash_log}')
             _r.destroy()
         except Exception:

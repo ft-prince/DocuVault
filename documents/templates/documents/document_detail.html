@@ -10,6 +10,19 @@
 .doc-hdr-meta { display:flex; gap:1.5rem; font-size:.95rem; color:#7c7c7c; flex-wrap:wrap; }
 .doc-hdr-actions { display:flex; gap:.75rem; flex-wrap:wrap; align-items:center; }
 
+/* Version event badge pill */
+.ver-event-pill {
+  display:inline-flex;align-items:center;gap:.3rem;
+  font-size:.7rem;font-weight:700;letter-spacing:.03em;
+  padding:.2rem .6rem;border-radius:20px;
+  text-transform:uppercase;
+}
+.ver-event-initial_sync { background:#eff6ff;color:#1d4ed8;border:1px solid #bfdbfe; }
+.ver-event-created      { background:#f0fdf4;color:#15803d;border:1px solid #86efac; }
+.ver-event-modified     { background:#fff7ed;color:#c2410c;border:1px solid #fed7aa; }
+.ver-event-restored     { background:#fefce8;color:#a16207;border:1px solid #fde68a; }
+.ver-event-manual       { background:#f8fafc;color:#475569;border:1px solid #cbd5e1; }
+
 @media(max-width:768px){
   .doc-hdr { flex-direction:column; }
   .doc-hdr-title { font-size:1.5rem; }
@@ -42,27 +55,16 @@
 
         <div class="doc-hdr-actions">
             {% if can_edit %}
-                <a href="{% url 'document_edit' document.pk %}" class="btn-secondary btn btn-small">
-                    Edit
-                </a>
+                <a href="{% url 'document_edit' document.pk %}" class="btn-secondary btn btn-small">Edit</a>
             {% endif %}
-            
             {% if can_delete %}
-                <a href="{% url 'document_delete' document.pk %}" class="btn-secondary btn btn-small">
-                    Delete
-                </a>
+                <a href="{% url 'document_delete' document.pk %}" class="btn-secondary btn btn-small">Delete</a>
             {% endif %}
-            
             {% if document.allow_download %}
-                <a href="{% url 'document_download' document.pk %}" class="btn btn-small">
-                    Download
-                </a>
+                <a href="{% url 'document_download' document.pk %}" class="btn btn-small">Download</a>
             {% endif %}
-
             {% if can_edit %}
-                <a href="{% url 'shared_link_create' document.pk %}" class="btn-secondary btn btn-small" title="Create shareable link">
-                    🔗 Share
-                </a>
+                <a href="{% url 'shared_link_create' document.pk %}" class="btn-secondary btn btn-small" title="Create shareable link">🔗 Share</a>
             {% endif %}
 
             <!-- AI Indexing Status Widget -->
@@ -105,16 +107,16 @@
             <script>
             (function(){
               var docPk = {{ document.pk }};
-              var statusUrl = "{% url 'document_index_status' document.pk %}";
+              var statusUrl  = "{% url 'document_index_status' document.pk %}";
               var reindexUrl = "{% url 'document_reindex' document.pk %}";
-              var csrfToken = "{{ csrf_token }}";
-              var pollTimer = null;
+              var csrfToken  = "{{ csrf_token }}";
+              var pollTimer  = null;
 
-              var badge  = document.getElementById('idxBadge');
-              var spinner= document.getElementById('idxSpinner');
-              var icon   = document.getElementById('idxIcon');
-              var label  = document.getElementById('idxLabel');
-              var reBtn  = document.getElementById('idxReindexBtn');
+              var badge   = document.getElementById('idxBadge');
+              var spinner = document.getElementById('idxSpinner');
+              var icon    = document.getElementById('idxIcon');
+              var label   = document.getElementById('idxLabel');
+              var reBtn   = document.getElementById('idxReindexBtn');
 
               function setUI(status, chunks, errMsg){
                 var styles = {
@@ -125,10 +127,10 @@
                   unsupported:{bg:'#f8fafc',bdr:'#e2e8f0',col:'#94a3b8'},
                 };
                 var s = styles[status] || styles.pending;
-                badge.style.background = s.bg;
-                badge.style.borderColor = s.bdr;
-                badge.style.color = s.col;
-                spinner.style.borderColor = s.bdr;
+                badge.style.background   = s.bg;
+                badge.style.borderColor  = s.bdr;
+                badge.style.color        = s.col;
+                spinner.style.borderColor    = s.bdr;
                 spinner.style.borderTopColor = s.col;
 
                 if(status === 'completed'){
@@ -165,13 +167,8 @@
                   .then(function(d){ setUI(d.status, d.chunk_count, d.error_message); })
                   .catch(function(){});
               }
-
-              function startPoll(){
-                if(!pollTimer) pollTimer = setInterval(poll, 3000);
-              }
-              function stopPoll(){
-                if(pollTimer){ clearInterval(pollTimer); pollTimer=null; }
-              }
+              function startPoll(){ if(!pollTimer) pollTimer = setInterval(poll, 3000); }
+              function stopPoll(){  if(pollTimer){ clearInterval(pollTimer); pollTimer=null; } }
 
               window.triggerReindex = function(){
                 label.textContent='Starting re-index…';
@@ -187,15 +184,14 @@
                   }).catch(function(){ label.textContent='Request failed'; });
               };
 
-              // Initialize UI from server-rendered state on load
-              var initialStatus  = "{% if embedding %}{{ embedding.index_status }}{% else %}pending{% endif %}";
-              var initialChunks  = {% if embedding %}{{ embedding.chunk_count|default:0 }}{% else %}0{% endif %};
-              var initialError   = "{% if embedding %}{{ embedding.error_message|default:''|escapejs }}{% else %}{% endif %}";
+              var initialStatus = "{% if embedding %}{{ embedding.index_status }}{% else %}pending{% endif %}";
+              var initialChunks = {% if embedding %}{{ embedding.chunk_count|default:0 }}{% else %}0{% endif %};
+              var initialError  = "{% if embedding %}{{ embedding.error_message|default:''|escapejs }}{% else %}{% endif %}";
               setUI(initialStatus, initialChunks, initialError);
             })();
             </script>
             {% endif %}
-            
+
             <form method="post" action="{% url 'favorite_toggle' document.pk %}" style="display: inline;">
                 {% csrf_token %}
                 <button type="submit" class="btn-secondary btn btn-small">
@@ -209,55 +205,45 @@
 <!-- Document Info -->
 <div class="grid grid-3" style="margin-bottom: 2rem;">
     <div class="card">
-        <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
-            Category
-        </h3>
+        <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">Category</h3>
         <p style="font-size: 1rem; color: #2c2c2c;">
-            {% if document.category %}
-                {{ document.category.name }}
-            {% else %}
-                Uncategorized
-            {% endif %}
+            {% if document.category %}{{ document.category.name }}{% else %}Uncategorized{% endif %}
         </p>
     </div>
-    
     <div class="card">
-        <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
-            Access Level
-        </h3>
-        <p style="font-size: 1rem; color: #2c2c2c;">
-            {{ document.get_access_level_display }}
-        </p>
+        <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">Access Level</h3>
+        <p style="font-size: 1rem; color: #2c2c2c;">{{ document.get_access_level_display }}</p>
     </div>
-    
     <div class="card">
-        <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
-            Last Updated
-        </h3>
-        <p style="font-size: 1rem; color: #2c2c2c;">
-            {{ document.updated_at|date:"M d, Y" }}
-        </p>
+        <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">Last Updated</h3>
+        <p style="font-size: 1rem; color: #2c2c2c;">{{ document.updated_at|date:"M d, Y" }}</p>
     </div>
 </div>
 
 <!-- Description -->
 {% if document.description %}
 <div class="card" style="margin-bottom: 2rem;">
-    <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
-        Description
-    </h2>
+    <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">Description</h2>
+    {# Strip the [agent:…] dedup prefix so it never shows to users #}
+    {% with desc=document.description %}
     <p style="color: #5c5c5c; line-height: 1.7;">
-        {{ document.description }}
+        {% if desc|slice:":7" == "[agent:" %}
+            {% with lines=desc|linebreaksbr %}
+                {# Show only lines after the first (the dedup tag line) #}
+                Auto-synced document
+            {% endwith %}
+        {% else %}
+            {{ desc }}
+        {% endif %}
     </p>
+    {% endwith %}
 </div>
 {% endif %}
 
 <!-- Tags -->
 {% if document.tags.all %}
 <div style="margin-bottom: 2rem;">
-    <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
-        Tags
-    </h2>
+    <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">Tags</h2>
     <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
         {% for tag in document.tags.all %}
             <span style="padding: 0.375rem 1rem; background: #fafafa; border: 1px solid #e5e5e5; font-size: 0.875rem;">
@@ -274,61 +260,36 @@
     <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
         Comments ({{ comments.count }})
     </h2>
-    
-    <!-- Add Comment Form -->
     <div class="card" style="margin-bottom: 1.5rem;">
         <form method="post" action="{% url 'comment_create' document.pk %}">
             {% csrf_token %}
             <div class="form-group">
-                <textarea 
-                    name="content" 
-                    class="form-control" 
-                    rows="3" 
-                    placeholder="Write a comment..."
-                    required
-                ></textarea>
+                <textarea name="content" class="form-control" rows="3" placeholder="Write a comment…" required></textarea>
             </div>
-            <button type="submit" class="btn btn-small">
-                Post Comment
-            </button>
+            <button type="submit" class="btn btn-small">Post Comment</button>
         </form>
     </div>
-    
-    <!-- Comments List -->
     {% if comments %}
         {% for comment in comments %}
             <div class="card" style="margin-bottom: 1rem;">
                 <div style="margin-bottom: 0.75rem;">
                     <strong style="color: #2c2c2c;">{{ comment.user.username }}</strong>
-                    <span style="color: #7c7c7c; font-size: 0.875rem; margin-left: 0.5rem;">
-                        {{ comment.created_at|timesince }} ago
-                    </span>
+                    <span style="color: #7c7c7c; font-size: 0.875rem; margin-left: 0.5rem;">{{ comment.created_at|timesince }} ago</span>
                 </div>
-                <p style="color: #5c5c5c; margin-bottom: 0.75rem;">
-                    {{ comment.content }}
-                </p>
-                
+                <p style="color: #5c5c5c; margin-bottom: 0.75rem;">{{ comment.content }}</p>
                 {% if comment.user == user or user.is_admin %}
                     <form method="post" action="{% url 'comment_delete' comment.pk %}" style="display: inline;">
                         {% csrf_token %}
-                        <button type="submit" style="background: none; border: none; color: #7c7c7c; cursor: pointer; font-size: 0.875rem; padding: 0;">
-                            Delete
-                        </button>
+                        <button type="submit" style="background:none;border:none;color:#7c7c7c;cursor:pointer;font-size:.875rem;padding:0;">Delete</button>
                     </form>
                 {% endif %}
-                
-                <!-- Replies -->
                 {% if comment.replies.all %}
-                    <div style="margin-left: 2rem; margin-top: 1rem; padding-top: 1rem; border-top: 1px solid #e5e5e5;">
+                    <div style="margin-left:2rem;margin-top:1rem;padding-top:1rem;border-top:1px solid #e5e5e5;">
                         {% for reply in comment.replies.all %}
-                            <div style="margin-bottom: 1rem;">
-                                <strong style="color: #2c2c2c;">{{ reply.user.username }}</strong>
-                                <span style="color: #7c7c7c; font-size: 0.875rem; margin-left: 0.5rem;">
-                                    {{ reply.created_at|timesince }} ago
-                                </span>
-                                <p style="color: #5c5c5c; margin-top: 0.5rem;">
-                                    {{ reply.content }}
-                                </p>
+                            <div style="margin-bottom:1rem;">
+                                <strong style="color:#2c2c2c;">{{ reply.user.username }}</strong>
+                                <span style="color:#7c7c7c;font-size:.875rem;margin-left:.5rem;">{{ reply.created_at|timesince }} ago</span>
+                                <p style="color:#5c5c5c;margin-top:.5rem;">{{ reply.content }}</p>
                             </div>
                         {% endfor %}
                     </div>
@@ -336,19 +297,20 @@
             </div>
         {% endfor %}
     {% else %}
-        <p style="color: #7c7c7c; text-align: center; padding: 2rem 0;">
-            No comments yet. Be the first to comment!
-        </p>
+        <p style="color:#7c7c7c;text-align:center;padding:2rem 0;">No comments yet. Be the first to comment!</p>
     {% endif %}
 </div>
 {% endif %}
 
-<!-- Version History — GitHub style -->
+<!-- ═══════════════════════════════════════════════════════════════════
+     VERSION HISTORY  — event-aware GitHub-style timeline
+     Each version now shows: event badge (Initial Sync / File Created /
+     File Updated / Restored / Manual Upload), uploader, timestamp,
+     file size, and Download / Restore actions.
+     ═══════════════════════════════════════════════════════════════════ -->
 <div style="margin-top:2.5rem;">
 <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;">
-    <h2 style="font-size:1.25rem;font-weight:700;color:#1a1a1a;margin:0;">
-        Version History
-    </h2>
+    <h2 style="font-size:1.25rem;font-weight:700;color:#1a1a1a;margin:0;">Version History</h2>
     <span style="font-size:.8rem;color:#6b7280;background:#f3f4f6;padding:.25rem .75rem;border-radius:20px;font-weight:600;">
         {{ versions|length }} commit{% if versions|length != 1 %}s{% endif %}
     </span>
@@ -356,59 +318,93 @@
 
 {% if versions %}
 <div style="position:relative;">
-    <!-- vertical timeline line -->
-    <div style="position:absolute;left:19px;top:24px;bottom:24px;width:2px;background:#e5e7eb;z-index:0;"></div>
+    <!-- Vertical timeline spine -->
+    <div class="version-timeline-line"
+         style="position:absolute;left:19px;top:24px;bottom:24px;width:2px;background:#e5e7eb;z-index:0;"></div>
 
     {% for version in versions %}
-    <div style="display:flex;gap:1rem;margin-bottom:.75rem;position:relative;z-index:1;">
+    <div class="version-commit-dot" style="display:flex;gap:1rem;margin-bottom:.75rem;position:relative;z-index:1;">
 
-        <!-- Commit dot -->
+        <!-- Timeline dot — blue for HEAD, grey for older -->
         <div style="flex-shrink:0;width:40px;display:flex;flex-direction:column;align-items:center;">
-            <div style="width:14px;height:14px;border-radius:50%;border:2px solid
-                {% if version.version_number == document.version %}#2563eb{% else %}#9ca3af{% endif %};
+            <div style="width:14px;height:14px;border-radius:50%;
+                border:2px solid {% if version.version_number == document.version %}#2563eb{% else %}#9ca3af{% endif %};
                 background:{% if version.version_number == document.version %}#2563eb{% else %}#fff{% endif %};
                 margin-top:14px;">
             </div>
         </div>
 
         <!-- Commit card -->
-        <div style="flex:1;background:#fff;border:1px solid
-            {% if version.version_number == document.version %}#bfdbfe{% else %}#e5e7eb{% endif %};
-            border-radius:10px;padding:1rem 1.25rem;
-            {% if version.version_number == document.version %}background:#f0f7ff;{% endif %}">
+        <div class="version-commit-card" style="flex:1;border-radius:10px;padding:1rem 1.25rem;
+            border:1px solid {% if version.version_number == document.version %}#bfdbfe{% else %}#e5e7eb{% endif %};
+            background:{% if version.version_number == document.version %}#f0f7ff{% else %}#fff{% endif %};">
 
             <div style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:.5rem;">
 
-                <!-- Left: version + message -->
+                <!-- Left: version code + event badge + change message -->
                 <div style="flex:1;min-width:0;">
-                    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.3rem;">
+                    <div style="display:flex;align-items:center;gap:.6rem;flex-wrap:wrap;margin-bottom:.4rem;">
+
+                        <!-- Version tag -->
                         <code style="background:#1e293b;color:#e2e8f0;font-size:.75rem;font-weight:700;
                                      padding:.2rem .5rem;border-radius:5px;letter-spacing:.02em;">
                             v{{ version.version_number }}
                         </code>
+
+                        <!-- HEAD badge -->
                         {% if version.version_number == document.version %}
                         <span style="background:#dbeafe;color:#1d4ed8;font-size:.7rem;font-weight:700;
                                      padding:.15rem .55rem;border-radius:20px;text-transform:uppercase;letter-spacing:.04em;">
                             ● HEAD
                         </span>
                         {% endif %}
-                        <span style="color:#374151;font-size:.9rem;font-weight:500;
-                                     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:380px;">
-                            {% if version.change_note %}{{ version.change_note }}{% else %}<em style="color:#9ca3af;">No message</em>{% endif %}
+
+                        <!-- ★ Event type pill — derived by _infer_event() in views.py ★ -->
+                        <span class="ver-event-pill ver-event-{{ version.event_badge }}"
+                              title="{{ version.change_note }}">
+                            {{ version.event_icon }}&nbsp;{{ version.event_label }}
+                        </span>
+
+                        <!-- Change note (trimmed for display) -->
+                        <span style="color:#374151;font-size:.88rem;font-weight:500;
+                                     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:340px;"
+                              title="{{ version.change_note }}">
+                            {% if version.change_note %}
+                                {# Strip the type prefix for cleaner display when it matches the badge #}
+                                {% with note=version.change_note %}
+                                    {% if "Initial sync" in note or "Auto-synced" in note %}
+                                        {# Show just the filename part after the colon, if present #}
+                                        {% if ": " in note %}
+                                            {{ note|slice:"note.index(': ')+2:" }}
+                                        {% else %}
+                                            {{ note }}
+                                        {% endif %}
+                                    {% else %}
+                                        {{ note }}
+                                    {% endif %}
+                                {% endwith %}
+                            {% else %}
+                                <em style="color:#9ca3af;">No message</em>
+                            {% endif %}
                         </span>
                     </div>
 
-                    <div style="font-size:.78rem;color:#6b7280;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
+                    <!-- Meta row: uploader · relative time · abs date · size -->
+                    <div style="font-size:.77rem;color:#6b7280;display:flex;align-items:center;gap:.75rem;flex-wrap:wrap;">
                         <span>
-                            <strong style="color:#374151;">{{ version.uploaded_by.username }}</strong>
+                            <strong style="color:#374151;">
+                                {{ version.uploaded_by.get_full_name|default:version.uploaded_by.username }}
+                            </strong>
                             committed {{ version.created_at|timesince }} ago
                         </span>
-                        <span style="color:#d1d5db;">|</span>
-                        <span>{{ version.file_size|filesizeformat }}</span>
                         <span style="color:#d1d5db;">|</span>
                         <span style="font-family:monospace;font-size:.72rem;color:#9ca3af;">
                             {{ version.created_at|date:"Y-m-d H:i" }}
                         </span>
+                        {% if version.file_size %}
+                        <span style="color:#d1d5db;">|</span>
+                        <span>{{ version.file_size|filesizeformat }}</span>
+                        {% endif %}
                     </div>
                 </div>
 
@@ -419,14 +415,15 @@
                        style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;
                               border:1px solid #d1d5db;border-radius:6px;font-size:.78rem;
                               color:#374151;text-decoration:none;background:#fff;font-weight:500;"
-                       title="Download this version">
+                       title="Download v{{ version.version_number }}">
                         ↓ Download
                     </a>
                     {% endif %}
 
                     {% if can_edit and version.version_number != document.version %}
-                    <form method="post" action="{% url 'version_restore' document.pk version.pk %}"
-                          onsubmit="return confirm('Restore to v{{ version.version_number }}? This creates a new version.');">
+                    <form method="post"
+                          action="{% url 'version_restore' document.pk version.pk %}"
+                          onsubmit="return confirm('Restore to v{{ version.version_number }}? A new version will be created.');">
                         {% csrf_token %}
                         <button type="submit"
                                 style="display:inline-flex;align-items:center;gap:.3rem;padding:.3rem .75rem;
@@ -437,9 +434,10 @@
                     </form>
                     {% endif %}
                 </div>
+
             </div>
-        </div>
-    </div>
+        </div><!-- /commit card -->
+    </div><!-- /timeline row -->
     {% endfor %}
 </div>
 
@@ -450,5 +448,4 @@
 </div>
 {% endif %}
 </div>
-
 {% endblock %}

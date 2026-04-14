@@ -274,7 +274,7 @@ class AgentPopup(Tk):
 
         # Auto-start checkbox
         ck = Checkbutton(body,
-            text='Start agent automatically when Windows starts',
+            text='Start Desktop Agent Synchronizer automatically when Windows starts',
             variable=self._startup,
             font=('Segoe UI', 8), bg=BG, fg=DARK,
             activebackground=BG, cursor='hand2',
@@ -343,7 +343,7 @@ class AgentPopup(Tk):
 
     def _show_done(self):
         self._clear()
-        self._header(2, 'All set!', 'Agent is configured and ready')
+        self._header(2, 'All set!', 'Desktop Agent Synchronizer is configured and ready')
 
         body = self._body()
 
@@ -368,26 +368,34 @@ class AgentPopup(Tk):
 
         ftr = Frame(self, bg=PANEL, padx=16, pady=10)
         ftr.pack(fill=X)
-        _btn(ftr, 'Launch Agent', self._launch, primary=True).pack(side=RIGHT)
-        _btn(ftr, 'Close', self.destroy, small=True).pack(side=RIGHT, padx=(0, 6))
+        _btn(ftr, 'Launch Desktop Agent Synchronizer', self._launch, primary=True).pack(side=RIGHT)
+        _btn(ftr, 'Close', self._close_and_launch, small=True).pack(side=RIGHT, padx=(0, 6))
 
         self._reposition()
 
-    def _launch(self):
+    def _close_and_launch(self):
+        """Close button on the Done screen — launches agent silently then closes."""
+        self._launch(silent=True)
+
+    def _launch(self, silent=False):
         try:
             if getattr(sys, 'frozen', False):
-                subprocess.Popen(
+                proc = subprocess.Popen(
                     [sys.executable, '--no-tray'],
                     creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
                 )
             else:
-                subprocess.Popen(
+                proc = subprocess.Popen(
                     [sys.executable, str(AGENT_SCRIPT), '--no-tray'],
                     creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
                     cwd=str(AGENT_SCRIPT.parent),
                 )
+            # Write PID so StatusPopup can find the process next time
+            APPDATA_DIR.mkdir(parents=True, exist_ok=True)
+            (APPDATA_DIR / 'agent.pid').write_text(str(proc.pid))
         except Exception as e:
-            _label(self, f'Error: {e}', color=RED).pack()
+            if not silent:
+                _label(self, f'Error: {e}', color=RED).pack()
             return
         self.destroy()
 
@@ -431,12 +439,12 @@ class StatusPopup(Tk):
         self._running = False
         self._pid     = None
 
-        self.title('DocuVault Agent')
+        self.title(' Desktop Agent Synchronizer')
         self.configure(bg=BG)
         self.resizable(False, False)
         self.attributes('-topmost', True)
         self.attributes('-toolwindow', True)
-        self.protocol('WM_DELETE_WINDOW', self.destroy)
+        self.protocol('WM_DELETE_WINDOW', self._close_to_bg)  # X button → keep agent running
 
         self._build()
         self._reposition()
@@ -457,7 +465,7 @@ class StatusPopup(Tk):
         hdr.pack(fill=X)
         hi = Frame(hdr, bg=BLUE, padx=18, pady=14)
         hi.pack(fill=X)
-        Label(hi, text='DocuVault Agent',
+        Label(hi, text='Desktop Agent Synchronizer',
               font=('Segoe UI', 14, 'bold'), fg='#fff', bg=BLUE).pack(anchor=W)
         Label(hi, text=self.cfg.get('server_url', 'Not configured'),
               font=('Segoe UI', 9), fg='#93c5fd', bg=BLUE).pack(anchor=W)
@@ -538,7 +546,7 @@ class StatusPopup(Tk):
                activebackground=BORDER, relief=FLAT,
                cursor='hand2', padx=12, pady=6).pack(side=LEFT)
 
-        Button(ftr, text='✕  Close', command=self.destroy,
+        Button(ftr, text='✕  Close window', command=self._close_to_bg,
                font=('Segoe UI', 9), bg=PANEL, fg=GREY,
                activebackground=BORDER, relief=FLAT,
                cursor='hand2', padx=10, pady=6).pack(side=RIGHT)
@@ -559,15 +567,15 @@ class StatusPopup(Tk):
         self._pid     = pid
         if running:
             self._dot.config(fg=GREEN)
-            self._status_lbl.config(text='● Agent is running', fg=GREEN)
+            self._status_lbl.config(text='● Desktop Agent Synchronizer is running', fg=GREEN)
             pid_str = f'  PID {pid}' if pid else ''
             self._sub_lbl.config(text=f'Monitoring active{pid_str} — syncing to DocuVault')
             self._start_btn.config(state=DISABLED, bg='#d1fae5', fg='#166534')
             self._stop_btn.config(state=NORMAL,   bg=RED,      fg='#fff')
         else:
             self._dot.config(fg=GREY)
-            self._status_lbl.config(text='● Agent is stopped', fg='#6b7280')
-            self._sub_lbl.config(text='Click ▶ Start Monitoring to begin')
+            self._status_lbl.config(text='● Desktop Agent Synchronizer is stopped', fg='#6b7280')
+            self._sub_lbl.config(text='Click ▶ Start Monitoring to begin  •  Closing will auto-start')
             self._start_btn.config(state=NORMAL,  bg=GREEN, fg='#fff')
             self._stop_btn.config(state=DISABLED, bg='#fca5a5', fg='#fff')
 
@@ -620,6 +628,37 @@ class StatusPopup(Tk):
                     pass
         _clear_pid()
         self.after(800, self._poll_async)
+
+    def _close_to_bg(self):
+        """Close the popup window. If agent is running it stays running.
+        If agent is NOT running, auto-start it before closing so the user
+        never accidentally leaves monitoring disabled."""
+        if not self._running:
+            # Start silently then close
+            self._status_lbl.config(text='Starting in background…', fg=AMBER)
+            self.update()
+
+            def _launch_and_close():
+                try:
+                    if getattr(sys, 'frozen', False):
+                        cmd = [sys.executable, '--no-tray']
+                        cwd = str(Path(sys.executable).parent)
+                    else:
+                        cmd = [sys.executable, str(AGENT_SCRIPT), '--no-tray']
+                        cwd = str(AGENT_SCRIPT.parent)
+                    proc = subprocess.Popen(
+                        cmd, cwd=cwd,
+                        creationflags=subprocess.CREATE_NO_WINDOW | subprocess.DETACHED_PROCESS,
+                    )
+                    _write_pid(proc.pid)
+                except Exception:
+                    pass
+                self.after(0, self.destroy)
+
+            threading.Thread(target=_launch_and_close, daemon=True).start()
+        else:
+            # Already running — just close the window, agent keeps going
+            self.destroy()
 
     def _open_settings(self):
         self.destroy()

@@ -89,6 +89,16 @@ def agent_auth_view(request):
 # 2. Upload — create or update document from watched folder
 # ─────────────────────────────────────────────────────────────
 
+# Maps change_type values to human-readable change_note prefixes.
+# The _infer_event() helper in views.py parses these back out for the
+# version history display on the document detail page.
+_CHANGE_NOTE_MAP = {
+    'initial_sync': 'Initial sync via Desktop Agent',
+    'created':      'Auto-synced (created)',
+    'modified':     'Auto-synced (modified)',
+}
+
+
 @csrf_exempt
 @require_http_methods(['POST'])
 def agent_upload_view(request):
@@ -99,16 +109,24 @@ def agent_upload_view(request):
         file        — the file to upload
         title       — document title (optional; defaults to filename)
         file_path   — full local path of the file (primary dedup key)
-        watch_path  — the local folder path being watched (legacy / fallback)
+        watch_path  — the local folder path being watched
         change_note — description of what changed (optional)
+        change_type — 'created' | 'modified' | 'initial_sync'
         category    — category name (optional)
         folder_id   — workspace folder ID to sync into (optional)
 
-    Logic:
-      - If a Document with the same owner + file_path already exists → new version
-      - Otherwise → create new document at version 1
-    Returns: {document_id, version, title, action}
+    Dedup logic (in priority order):
+      1. Match by [agent:<normalised_file_path>] tag in description  (existing records)
+      2. Match by title + owner + same folder                        (fallback)
+      Never creates a second Document for the same physical file.
+
+    Version logic:
+      - initial_sync  → skip entirely if file content (MD5) is unchanged
+      - created       → always create v1 (new file appeared)
+      - modified      → create new version only if MD5 differs from current
     """
+    import hashlib
+
     user = _get_agent_user(request)
     if user is None:
         return _json_error('Invalid or missing token', status=401)
@@ -117,88 +135,174 @@ def agent_upload_view(request):
         return _json_error('file field is required')
 
     uploaded_file = request.FILES['file']
-    # file_path is the full path of the file on the client machine — used as unique dedup key
+
+    # ── Read POST fields ──────────────────────────────────────
     file_path     = request.POST.get('file_path', '').strip()
     watch_path    = request.POST.get('watch_path', '').strip()
     title         = request.POST.get('title', '').strip() or os.path.splitext(uploaded_file.name)[0]
-    change_note   = request.POST.get('change_note', 'Auto-synced by Desktop Agent').strip()
     category_name = request.POST.get('category', '').strip()
     folder_id_str = request.POST.get('folder_id', '').strip()
 
-    # Resolve category
+    change_type = request.POST.get('change_type', 'modified').strip()
+    if change_type not in _CHANGE_NOTE_MAP:
+        change_type = 'modified'
+
+    type_prefix = _CHANGE_NOTE_MAP[change_type]
+    change_note = f"{type_prefix}: {uploaded_file.name}"
+
+    # ── Normalise the dedup key (always forward slashes) ─────
+    # This is stored in description AND used for lookup — consistent format
+    # prevents the "already exists but not found" duplicate-create bug.
+    raw_key  = file_path or watch_path
+    dedup_key = raw_key.replace('\\', '/').strip() if raw_key else ''
+
+    # ── Helpers ───────────────────────────────────────────────
+    def _md5_upload(file_obj):
+        h = hashlib.md5()
+        for chunk in file_obj.chunks():
+            h.update(chunk)
+        file_obj.seek(0)
+        return h.hexdigest()
+
+    def _md5_disk(path):
+        try:
+            with open(path, 'rb') as fh:
+                return hashlib.md5(fh.read()).hexdigest()
+        except Exception:
+            return None
+
+    # ── Resolve category ──────────────────────────────────────
     category = None
     if category_name:
         category, _ = Category.objects.get_or_create(name=category_name)
 
-    # Resolve workspace folder (optional — agent sends folder_id from config)
+    # ── Resolve workspace folder ──────────────────────────────
     target_folder = None
     if folder_id_str:
         try:
             from .models import Folder as _Folder
             target_folder = _Folder.objects.get(id=int(folder_id_str), owner=user)
         except Exception:
-            pass  # folder not found or invalid — just leave unfiled
+            pass
 
-    # Determine if this is an update or create.
-    # Dedup key: file_path (full path) takes priority over watch_path (folder).
-    # This ensures each file gets its own Document — not one document per folder.
-    existing = None
-    dedup_key = file_path or watch_path
-    if dedup_key:
-        existing = Document.objects.filter(
-            owner=user,
-            is_deleted=False,
-            description__startswith=f'[agent:{dedup_key}]'
-        ).first()
+    # ── Dedup lookup ─────────────────────────────────────────
+    # Strategy: try every reasonable variant of the path so old records
+    # (which may have been stored with backslashes) are still found.
+    def _find_existing():
+        variants = list({dedup_key, raw_key})   # forward-slash + original
+        variants = [v for v in variants if v]
+
+        for v in variants:
+            doc = Document.objects.filter(
+                owner=user,
+                is_deleted=False,
+                description__contains=f'[agent:{v}]'
+            ).first()
+            if doc:
+                return doc
+
+        # Fallback: match by title + owner + folder (catches records created
+        # before the [agent:…] tag was introduced)
+        qs = Document.objects.filter(owner=user, is_deleted=False, title=title)
+        if target_folder is not None:
+            qs = qs.filter(folder=target_folder)
+        return qs.first()
+
+    existing = _find_existing()
 
     if existing:
-        # ── New version of an existing document ──────────────────
+        # ── Existing document — maybe create a new version ────
         document = existing
-        old_version = document.version
-        document.version += 1
-        document.file = uploaded_file
+        new_hash = _md5_upload(uploaded_file)
+        cur_hash = _md5_disk(document.file.path) if document.file else None
+
+        if new_hash and cur_hash and new_hash == cur_hash:
+            # File unchanged — skip silently (covers initial_sync restarts
+            # and spurious OS modify events)
+            return _json_ok({
+                'document_id': document.pk,
+                'version':     document.version,
+                'title':       document.title,
+                'action':      'skipped_no_change',
+                'folder_id':   document.folder_id,
+                'folder_name': document.folder.name if document.folder else None,
+            })
+
+        # Content has changed — save a new version
+        # Always use 'modified' note for updates regardless of what change_type
+        # the agent sent — on_created can fire for files that already exist
+        # if the agent restarts or the file is moved then modified.
+        update_note = f"{_CHANGE_NOTE_MAP['modified']}: {uploaded_file.name}"
+        new_version        = document.version + 1
+        document.version   = new_version
+        document.file      = uploaded_file
         document.file_size = uploaded_file.size
-        document.file_type = uploaded_file.content_type or mimetypes.guess_type(uploaded_file.name)[0] or 'application/octet-stream'
+        document.file_type = (
+            uploaded_file.content_type
+            or mimetypes.guess_type(uploaded_file.name)[0]
+            or 'application/octet-stream'
+        )
         document.updated_at = timezone.now()
-        # Move to the configured folder if one is specified
         if target_folder is not None:
             document.folder = target_folder
         document.save()
 
         DocumentVersion.objects.get_or_create(
             document=document,
-            version_number=document.version,
+            version_number=new_version,
             defaults={
-                'file': document.file,
-                'file_size': document.file_size,
+                'file':        document.file,
+                'file_size':   document.file_size,
                 'uploaded_by': user,
-                'change_note': change_note,
+                'change_note': update_note,
             }
         )
+
+        # Reset RAG embedding so new content gets re-indexed
+        try:
+            from .models import DocumentEmbedding
+            emb, _ = DocumentEmbedding.objects.get_or_create(document=document)
+            emb.is_indexed    = False
+            emb.index_status  = 'pending'
+            emb.error_message = ''
+            emb.save(update_fields=['is_indexed', 'index_status', 'error_message'])
+        except Exception:
+            pass
 
         ActivityLog.objects.create(
             user=user,
             document=document,
             action='edit',
-            description=f"Desktop Agent auto-synced v{document.version}: {document.title}",
+            description=f"Desktop Agent auto-synced v{new_version}: {document.title}",
             ip_address='127.0.0.1'
         )
-
-        # Notify document owner if shared
-        _notify_watchers(document, user, f"Document '{document.title}' was updated to v{document.version} by Desktop Agent")
+        _notify_watchers(
+            document, user,
+            f"Document '{document.title}' updated to v{new_version} by Desktop Agent"
+        )
+        _increment_sync_done(watch_path, change_type)
 
         return _json_ok({
             'document_id': document.pk,
-            'version': document.version,
-            'title': document.title,
-            'action': 'updated',
-            'folder_id': document.folder_id,
+            'version':     new_version,
+            'title':       document.title,
+            'action':      'updated',
+            'folder_id':   document.folder_id,
             'folder_name': document.folder.name if document.folder else None,
         })
 
     else:
-        # ── Brand-new document ────────────────────────────────────
-        description = f'[agent:{dedup_key}]\nAuto-synced document.' if dedup_key else 'Auto-synced by Desktop Agent.'
+        # ── Brand-new document ────────────────────────────────
+        description = (
+            f'[agent:{dedup_key}]\nAuto-synced document.'
+            if dedup_key else
+            'Auto-synced by Desktop Agent.'
+        )
+        v1_note = (
+            'Initial sync via Desktop Agent'
+            if change_type == 'initial_sync'
+            else f'Auto-synced (created): {uploaded_file.name}'
+        )
 
         document = Document.objects.create(
             owner=user,
@@ -206,11 +310,15 @@ def agent_upload_view(request):
             description=description,
             file=uploaded_file,
             file_size=uploaded_file.size,
-            file_type=uploaded_file.content_type or mimetypes.guess_type(uploaded_file.name)[0] or 'application/octet-stream',
+            file_type=(
+                uploaded_file.content_type
+                or mimetypes.guess_type(uploaded_file.name)[0]
+                or 'application/octet-stream'
+            ),
             version=1,
             access_level='private',
             category=category,
-            folder=target_folder,       # None = unfiled; set if agent configured a folder
+            folder=target_folder,
         )
 
         DocumentVersion.objects.create(
@@ -219,7 +327,7 @@ def agent_upload_view(request):
             file=document.file,
             file_size=document.file_size,
             uploaded_by=user,
-            change_note='Initial version — synced by Desktop Agent',
+            change_note=v1_note,
         )
 
         ActivityLog.objects.create(
@@ -229,15 +337,19 @@ def agent_upload_view(request):
             description=f"Desktop Agent created: {document.title}",
             ip_address='127.0.0.1'
         )
+        _increment_sync_done(watch_path, change_type)
 
         return _json_ok({
             'document_id': document.pk,
-            'version': 1,
-            'title': document.title,
-            'action': 'created',
-            'folder_id': document.folder_id,
+            'version':     1,
+            'title':       document.title,
+            'action':      'created',
+            'folder_id':   document.folder_id,
             'folder_name': document.folder.name if document.folder else None,
         }, status=201)
+
+
+
 
 
 # ─────────────────────────────────────────────────────────────
@@ -254,7 +366,6 @@ def agent_events_view(request):
     optionally filtered to events after `since`.
     Used by both the Desktop Agent and the dashboard's auto-refresh JS.
     """
-    # Accept both token auth (agent) and session auth (dashboard)
     if request.user.is_authenticated:
         user = request.user
     else:
@@ -284,14 +395,14 @@ def agent_events_view(request):
     for log in qs:
         if log.document and log.document.can_view(user):
             events.append({
-                'id': log.pk,
-                'action': log.action,
-                'document_id': log.document.pk,
-                'document_title': log.document.title,
+                'id':               log.pk,
+                'action':           log.action,
+                'document_id':      log.document.pk,
+                'document_title':   log.document.title,
                 'document_version': log.document.version,
-                'changed_by': log.user.username,
-                'timestamp': log.created_at.isoformat(),
-                'description': log.description,
+                'changed_by':       log.user.username,
+                'timestamp':        log.created_at.isoformat(),
+                'description':      log.description,
             })
 
     return _json_ok({'events': events, 'count': len(events)})
@@ -314,9 +425,9 @@ def agent_heartbeat_view(request):
         return _json_error('Invalid or missing token', status=401)
 
     return _json_ok({
-        'status': 'online',
+        'status':      'online',
         'server_time': timezone.now().isoformat(),
-        'user': user.username,
+        'user':        user.username,
     })
 
 
@@ -334,15 +445,11 @@ def agent_status_view(request):
     try:
         token_obj = AgentToken.objects.get(user=request.user, is_active=True)
         last_used = token_obj.last_used
-        if last_used is None:
-            online = False
-        else:
-            age_seconds = (timezone.now() - last_used).total_seconds()
-            online = age_seconds <= 120   # 2-minute window
+        online    = bool(last_used and (timezone.now() - last_used).total_seconds() <= 120)
         return _json_ok({
-            'online': online,
+            'online':   online,
             'last_seen': last_used.isoformat() if last_used else None,
-            'username': request.user.username,
+            'username':  request.user.username,
         })
     except AgentToken.DoesNotExist:
         return _json_ok({'online': False, 'last_seen': None, 'username': request.user.username})
@@ -378,7 +485,6 @@ def agent_token_reset_view(request):
 
 def _notify_watchers(document, sender, message):
     """Notify users who can view the document that it changed."""
-    # For now: only notify the document owner if the agent is a different user
     if document.owner != sender:
         Notification.objects.create(
             recipient=document.owner,
@@ -388,3 +494,48 @@ def _notify_watchers(document, sender, message):
             message=message,
             document=document,
         )
+
+
+def _increment_sync_done(watch_path: str, change_type: str):
+    """
+    Increment the in-memory sync progress counter after each successful upload
+    so the frontend /agent/sync/status/ polling shows a live progress bar
+    during initial_sync runs.
+
+    Only increments for initial_sync events — live watchdog events don't need
+    a progress bar.
+    """
+    if change_type != 'initial_sync' or not watch_path:
+        return
+    try:
+        from .views import _SYNC_STATE, _SYNC_STATE_LOCK
+        with _SYNC_STATE_LOCK:
+            state = _SYNC_STATE.get(watch_path)
+            if state and state.get('status') == 'running':
+                state['done'] = state.get('done', 0) + 1
+    except Exception:
+        pass  # non-critical — never let this break an upload
+
+
+# ─────────────────────────────────────────────────────────────
+# Utility: fix legacy backslash dedup keys (run once from shell)
+# ─────────────────────────────────────────────────────────────
+
+def fix_agent_description_paths():
+    """
+    One-time fix for existing documents whose description contains
+    [agent:C:\\path\\to\\file] (backslashes).  Normalises them to
+    [agent:C:/path/to/file] so the dedup lookup always finds them.
+
+    Run from Django shell:
+        from documents.agent_api import fix_agent_description_paths
+        fix_agent_description_paths()
+    """
+    fixed = 0
+    for doc in Document.objects.filter(description__contains='[agent:'):
+        if '\\' in doc.description:
+            doc.description = doc.description.replace('\\', '/')
+            doc.save(update_fields=['description'])
+            fixed += 1
+    print(f"Fixed {fixed} document(s).")
+    return fixed

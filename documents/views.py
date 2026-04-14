@@ -250,7 +250,48 @@ def document_detail_view(request, pk):
     comments = document.comments.filter(parent=None).select_related('user').prefetch_related('replies')
     
     # Get ALL versions — full history like GitHub
-    versions = document.versions.select_related('uploaded_by').order_by('-version_number')
+    versions_qs = document.versions.select_related('uploaded_by').order_by('-version_number')
+
+    # Annotate each version with a human-readable event label derived from
+    # the change_note written by the agent (or by manual edits).
+    _TYPE_LABELS = {
+        'initial_sync': ('📥', 'Initial Sync',  'info'),
+        'created':      ('✨', 'File Created',  'success'),
+        'modified':     ('✏️', 'File Updated',  'primary'),
+        'restored':     ('🔄', 'Restored',      'warning'),
+        'deleted':      ('🗑️', 'Deleted',        'danger'),
+        'manual':       ('📝', 'Manual Upload', 'secondary'),
+    }
+
+    def _infer_event(version):
+        note = (version.change_note or '').lower()
+        # Check explicit type prefixes first — most reliable signal
+        if 'initial sync' in note:
+            return _TYPE_LABELS['initial_sync']
+        if 'restore' in note:
+            return _TYPE_LABELS['restored']
+        if 'auto-synced (modified)' in note:
+            return _TYPE_LABELS['modified']
+        # v1 is always a creation regardless of what the note says
+        if version.version_number == 1:
+            if 'auto-synced' in note or 'desktop agent' in note:
+                return _TYPE_LABELS['created']
+            return _TYPE_LABELS['manual']
+        # v2+ from the agent is always an update
+        if 'auto-synced (created)' in note:
+            # agent fired on_created but document already existed → update
+            return _TYPE_LABELS['modified']
+        if 'auto-synced' in note or 'desktop agent' in note:
+            return _TYPE_LABELS['modified']
+        return _TYPE_LABELS['manual']
+
+    versions = []
+    for v in versions_qs:
+        icon, label, badge = _infer_event(v)
+        v.event_icon  = icon
+        v.event_label = label
+        v.event_badge = badge
+        versions.append(v)
     
     # Check if favorited
     is_favorited = Favorite.objects.filter(user=request.user, document=document).exists()
@@ -1919,3 +1960,93 @@ def agent_build_log_view(request):
         return JsonResponse({'ok': True, 'log': ''.join(last), 'built': built})
     except FileNotFoundError:
         return JsonResponse({'ok': True, 'log': '', 'built': False})
+
+
+# ============================================================
+# AGENT SYNC PROGRESS — in-memory state (per folder_path)
+# ============================================================
+
+import threading as _threading
+_SYNC_STATE_LOCK = _threading.Lock()
+_SYNC_STATE: dict = {}   # folder_path → {'status': ..., 'total': int, 'done': int}
+
+
+@csrf_exempt
+def agent_sync_start_view(request):
+    """
+    POST /agent/sync/start/
+    Called by the desktop agent when an initial sync begins.
+    Body JSON: { folder_path, total_files }
+    No auth required — relies on the fact that it's only called from localhost
+    (or you can add token auth here if desired).
+    """
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+    try:
+        data = json.loads(request.body)
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'bad json'}, status=400)
+
+    folder_path = data.get('folder_path', '')
+    total       = int(data.get('total_files', 0))
+    with _SYNC_STATE_LOCK:
+        _SYNC_STATE[folder_path] = {
+            'status': 'running',
+            'total':  total,
+            'done':   0,
+        }
+    return JsonResponse({'ok': True})
+
+
+@csrf_exempt
+def agent_sync_done_view(request):
+    """
+    POST /agent/sync/done/
+    Called by the desktop agent when an initial sync finishes.
+    Body JSON: { folder_path, uploaded, skipped }
+    """
+    if request.method != 'POST':
+        return JsonResponse({'ok': False}, status=405)
+    try:
+        data = json.loads(request.body)
+    except ValueError:
+        return JsonResponse({'ok': False, 'error': 'bad json'}, status=400)
+
+    folder_path = data.get('folder_path', '')
+    with _SYNC_STATE_LOCK:
+        state = _SYNC_STATE.get(folder_path, {})
+        state['status']   = 'done'
+        state['uploaded'] = int(data.get('uploaded', 0))
+        state['skipped']  = int(data.get('skipped', 0))
+        _SYNC_STATE[folder_path] = state
+    return JsonResponse({'ok': True})
+
+
+@login_required
+def agent_sync_status_view(request):
+    """
+    GET /agent/sync/status/?folder_path=<path>
+    Returns the current initial-sync progress for a given folder path so the
+    frontend can show a live progress bar / spinner.
+    Also returns aggregate pending-indexing stats so the UI can show how many
+    PDFs are still being processed by the RAG pipeline.
+    """
+    folder_path = request.GET.get('folder_path', '')
+
+    with _SYNC_STATE_LOCK:
+        sync = dict(_SYNC_STATE.get(folder_path, {'status': 'idle', 'total': 0, 'done': 0}))
+
+    # Count documents whose RAG embeddings are still pending / in-progress
+    try:
+        from .models import DocumentEmbedding
+        indexing_count = DocumentEmbedding.objects.filter(
+            index_status__in=['pending', 'indexing']
+        ).count()
+    except Exception:
+        indexing_count = 0
+
+    return JsonResponse({
+        'ok':            True,
+        'sync':          sync,
+        'indexing_count': indexing_count,
+    })

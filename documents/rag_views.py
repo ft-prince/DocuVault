@@ -133,44 +133,85 @@ def get_rag_chatbot() -> RAGChatbot:
 
 @login_required
 def chatbot_view(request):
-    """Main chatbot interface"""
-    # Get or create active chat session
-    chat_session = ChatSession.objects.filter(
-        user=request.user,
-        is_active=True
-    ).first()
-    
+    """Main chatbot interface with session history sidebar"""
+    from datetime import date, timedelta
+
+    # Load a specific session if requested via ?session=<id>
+    session_id = request.GET.get('session')
+    chat_session = None
+    if session_id:
+        try:
+            chat_session = ChatSession.objects.get(id=session_id, user=request.user)
+        except ChatSession.DoesNotExist:
+            chat_session = None
+
+    if not chat_session:
+        chat_session = (
+            ChatSession.objects
+            .filter(user=request.user, is_active=True)
+            .order_by('-updated_at')
+            .first()
+        )
+
     if not chat_session:
         chat_session = ChatSession.objects.create(
             user=request.user,
             title='New Conversation'
         )
-    
-    # Get chat history
+
+    # Messages for the active session
     messages_list = chat_session.messages.all()
-    
-    # Get user's accessible documents
+
+    # Accessible documents
     user_documents = Document.objects.filter(
         Q(access_level='public') |
         Q(owner=request.user) |
         Q(shared_with=request.user)
     ).filter(is_deleted=False).distinct()
-    
-    # Get indexed documents count
+
     indexed_count = DocumentEmbedding.objects.filter(
         document__in=user_documents,
         is_indexed=True
     ).count()
-    
+
+    # Build grouped session list for sidebar (Today / Yesterday / This Week / Older)
+    today     = date.today()
+    yesterday = today - timedelta(days=1)
+    week_ago  = today - timedelta(days=7)
+
+    all_sessions_qs = (
+        ChatSession.objects
+        .filter(user=request.user)
+        .order_by('-updated_at')[:80]
+    )
+
+    grouped_sessions = []
+    current_group = None
+    for s in all_sessions_qs:
+        d = s.updated_at.date()
+        if d == today:
+            group = 'Today'
+        elif d == yesterday:
+            group = 'Yesterday'
+        elif d > week_ago:
+            group = 'This Week'
+        else:
+            group = 'Older'
+        if group != current_group:
+            current_group = group
+            grouped_sessions.append({'type': 'header', 'label': group})
+        grouped_sessions.append({'type': 'session', 'session': s})
+
     context = {
-        'chat_session': chat_session,
-        'chat_messages': messages_list,
-        'total_documents': user_documents.count(),
+        'chat_session':     chat_session,
+        'chat_messages':    messages_list,
+        'total_documents':  user_documents.count(),
         'indexed_documents': indexed_count,
-        'form': ChatQueryForm(),
-        'enhanced_rag': True
+        'form':             ChatQueryForm(),
+        'enhanced_rag':     True,
+        'grouped_sessions': grouped_sessions,
     }
-    
+
     return render(request, 'rag/chatbot.html', context)
 
 
@@ -404,6 +445,47 @@ def clear_chat_view(request):
         return JsonResponse({'success': True})
     
     return JsonResponse({'success': False, 'error': 'Invalid session'}, status=400)
+
+
+@login_required
+@require_http_methods(["POST"])
+def new_chat_view(request):
+    """Create a new chat session, return its id as JSON."""
+    session = ChatSession.objects.create(
+        user=request.user,
+        title='New Conversation',
+    )
+    return JsonResponse({'ok': True, 'session_id': session.id})
+
+
+@login_required
+@require_http_methods(["POST"])
+def delete_session_view(request, pk):
+    """Delete a chat session and its RAG memory."""
+    session = get_object_or_404(ChatSession, id=pk, user=request.user)
+    try:
+        chatbot = get_rag_chatbot()
+        chatbot.clear_memory(thread_id=str(session.id))
+    except Exception:
+        pass
+    session.delete()
+    return JsonResponse({'ok': True})
+
+
+@login_required
+@require_http_methods(["POST"])
+def rename_session_view(request, pk):
+    """Rename a chat session title."""
+    session = get_object_or_404(ChatSession, id=pk, user=request.user)
+    try:
+        data = json.loads(request.body)
+        title = data.get('title', '').strip()
+        if title:
+            session.title = title[:100]
+            session.save(update_fields=['title'])
+    except Exception:
+        pass
+    return JsonResponse({'ok': True})
 
 
 @login_required
@@ -660,6 +742,13 @@ def chatbot_query_stream_view(request):
         content=question,
     )
 
+    # Auto-title session on first user message
+    if chat_session.title == 'New Conversation':
+        human_count = chat_session.messages.filter(message_type='human').count()
+        if human_count <= 1:
+            chat_session.title = question[:60]
+            chat_session.save(update_fields=['title'])
+
     # Precompute accessible doc FILE PATHS for source filtering.
     # We must match file paths (not titles) because ChromaDB stores the OS
     # path as the 'source' field — UUID-based filenames never contain the title.
@@ -680,6 +769,7 @@ def chatbot_query_stream_view(request):
     def sse_generator():
         # Send session id first so JS can use it immediately
         yield f"data: {json.dumps({'type': 'session', 'session_id': chat_session.id})}\n\n"
+        yield f"data: {json.dumps({'type': 'title', 'session_id': chat_session.id, 'title': chat_session.title})}\n\n"
 
         try:
             chatbot = get_rag_chatbot()
