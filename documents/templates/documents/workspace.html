@@ -166,6 +166,147 @@
   .ws-mob-bar{display:none;}
   .ws-overlay{display:none!important;}
 }
+
+/* ── Workspace Tabs ──────────────────────────── */
+.ws-tabs{display:flex;border-bottom:2px solid #e5e7eb;margin-bottom:1.25rem;gap:0;flex-shrink:0}
+.ws-tab{padding:.625rem 1.25rem;font-size:.875rem;font-weight:500;color:#6b7280;cursor:pointer;border:none;background:none;border-bottom:2px solid transparent;margin-bottom:-2px;transition:all .15s;display:flex;align-items:center;gap:.35rem;}
+.ws-tab:hover{color:#374151;background:#f9fafb;}
+.ws-tab.active{color:#2563eb;border-bottom-color:#2563eb;font-weight:600;}
+.ws-tab-badge{background:#e5e7eb;color:#374151;font-size:.68rem;font-weight:700;padding:.1rem .4rem;border-radius:10px;}
+.ws-tab.active .ws-tab-badge{background:#dbeafe;color:#1d4ed8;}
+
+/* ── Bell button ─────────────────────────────── */
+.ws-bell{position:relative;background:none;border:1px solid #e5e7eb;border-radius:8px;padding:.4rem .65rem;cursor:pointer;color:#374151;font-size:.875rem;display:flex;align-items:center;gap:.3rem;transition:background .12s;flex-shrink:0;}
+.ws-bell:hover{background:#f3f4f6;}
+.ws-bell-badge{position:absolute;top:-5px;right:-5px;background:#ef4444;color:#fff;font-size:.6rem;font-weight:700;min-width:16px;height:16px;border-radius:999px;display:flex;align-items:center;justify-content:center;padding:0 .2rem;}
+
+/* ── Favorites Panel ─────────────────────────── */
+.fav-empty{text-align:center;padding:3rem 1rem;color:#9ca3af;}
+.fav-empty-icon{font-size:2.5rem;margin-bottom:.5rem;}
+
+/* ── Notifications Drawer ────────────────────── */
+.notif-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:1100;align-items:flex-start;justify-content:flex-end;}
+.notif-overlay.open{display:flex;}
+.notif-panel{background:#fff;width:420px;max-width:100vw;height:100vh;display:flex;flex-direction:column;box-shadow:-8px 0 30px rgba(0,0,0,.12);animation:notifSlide .22s ease-out;}
+@keyframes notifSlide{from{transform:translateX(420px)}to{transform:none}}
+.notif-head{display:flex;align-items:center;justify-content:space-between;padding:1rem 1.25rem;border-bottom:1px solid #e5e7eb;flex-shrink:0;}
+.notif-head h3{font-size:1rem;font-weight:700;color:#111;margin:0;}
+.notif-head-acts{display:flex;gap:.5rem;align-items:center;}
+.notif-close-btn{background:none;border:none;font-size:1.25rem;cursor:pointer;color:#6b7280;padding:.1rem .3rem;border-radius:4px;line-height:1;transition:background .12s;}
+.notif-close-btn:hover{background:#f3f4f6;color:#111;}
+.btn-mark-all{font-size:.78rem;color:#2563eb;background:none;border:1px solid #bfdbfe;border-radius:6px;padding:.25rem .65rem;cursor:pointer;transition:background .12s;}
+.btn-mark-all:hover{background:#eff6ff;}
+.notif-list{flex:1;overflow-y:auto;}
+.notif-item{display:flex;align-items:flex-start;gap:.75rem;padding:.875rem 1.25rem;border-bottom:1px solid #f3f4f6;transition:background .12s;cursor:pointer;}
+.notif-item.unread{background:#eff6ff;}
+.notif-item.unread:hover{background:#dbeafe;}
+.notif-item:not(.unread):hover{background:#f9fafb;}
+.notif-dot{width:8px;height:8px;border-radius:50%;background:#3b82f6;flex-shrink:0;margin-top:.4rem;}
+.notif-item:not(.unread) .notif-dot{background:#d1d5db;}
+.notif-body{flex:1;min-width:0;}
+.notif-title{font-size:.875rem;font-weight:600;color:#111;margin-bottom:.15rem;}
+.notif-item:not(.unread) .notif-title{font-weight:500;color:#374151;}
+.notif-msg{font-size:.8rem;color:#6b7280;line-height:1.45;margin-bottom:.2rem;}
+.notif-time{font-size:.72rem;color:#9ca3af;}
+.notif-empty{text-align:center;padding:3rem 1rem;color:#9ca3af;font-size:.875rem;}
+@media(max-width:480px){
+  .notif-panel{width:100vw;}
+  .ws-tab{padding:.55rem .875rem;font-size:.8rem;}
+}
+
+/* ── Profile Panel ───────────────────────────── */
+.profile-grid{display:grid;grid-template-columns:320px 1fr;gap:1.25rem;align-items:start}
+.profile-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.5rem;display:flex;flex-direction:column;align-items:center;text-align:center;gap:.5rem}
+.profile-avatar{width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#6366f1);color:#fff;font-size:1.75rem;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-bottom:.25rem}
+.profile-info{width:100%}
+.profile-name{font-size:1.1rem;font-weight:700;color:#111;margin:0 0 .15rem}
+.profile-username{font-size:.82rem;color:#6b7280;margin:.1rem 0}
+.profile-email{font-size:.82rem;color:#6b7280;margin:.1rem 0}
+.profile-bio{font-size:.83rem;color:#374151;margin:.4rem 0 0;line-height:1.5}
+.profile-badge-row{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center;margin-top:.6rem}
+.profile-badge{font-size:.7rem;font-weight:700;padding:.2rem .55rem;border-radius:999px}
+.profile-badge.admin{background:#fef3c7;color:#92400e}
+.profile-badge.role{background:#ede9fe;color:#5b21b6}
+.profile-badge.joined{background:#f0f9ff;color:#0369a1}
+
+.profile-stats-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.25rem}
+.profile-section-title{font-size:.875rem;font-weight:700;color:#374151;margin:0 0 1rem;display:flex;align-items:center;gap:.4rem}
+.profile-stats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:.75rem}
+.profile-stat{background:#f8fafc;border:1px solid #e5e7eb;border-radius:10px;padding:.85rem .5rem;text-align:center;display:flex;flex-direction:column;gap:.25rem}
+.profile-stat-num{font-size:1.5rem;font-weight:800;color:#111;line-height:1}
+.profile-stat-label{font-size:.72rem;color:#6b7280;font-weight:500}
+
+.profile-activity-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.25rem;grid-column:1/-1}
+.profile-activity-row{display:flex;align-items:center;gap:.65rem;padding:.5rem 0;border-bottom:1px solid #f3f4f6;font-size:.82rem}
+.profile-activity-row:last-child{border-bottom:none}
+
+/* ══ RESPONSIVE ═════════════════════════════════
+   Tablet: 769–1024px
+   Mobile: ≤768px
+   Small:  ≤480px
+   Tiny:   ≤360px
+══════════════════════════════════════════════ */
+
+/* Tablet */
+@media(min-width:769px) and (max-width:1024px){
+  .profile-grid{grid-template-columns:280px 1fr;}
+  .profile-stats-grid{grid-template-columns:repeat(2,1fr);}
+}
+
+/* Tablet & below – tabs scroll horizontally */
+@media(max-width:1024px){
+  .ws-tabs{overflow-x:auto;-webkit-overflow-scrolling:touch;flex-wrap:nowrap;scrollbar-width:none;}
+  .ws-tabs::-webkit-scrollbar{display:none;}
+  .ws-tab{white-space:nowrap;flex-shrink:0;}
+}
+
+/* Mobile: ≤768px */
+@media(max-width:768px){
+  /* Profile panel */
+  .profile-grid{grid-template-columns:1fr;gap:1rem;}
+  .profile-card{padding:1.25rem;}
+  .profile-avatar{width:60px;height:60px;font-size:1.4rem;}
+  .profile-name{font-size:1rem;}
+  .profile-stats-grid{grid-template-columns:repeat(3,1fr);gap:.5rem;}
+  .profile-stat{padding:.7rem .35rem;}
+  .profile-stat-num{font-size:1.2rem;}
+  .profile-stat-label{font-size:.68rem;}
+  .profile-activity-card{grid-column:auto;}
+
+  /* Shared panel – single column cards */
+  #ws-panel-shared .doc-grid{grid-template-columns:1fr;}
+
+  /* Tab bar – smaller text & padding */
+  .ws-tab{padding:.5rem .875rem;font-size:.8rem;}
+
+  /* Bell badge positioning */
+  .ws-bell{padding:.35rem .55rem;}
+}
+
+/* Small mobile: ≤480px */
+@media(max-width:480px){
+  /* Notifications full-width */
+  .notif-panel{width:100vw;}
+
+  /* Tabs even more compact */
+  .ws-tab{padding:.45rem .65rem;font-size:.76rem;}
+  .ws-tab-badge{display:none;}  /* hide counts on tiny screens */
+
+  /* Profile stats 2-col */
+  .profile-stats-grid{grid-template-columns:repeat(2,1fr);}
+  .profile-stats-card{padding:1rem;}
+  .profile-activity-card{padding:1rem;}
+
+  /* Profile card tighter */
+  .profile-card{padding:1rem;}
+  .profile-avatar{width:52px;height:52px;font-size:1.25rem;}
+}
+
+/* Tiny: ≤360px */
+@media(max-width:360px){
+  .ws-tab{padding:.4rem .5rem;font-size:.72rem;}
+  .profile-stats-grid{grid-template-columns:repeat(2,1fr);}
+}
 </style>
 
 <div id="ws-overlay" class="ws-overlay" onclick="toggleWsSidebar(false)"></div>
@@ -189,6 +330,8 @@
       <div class="ws-stat-row"><span>Documents</span><strong>{{ stats.total_docs }}</strong></div>
       <div class="ws-stat-row"><span>Folders</span><strong>{{ stats.total_folders }}</strong></div>
       <div class="ws-stat-row"><span>Versions</span><strong>{{ stats.total_versions }}</strong></div>
+      <div class="ws-stat-row"><span>Shared with Me</span><strong>{{ stats.shared_with_me }}</strong></div>
+      <div class="ws-stat-row"><span>Favorites</span><strong>{{ stats.favorites }}</strong></div>
     </div>
 
     <!-- Fixed nav links -->
@@ -209,7 +352,7 @@
        onmouseover="this.style.background='#f3f4f6'" onmouseout="this.style.background=''">
       <span id="sb-agent-dot" style="width:9px;height:9px;border-radius:50%;background:#ccc;flex-shrink:0"></span>
       <span style="flex:1;font-size:.82rem;color:#374151">
-        <span id="sb-agent-label">Desktop Agent</span><br>
+        <span id="sb-agent-label">Desktop Agent Synchronizer</span><br>
         <span id="sb-agent-sub" style="font-size:.73rem;color:#9ca3af">Checking…</span>
       </span>
       <span style="font-size:.7rem;color:#9ca3af">⚙</span>
@@ -244,6 +387,14 @@
         {% endif %}
       </div>
       <div class="ws-actions">
+        <button class="ws-bell" onclick="openNotifModal()" title="Notifications" id="ws-bell-btn">
+          🔔
+          {% if ws_unread_count %}
+          <span class="ws-bell-badge" id="ws-bell-badge">{{ ws_unread_count }}</span>
+          {% else %}
+          <span class="ws-bell-badge" id="ws-bell-badge" style="display:none">0</span>
+          {% endif %}
+        </button>
         {% if current_folder %}
           <button class="btn-ghost" onclick="showInlineCreate({{ current_folder.id }})"
                   style="font-size:.8rem;padding:.4rem .8rem;">＋ Subfolder</button>
@@ -252,6 +403,28 @@
            class="btn-primary" style="text-decoration:none;">＋ New Document</a>
       </div>
     </div>
+
+    <!-- Tabs -->
+    <div class="ws-tabs">
+      <button class="ws-tab active" id="tab-btn-docs" onclick="switchWsTab('docs')">
+        📁 Documents
+        {% if stats.total_docs %}<span class="ws-tab-badge">{{ stats.total_docs }}</span>{% endif %}
+      </button>
+      <button class="ws-tab" id="tab-btn-favs" onclick="switchWsTab('favs')">
+        ⭐ Favorites
+        {% if stats.favorites %}<span class="ws-tab-badge">{{ stats.favorites }}</span>{% endif %}
+      </button>
+      <button class="ws-tab" id="tab-btn-shared" onclick="switchWsTab('shared')">
+        👥 Shared with Me
+        {% if stats.shared_with_me %}<span class="ws-tab-badge">{{ stats.shared_with_me }}</span>{% endif %}
+      </button>
+      <button class="ws-tab" id="tab-btn-profile" onclick="switchWsTab('profile')">
+        👤 My Info
+      </button>
+    </div>
+
+    <!-- ══ DOCUMENTS PANEL ══ -->
+    <div id="ws-panel-docs">
 
     <!-- Search -->
     <form method="get" action="{% url 'workspace' %}" class="ws-search">
@@ -362,7 +535,216 @@
     </div>
     {% endif %}
 
+    </div><!-- /ws-panel-docs -->
+
+    <!-- ══ FAVORITES PANEL ══ -->
+    <div id="ws-panel-favs" style="display:none">
+      {% if ws_favorites %}
+      <div class="doc-grid">
+        {% for fav in ws_favorites %}
+        {% with doc=fav.document ext=fav.document.file.name|lower %}
+        <div class="doc-card">
+          <div class="doc-card-top">
+            <div class="doc-type-icon
+              {% if '.pdf' in ext %}pdf
+              {% elif '.docx' in ext or '.doc' in ext %}docx
+              {% elif '.xlsx' in ext or '.xls' in ext %}xlsx
+              {% elif '.pptx' in ext or '.ppt' in ext %}pptx
+              {% elif '.png' in ext or '.jpg' in ext or '.jpeg' in ext %}img
+              {% else %}other{% endif %}">
+              {% if '.pdf' in ext %}📕{% elif '.docx' in ext or '.doc' in ext %}📘
+              {% elif '.xlsx' in ext or '.xls' in ext %}📗{% elif '.pptx' in ext or '.ppt' in ext %}📙
+              {% elif '.png' in ext or '.jpg' in ext or '.jpeg' in ext %}🖼{% else %}📎{% endif %}
+            </div>
+            <div class="doc-card-meta">
+              <a href="{% url 'document_detail' doc.id %}" class="doc-card-title">{{ doc.title }}</a>
+              <div class="doc-card-sub">
+                <span class="doc-version-badge">v{{ doc.version }}</span>
+                {% if doc.folder %}<span class="doc-folder-tag">📁 {{ doc.folder.name }}</span>{% endif %}
+              </div>
+            </div>
+          </div>
+          <div class="doc-card-footer">
+            <span class="doc-card-date">{{ doc.updated_at|timesince }} ago</span>
+            <div class="doc-card-actions">
+              <a href="{% url 'document_detail' doc.id %}" class="btn-doc-action" title="View">👁</a>
+              {% if not doc.is_locked %}
+              <a href="{% url 'document_edit' doc.id %}" class="btn-doc-action" title="Edit">✏️</a>
+              {% endif %}
+              <a href="{% url 'document_download' doc.id %}" class="btn-doc-action" title="Download">⬇</a>
+            </div>
+          </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="fav-empty">
+        <div class="fav-empty-icon">⭐</div>
+        <p style="font-size:1rem;font-weight:600;color:#374151;margin-bottom:.35rem">No favorites yet</p>
+        <p style="font-size:.875rem">Open any document and click ☆ Favorite to save it here.</p>
+      </div>
+      {% endif %}
+    </div><!-- /ws-panel-favs -->
+
+    <!-- ══ SHARED WITH ME PANEL ══ -->
+    <div id="ws-panel-shared" style="display:none">
+      {% if ws_shared_docs %}
+      <div class="doc-grid">
+        {% for doc in ws_shared_docs %}
+        {% with ext=doc.file.name|lower %}
+        <div class="doc-card">
+          <div class="doc-card-top">
+            <div class="doc-type-icon
+              {% if '.pdf' in ext %}pdf
+              {% elif '.docx' in ext or '.doc' in ext %}docx
+              {% elif '.xlsx' in ext or '.xls' in ext %}xlsx
+              {% elif '.pptx' in ext or '.ppt' in ext %}pptx
+              {% elif '.png' in ext or '.jpg' in ext or '.jpeg' in ext %}img
+              {% else %}other{% endif %}">
+              {% if '.pdf' in ext %}📕{% elif '.docx' in ext or '.doc' in ext %}📘
+              {% elif '.xlsx' in ext or '.xls' in ext %}📗{% elif '.pptx' in ext or '.ppt' in ext %}📙
+              {% elif '.png' in ext or '.jpg' in ext or '.jpeg' in ext %}🖼{% else %}📎{% endif %}
+            </div>
+            <div class="doc-card-meta">
+              <a href="{% url 'document_detail' doc.id %}" class="doc-card-title">{{ doc.title }}</a>
+              <div class="doc-card-sub">
+                <span class="doc-version-badge">v{{ doc.version }}</span>
+                {% if doc.folder %}<span class="doc-folder-tag">📁 {{ doc.folder.name }}</span>{% endif %}
+              </div>
+              <div style="font-size:.72rem;color:#6b7280;margin-top:.2rem">
+                👤 Shared by <strong>{{ doc.owner.username }}</strong>
+              </div>
+            </div>
+          </div>
+          <div class="doc-card-footer">
+            <span class="doc-card-date">{{ doc.updated_at|timesince }} ago</span>
+            <div class="doc-card-actions">
+              <a href="{% url 'document_detail' doc.id %}" class="btn-doc-action" title="View">👁</a>
+              <a href="{% url 'document_download' doc.id %}" class="btn-doc-action" title="Download">⬇</a>
+            </div>
+          </div>
+        </div>
+        {% endwith %}
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="fav-empty">
+        <div class="fav-empty-icon">👥</div>
+        <p style="font-size:1rem;font-weight:600;color:#374151;margin-bottom:.35rem">No shared documents</p>
+        <p style="font-size:.875rem">Documents shared with you by other users will appear here.</p>
+      </div>
+      {% endif %}
+    </div><!-- /ws-panel-shared -->
+
+    <!-- ══ MY PROFILE PANEL ══ -->
+    <div id="ws-panel-profile" style="display:none">
+      <div class="profile-grid">
+
+        <!-- User Info Card -->
+        <div class="profile-card">
+          <div class="profile-avatar">{{ user.username|first|upper }}</div>
+          <div class="profile-info">
+            <h2 class="profile-name">{{ user.get_full_name|default:user.username }}</h2>
+            <p class="profile-username">@{{ user.username }}</p>
+            {% if user.email %}<p class="profile-email">✉ {{ user.email }}</p>{% endif %}
+            {% if user.bio %}<p class="profile-bio">{{ user.bio }}</p>{% endif %}
+            <div class="profile-badge-row">
+              {% if user.is_admin %}<span class="profile-badge admin">Admin</span>{% endif %}
+              {% if user.role %}<span class="profile-badge role">{{ user.role.name }}</span>{% endif %}
+              <span class="profile-badge joined">Joined {{ user.date_joined|date:"M Y" }}</span>
+            </div>
+          </div>
+          <a href="{% url 'profile' %}" class="btn-primary" style="text-decoration:none;margin-top:1rem;font-size:.875rem;padding:.5rem 1.1rem;border-radius:8px;display:inline-flex;align-items:center;gap:.4rem">✏️ Edit Profile</a>
+        </div>
+
+        <!-- Stats Card -->
+        <div class="profile-stats-card">
+          <h3 class="profile-section-title">📊 My Statistics</h3>
+          <div class="profile-stats-grid">
+            <div class="profile-stat">
+              <span class="profile-stat-num">{{ stats.total_docs }}</span>
+              <span class="profile-stat-label">Documents</span>
+            </div>
+            <div class="profile-stat">
+              <span class="profile-stat-num">{{ stats.total_folders }}</span>
+              <span class="profile-stat-label">Folders</span>
+            </div>
+            <div class="profile-stat">
+              <span class="profile-stat-num">{{ stats.total_versions }}</span>
+              <span class="profile-stat-label">Versions</span>
+            </div>
+            <div class="profile-stat">
+              <span class="profile-stat-num">{{ stats.favorites }}</span>
+              <span class="profile-stat-label">Favorites</span>
+            </div>
+            <div class="profile-stat">
+              <span class="profile-stat-num">{{ stats.shared_with_me }}</span>
+              <span class="profile-stat-label">Shared with Me</span>
+            </div>
+            <div class="profile-stat">
+              <span class="profile-stat-num">{{ stats.unfiled }}</span>
+              <span class="profile-stat-label">Unfiled</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity Card -->
+        {% if recent_versions %}
+        <div class="profile-activity-card">
+          <h3 class="profile-section-title">🕐 Recent Activity</h3>
+          {% for v in recent_versions|slice:":6" %}
+          <div class="profile-activity-row">
+            <span class="version-num">v{{ v.version_number }}</span>
+            <a href="{% url 'document_detail' v.document.id %}#versions" class="version-doc-link">{{ v.document.title }}</a>
+            <span style="font-size:.72rem;color:#9ca3af;flex-shrink:0">{{ v.created_at|timesince }} ago</span>
+          </div>
+          {% endfor %}
+        </div>
+        {% endif %}
+
+      </div>
+    </div><!-- /ws-panel-profile -->
+
   </main>
+</div>
+
+<!-- ══ NOTIFICATIONS DRAWER ════════════════════════════════════ -->
+<div class="notif-overlay" id="notif-overlay" onclick="if(event.target===this)closeNotifModal()">
+  <div class="notif-panel">
+    <div class="notif-head">
+      <h3>🔔 Notifications
+        {% if ws_unread_count %}<span style="background:#ef4444;color:#fff;font-size:.65rem;font-weight:700;padding:.15rem .45rem;border-radius:999px;margin-left:.4rem">{{ ws_unread_count }}</span>{% endif %}
+      </h3>
+      <div class="notif-head-acts">
+        {% if ws_unread_count %}
+        <button class="btn-mark-all" onclick="markAllNotifsRead()">Mark all read</button>
+        {% endif %}
+        <button class="notif-close-btn" onclick="closeNotifModal()">✕</button>
+      </div>
+    </div>
+    <div class="notif-list" id="notif-list">
+      {% if ws_notifications %}
+        {% for notif in ws_notifications %}
+        <div class="notif-item {% if not notif.is_read %}unread{% endif %}"
+             id="notif-{{ notif.id }}"
+             onclick="markNotifRead({{ notif.id }}{% if notif.document %}, '{% url 'document_detail' notif.document.pk %}'{% else %}, null{% endif %})">
+          <div class="notif-dot"></div>
+          <div class="notif-body">
+            <div class="notif-title">{{ notif.title }}</div>
+            <div class="notif-msg">{{ notif.message }}</div>
+            <div class="notif-time">{{ notif.created_at|timesince }} ago</div>
+          </div>
+        </div>
+        {% endfor %}
+      {% else %}
+        <div class="notif-empty">
+          <div style="font-size:2rem;margin-bottom:.5rem">🔔</div>
+          <p>No notifications yet</p>
+        </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
 
 <!-- ══ MOVE-TO-FOLDER MODAL ════════════════════════════════════ -->
@@ -549,9 +931,9 @@ document.querySelectorAll('.folder-row[data-folder-id]').forEach(function(row){
       var sub=document.getElementById('sb-agent-sub');
       if(!dot)return;
       function ta(iso){var s=Math.floor((Date.now()-new Date(iso))/1000);return s<60?s+'s ago':Math.floor(s/60)+'m ago';}
-      if(d.online){dot.style.background='#22c55e';lbl.textContent='Agent running';sub.textContent='Live · click to configure';}
-      else if(d.last_seen){dot.style.background='#f59e0b';lbl.textContent='Agent offline';sub.textContent='Last seen '+ta(d.last_seen);}
-      else{dot.style.background='#d1d5db';lbl.textContent='Agent not linked';sub.textContent='Click to set up';}
+      if(d.online){dot.style.background='#22c55e';lbl.textContent='Desktop Agent Synchronizer running';sub.textContent='Live · click to configure';}
+      else if(d.last_seen){dot.style.background='#f59e0b';lbl.textContent='Desktop Agent Synchronizer offline';sub.textContent='Last seen '+ta(d.last_seen);}
+      else{dot.style.background='#d1d5db';lbl.textContent='Desktop Agent Synchronizer not linked';sub.textContent='Click to set up';}
     }).catch(function(){});
   setTimeout(pollSidebarAgent,30000);
 })();
@@ -570,5 +952,62 @@ document.querySelectorAll('.folder-row[data-folder-id]').forEach(function(row){
   });
 })();
 {% endif %}
+
+/* ── Tab switching ──────────────────────────── */
+function switchWsTab(tab) {
+  var panels = {
+    docs:    document.getElementById('ws-panel-docs'),
+    favs:    document.getElementById('ws-panel-favs'),
+    shared:  document.getElementById('ws-panel-shared'),
+    profile: document.getElementById('ws-panel-profile')
+  };
+  var btns = {
+    docs:    document.getElementById('tab-btn-docs'),
+    favs:    document.getElementById('tab-btn-favs'),
+    shared:  document.getElementById('tab-btn-shared'),
+    profile: document.getElementById('tab-btn-profile')
+  };
+  Object.keys(panels).forEach(function(k) {
+    if (panels[k]) panels[k].style.display = k === tab ? '' : 'none';
+    if (btns[k])   btns[k].classList.toggle('active', k === tab);
+  });
+}
+
+/* ── Notifications modal ───────────────────── */
+function openNotifModal() {
+  document.getElementById('notif-overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeNotifModal() {
+  document.getElementById('notif-overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function markNotifRead(id, redirectUrl) {
+  var item = document.getElementById('notif-' + id);
+  if (item && item.classList.contains('unread')) {
+    item.classList.remove('unread');
+    fetch('/notifications/' + id + '/read/', { method:'POST', headers:{'X-CSRFToken': CSRF, 'X-Requested-With':'XMLHttpRequest'}, credentials:'same-origin' }).catch(function(){});
+    // Update badge count
+    var badge = document.getElementById('ws-bell-badge');
+    if (badge) {
+      var n = parseInt(badge.textContent, 10) - 1;
+      badge.textContent = n;
+      badge.style.display = n > 0 ? '' : 'none';
+    }
+  }
+  if (redirectUrl) { closeNotifModal(); window.location.href = redirectUrl; }
+}
+
+function markAllNotifsRead() {
+  fetch('/notifications/mark-all-read-ajax/', { method:'POST', headers:{'X-CSRFToken': CSRF, 'X-Requested-With':'XMLHttpRequest'}, credentials:'same-origin' })
+    .then(function(){
+      document.querySelectorAll('.notif-item.unread').forEach(function(el){ el.classList.remove('unread'); });
+      var badge = document.getElementById('ws-bell-badge');
+      if (badge) { badge.textContent = '0'; badge.style.display = 'none'; }
+      var btn = document.querySelector('.btn-mark-all');
+      if (btn) btn.style.display = 'none';
+    }).catch(function(){});
+}
 </script>
 {% endblock %}

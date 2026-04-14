@@ -129,7 +129,7 @@ AUTH_USER_MODEL = 'documents.User'
 
 # Login URLs
 LOGIN_URL = 'login'
-LOGIN_REDIRECT_URL = 'dashboard'
+LOGIN_REDIRECT_URL = 'chatbot'
 LOGOUT_REDIRECT_URL = 'home'
 
 # Default primary key field type

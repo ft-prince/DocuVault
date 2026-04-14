@@ -1,5 +1,5 @@
 {% extends 'documents/base.html' %}
-{% block title %}Desktop Agent Setup – DocuVault{% endblock %}
+{% block title %}Desktop Agent Synchronizer Setup – DocuVault{% endblock %}
 
 {% block content %}
 <style>
@@ -128,7 +128,7 @@
 <div class="ag-card" style="margin-bottom:1.5rem">
   <div class="ag-card-head">
     <span>📦</span>
-    <h2>Give the agent to your team</h2>
+    <h2>Give the Desktop Agent Synchronizer to your team</h2>
   </div>
   <div class="ag-card-body">
 
@@ -147,7 +147,7 @@
       <div style="text-align:center;padding:1rem .5rem;border:1px solid #e5e7eb;border-radius:10px">
         <div style="font-size:1.6rem;margin-bottom:.4rem">✅</div>
         <div style="font-weight:700;font-size:.82rem;color:#111;margin-bottom:.25rem">3. Done</div>
-        <div style="font-size:.76rem;color:#6b7280">Agent runs silently, syncing your local folder to DocuVault</div>
+        <div style="font-size:.76rem;color:#6b7280">Desktop Agent Synchronizer runs silently, syncing your local folder to DocuVault</div>
       </div>
     </div>
 
@@ -157,7 +157,7 @@
          style="display:inline-flex;align-items:center;gap:.55rem;background:#2563eb;color:#fff;
                 font-size:.95rem;font-weight:700;padding:.75rem 1.75rem;border-radius:9px;
                 text-decoration:none;box-shadow:0 2px 10px rgba(37,99,235,.28)">
-        ⬇ Download Agent (ZIP)
+        ⬇ Download Desktop Agent Synchronizer (ZIP)
       </a>
       <span style="font-size:.82rem;color:#6b7280">Requires Python 3.10+ — free from <a href="https://www.python.org/downloads/" target="_blank" style="color:#2563eb">python.org</a></span>
     </div>
@@ -178,7 +178,7 @@
       <strong>ℹ️ About watch folders</strong> — Each team member picks <em>their own</em> local folder during setup.
       It does not need to match anything on this page.
       Files saved in that folder are automatically uploaded to DocuVault on this server.
-      The watch folders configured below (Connection settings) only apply to the agent running <em>on this server</em>.
+      The watch folders configured below (Connection settings) only apply to the Desktop Agent Synchronizer running <em>on this server</em>.
     </div>
 
     {% if user.is_staff %}
@@ -192,7 +192,7 @@
         <li>Extract the ZIP, open the folder</li>
         <li>Double-click <code style="background:#f3f4f6;padding:.05rem .3rem;border-radius:3px">RunAgent.bat</code> — it auto-installs packages on first run</li>
         <li>In the popup: enter this server's URL (<strong>{{ server_url }}</strong>), login, and choose a folder to watch</li>
-        <li>Click <strong>Launch Agent</strong> — done. Optionally place a shortcut of <code style="background:#f3f4f6;padding:.05rem .3rem;border-radius:3px">StartAgentBackground.bat</code> in <code style="background:#f3f4f6;padding:.05rem .3rem;border-radius:3px">shell:startup</code> to auto-start on login.</li>
+        <li>Click <strong>Launch Desktop Agent Synchronizer</strong> — done. Optionally place a shortcut of <code style="background:#f3f4f6;padding:.05rem .3rem;border-radius:3px">StartAgentBackground.bat</code> in <code style="background:#f3f4f6;padding:.05rem .3rem;border-radius:3px">shell:startup</code> to auto-start on login.</li>
       </ol>
     </details>
     {% endif %}
@@ -212,7 +212,7 @@
     <span id="ag-status-sub">
       {% if agent_online %}Connected &bull; PID {{ proc_pid|default:"—" }} &bull; heartbeat {{ agent_last|timesince }} ago
       {% elif agent_last %}Last seen {{ agent_last|timesince }} ago &bull; process {{ proc_pid|default:"stopped" }}
-      {% else %}Save your settings below, then click Start Agent{% endif %}
+      {% else %}Save your settings below, then click Start Desktop Agent Synchronizer{% endif %}
     </span>
   </div>
   <div class="ag-banner-btns">
@@ -246,7 +246,7 @@
       <div class="form-row">
         <label>Password <span style="color:#9ca3af;font-weight:400">(leave blank to keep existing)</span></label>
         <input type="password" id="f-password" placeholder="••••••••">
-        <p class="hint">Stored locally in config.json — only used to obtain an agent token on startup</p>
+        <p class="hint">Stored locally in config.json — only used to obtain a token on startup</p>
       </div>
     </div>
   </div>
@@ -337,7 +337,7 @@
       💾 Save configuration
     </button>
     <button class="btn-success" onclick="saveAndStart()" id="btn-save-start">
-      💾▶ Save &amp; Start Agent
+      💾▶ Save &amp; Start Desktop Agent Synchronizer
     </button>
     <span id="save-msg" style="font-size:.82rem;color:#16a34a;display:none">✓ Saved</span>
   </div>
@@ -361,7 +361,7 @@
             <td id="proc-pid-cell">{{ proc_pid|default:"—" }}</td></tr>
         <tr><td style="color:#6b7280;padding:.35rem 0">Heartbeat</td>
             <td id="proc-hb-cell">{% if agent_last %}{{ agent_last|timesince }} ago{% else %}—{% endif %}</td></tr>
-        <tr><td style="color:#6b7280;padding:.35rem 0;vertical-align:top">Agent dir</td>
+        <tr><td style="color:#6b7280;padding:.35rem 0;vertical-align:top">Desktop Agent Synchronizer dir</td></tr>
             <td style="font-family:monospace;font-size:.75rem;word-break:break-all;color:#6b7280">{{ agent_dir }}</td></tr>
       </table>
       <div style="margin-top:.9rem">
@@ -468,7 +468,7 @@ function startAgent(){
   fetch('{% url "agent_process_start" %}',{
     method:'POST',credentials:'same-origin',headers:{'X-CSRFToken':CSRF}
   }).then(function(r){return r.json();}).then(function(d){
-    btn.disabled=false; btn.innerHTML='▶ Start Agent';
+    btn.disabled=false; btn.innerHTML='▶ Start Desktop Agent Synchronizer';
     if(d.ok){
       toast(d.message);
       btn.style.display='none';
@@ -480,14 +480,14 @@ function startAgent(){
 
 /* ── Stop agent ─────────────────────────────── */
 function stopAgent(){
-  if(!confirm('Stop the Desktop Agent?')) return;
+  if(!confirm('Stop the Desktop Agent Synchronizer?')) return;
   var btn=document.getElementById('btn-stop');
   btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Stopping…';
   fetch('{% url "agent_process_stop" %}',{
     method:'POST',credentials:'same-origin',headers:{'X-CSRFToken':CSRF}
   }).then(function(r){return r.json();}).then(function(d){
-    btn.disabled=false; btn.innerHTML='■ Stop Agent';
-    toast(d.message||(d.ok?'Agent stopped':'Stop failed'), !d.ok);
+    btn.disabled=false; btn.innerHTML='■ Stop Desktop Agent Synchronizer';
+    toast(d.message||(d.ok?'Desktop Agent Synchronizer stopped':'Stop failed'), !d.ok);
     if(d.ok){
       btn.style.display='none';
       document.getElementById('btn-start').style.display='';
@@ -516,17 +516,17 @@ function pollStatus(){
 
       if(d.online){
         banner.className='ag-banner green'; dot.className='ag-banner-dot green';
-        txt.textContent='Agent is running';
+        txt.textContent='Desktop Agent Synchronizer is running';
         sub.textContent='Connected · PID '+(d.pid||'—')+' · heartbeat '+(d.last_seen?ta(d.last_seen)+'ago':'–');
         procCell.innerHTML='<span style="color:#16a34a;font-weight:600">● Running</span>';
       } else if(d.last_seen){
         banner.className='ag-banner yellow'; dot.className='ag-banner-dot yellow';
-        txt.textContent='Agent offline';
+        txt.textContent='Desktop Agent Synchronizer offline';
         sub.textContent='Last seen '+ta(d.last_seen)+' ago';
         procCell.innerHTML='<span style="color:#f59e0b;font-weight:600">● Offline</span>';
       } else {
         banner.className='ag-banner grey'; dot.className='ag-banner-dot grey';
-        txt.textContent='Agent not started'; sub.textContent='Click Start Agent below';
+        txt.textContent='Desktop Agent Synchronizer not started'; sub.textContent='Click Start Desktop Agent Synchronizer below';
         procCell.innerHTML='<span style="color:#9ca3af">● Stopped</span>';
       }
       if(pidCell) pidCell.textContent=d.pid||'—';

@@ -99,6 +99,7 @@ urlpatterns = [
     # ============================================================
     path('notifications/', views.notifications_list_view, name='notifications_list'),
     path('notifications/<int:pk>/read/', views.notification_mark_read_view, name='notification_mark_read'),
+    path('notifications/mark-all-read-ajax/', views.notification_mark_all_read_ajax_view, name='notification_mark_all_read_ajax'),
     
     # ============================================================
     # SEARCH URLS

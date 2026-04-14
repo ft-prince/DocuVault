@@ -172,7 +172,7 @@
 <!-- Desktop Agent Status -->
 <div style="margin-top: 3rem;">
     <h2 style="font-size: 1.25rem; font-weight: 600; color: #2c2c2c; margin-bottom: 1rem;">
-        Desktop Agent
+        Desktop Agent Synchronizer
     </h2>
     <div class="card agent-card" style="display: flex; align-items: center; justify-content: space-between; padding: 1.25rem 1.5rem;">
         <div style="display: flex; align-items: center; gap: 1rem;">
@@ -209,15 +209,15 @@
                 if (!d.ok) return;
                 if (d.online) {
                     dot.style.background = '#28a745';
-                    statusText.textContent = 'Agent is running';
+                    statusText.textContent = 'Desktop Agent Synchronizer is running';
                     lastSeen.textContent = 'Last seen: ' + timeAgo(d.last_seen);
                 } else if (d.last_seen) {
                     dot.style.background = '#ffc107';
-                    statusText.textContent = 'Agent offline';
+                    statusText.textContent = 'Desktop Agent Synchronizer offline';
                     lastSeen.textContent = 'Last seen: ' + timeAgo(d.last_seen);
                 } else {
                     dot.style.background = '#ccc';
-                    statusText.textContent = 'Agent not connected';
+                    statusText.textContent = 'Desktop Agent Synchronizer not connected';
                     lastSeen.textContent = 'Run desktop_agent/agent.py to start';
                 }
             })

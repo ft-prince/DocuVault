@@ -64,7 +64,7 @@ def register_view(request):
 def login_view(request):
     """User login"""
     if request.user.is_authenticated:
-        return redirect('workspace')
+        return redirect('chatbot')
 
     if request.method == 'POST':
         form = UserLoginForm(request.POST)
@@ -76,7 +76,7 @@ def login_view(request):
             if user is not None:
                 login(request, user)
                 messages.success(request, f'Welcome back, {user.username}!')
-                return redirect(request.GET.get('next', 'workspace'))
+                return redirect(request.GET.get('next', 'chatbot'))
             else:
                 messages.error(request, 'Invalid username or password.')
     else:
@@ -1043,10 +1043,22 @@ def notification_mark_read_view(request, pk):
     notification = get_object_or_404(Notification, pk=pk, recipient=request.user)
     notification.is_read = True
     notification.save()
-    
+
+    # AJAX call from workspace notifications drawer
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return JsonResponse({'ok': True})
+
     if notification.document:
         return redirect('document_detail', pk=notification.document.pk)
     return redirect('notifications_list')
+
+
+@login_required
+@require_POST
+def notification_mark_all_read_ajax_view(request):
+    """Mark all notifications as read (AJAX)"""
+    request.user.notifications.filter(is_read=False).update(is_read=True)
+    return JsonResponse({'ok': True})
 
 
 # ============================================================
@@ -1218,21 +1230,54 @@ def workspace_view(request):
     # All user folders flat list (for "move to folder" dropdown)
     all_folders = Folder.objects.filter(owner=user).order_by('name')
 
+    # Favorites (for unified workspace tab)
+    ws_favorites = (
+        Favorite.objects
+        .filter(user=user)
+        .select_related('document', 'document__owner', 'document__category', 'document__folder')
+        .order_by('-created_at')[:50]
+    )
+
+    # Notifications (for modal)
+    ws_notifications = (
+        user.notifications.all()
+        .order_by('-created_at')[:30]
+    )
+    ws_unread_count = user.notifications.filter(is_read=False).count()
+
+    # Shared docs count for dashboard stats
+    shared_with_me_count = user.shared_documents.filter(is_deleted=False).count()
+
+    # Shared with me documents (for unified workspace tab)
+    ws_shared_docs = (
+        user.shared_documents
+        .filter(is_deleted=False)
+        .select_related('owner', 'folder', 'category')
+        .prefetch_related('versions')
+        .order_by('-updated_at')[:50]
+    )
+
     return render(request, 'documents/workspace.html', {
-        'folder_tree':     folder_tree,
-        'docs':            docs,
-        'current_folder':  current_folder,
-        'panel_title':     panel_title,
-        'folder_id':       folder_id,
-        'search_q':        search_q,
+        'folder_tree':        folder_tree,
+        'docs':               docs,
+        'current_folder':     current_folder,
+        'panel_title':        panel_title,
+        'folder_id':          folder_id,
+        'search_q':           search_q,
         'stats': {
-            'total_docs':    total_docs,
-            'total_folders': total_folders,
-            'total_versions': total_versions,
-            'unfiled':       unfiled_count,
+            'total_docs':      total_docs,
+            'total_folders':   total_folders,
+            'total_versions':  total_versions,
+            'unfiled':         unfiled_count,
+            'shared_with_me':  shared_with_me_count,
+            'favorites':       ws_favorites.count(),
         },
-        'recent_versions': recent_versions,
-        'all_folders':     all_folders,
+        'recent_versions':    recent_versions,
+        'all_folders':        all_folders,
+        'ws_favorites':       ws_favorites,
+        'ws_notifications':   ws_notifications,
+        'ws_unread_count':    ws_unread_count,
+        'ws_shared_docs':     ws_shared_docs,
     })
 
 
