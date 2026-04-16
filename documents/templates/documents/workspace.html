@@ -319,8 +319,6 @@
       ☰ Folders &amp; Nav
     </button>
     <span style="font-size:.85rem;font-weight:600;color:#111;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ panel_title }}</span>
-    <a href="{% url 'document_create' %}{% if current_folder %}?folder={{ current_folder.id }}{% endif %}"
-       class="btn-primary" style="text-decoration:none;font-size:.8rem;padding:.35rem .75rem;border-radius:8px;flex-shrink:0;">＋ New</a>
   </div>
 
   <!-- ══ SIDEBAR ══════════════════════════════════════════════ -->
@@ -932,8 +930,8 @@ document.querySelectorAll('.folder-row[data-folder-id]').forEach(function(row){
       if(!dot)return;
       function ta(iso){var s=Math.floor((Date.now()-new Date(iso))/1000);return s<60?s+'s ago':Math.floor(s/60)+'m ago';}
       if(d.online){dot.style.background='#22c55e';lbl.textContent='Desktop Agent Synchronizer running';sub.textContent='Live · click to configure';}
-      else if(d.last_seen){dot.style.background='#f59e0b';lbl.textContent='Desktop Agent Synchronizer offline';sub.textContent='Last seen '+ta(d.last_seen);}
-      else{dot.style.background='#d1d5db';lbl.textContent='Desktop Agent Synchronizer not linked';sub.textContent='Click to set up';}
+      else if(d.last_seen){dot.style.background='#f59e0b';lbl.textContent='Desktop Agent Synchronizer offline';sub.textContent='Last seen '+ta(d.last_seen)+' · click to reconnect';}
+      else{dot.style.background='#d1d5db';lbl.textContent='Auto-sync not set up';sub.textContent='Install the desktop app to sync local folders · click to download &amp; set up';}
     }).catch(function(){});
   setTimeout(pollSidebarAgent,30000);
 })();

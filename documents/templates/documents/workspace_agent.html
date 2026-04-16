@@ -226,121 +226,6 @@
 <div class="ag-layout">
 <div> <!-- left column -->
 
-  <!-- ── Credentials & server ──────────────────────────────── -->
-  <div class="ag-card">
-    <div class="ag-card-head">
-      <span>🔑</span><h2>Connection settings</h2>
-    </div>
-    <div class="ag-card-body">
-      <div class="form-2col">
-        <div class="form-row">
-          <label>DocuVault server URL</label>
-          <input type="text" id="f-server-url" value="{{ cfg.server_url }}" placeholder="http://localhost:8000">
-          <p class="hint">LAN IP if agent runs on another PC, e.g. http://192.168.1.10:8000</p>
-        </div>
-        <div class="form-row">
-          <label>Username</label>
-          <input type="text" id="f-username" value="{{ cfg.username }}" placeholder="Your DocuVault username">
-        </div>
-      </div>
-      <div class="form-row">
-        <label>Password <span style="color:#9ca3af;font-weight:400">(leave blank to keep existing)</span></label>
-        <input type="password" id="f-password" placeholder="••••••••">
-        <p class="hint">Stored locally in config.json — only used to obtain a token on startup</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Watch folders ─────────────────────────────────────── -->
-  <div class="ag-card">
-    <div class="ag-card-head">
-      <span>📂</span><h2>Watch folders</h2>
-      <button class="btn-ghost" onclick="addWatchFolder()" style="font-size:.8rem;padding:.3rem .8rem">＋ Add folder</button>
-    </div>
-    <div class="ag-card-body" id="wf-list">
-      {% for wf in cfg.watch_folders %}
-      <div class="wf-entry" id="wf-{{ forloop.counter0 }}">
-        <button class="wf-remove" onclick="removeWatchFolder(this)" title="Remove">✕</button>
-
-        <div class="form-row">
-          <label>Local folder path</label>
-          <input type="text" class="wf-path" value="{{ wf.path }}" placeholder="C:\Users\you\Documents\Work">
-        </div>
-
-        <div class="form-2col">
-          <div class="form-row">
-            <label>Sync into workspace folder</label>
-            <select class="wf-folder-id">
-              <option value="">— Unfiled —</option>
-              {% for f in all_folders %}
-              <option value="{{ f.id }}" {% if wf.folder_id == f.id %}selected{% endif %}>
-                📁 {{ f.name }}{% if f.parent %} · {{ f.parent.name }}{% endif %}
-              </option>
-              {% endfor %}
-            </select>
-          </div>
-          <div class="form-row">
-            <label>Category label</label>
-            <input type="text" class="wf-category" value="{{ wf.category|default:'General' }}" placeholder="General">
-          </div>
-        </div>
-
-        <div class="form-row">
-          <label>File extensions to sync</label>
-          <div class="ext-wrap" data-exts>
-            {% for ext in wf.extensions %}
-            <span class="ext-tag">{{ ext }}<button onclick="removeExt(this)">×</button></span>
-            {% endfor %}
-          </div>
-          <div class="ext-input-row">
-            <input type="text" class="ext-new" placeholder=".docx" maxlength="10"
-                   onkeydown="if(event.key==='Enter'){event.preventDefault();addExt(this)}">
-            <button class="btn-add-ext" onclick="addExt(this.previousElementSibling)">Add</button>
-          </div>
-        </div>
-
-        <label style="font-size:.82rem;color:#374151;display:flex;align-items:center;gap:.5rem;cursor:pointer">
-          <input type="checkbox" class="wf-recursive" {% if wf.recursive %}checked{% endif %}>
-          Include subfolders (recursive)
-        </label>
-      </div>
-      {% empty %}
-      <p id="wf-empty" style="font-size:.85rem;color:#9ca3af;text-align:center;padding:1.5rem 0">
-        No watch folders yet. Click <strong>＋ Add folder</strong> to start.
-      </p>
-      {% endfor %}
-    </div>
-  </div>
-
-  <!-- ── Sync settings ─────────────────────────────────────── -->
-  <div class="ag-card">
-    <div class="ag-card-head"><span>⚙️</span><h2>Sync settings</h2></div>
-    <div class="ag-card-body">
-      <div class="form-2col">
-        <div class="form-row">
-          <label>Debounce (seconds)</label>
-          <input type="number" id="f-debounce" value="{{ cfg.sync.debounce_seconds|default:3 }}" min="1" max="30">
-          <p class="hint">Wait this long after the last file save before uploading</p>
-        </div>
-        <div class="form-row">
-          <label>Heartbeat interval (seconds)</label>
-          <input type="number" id="f-heartbeat" value="{{ cfg.sync.heartbeat_interval_seconds|default:60 }}" min="10" max="300">
-          <p class="hint">How often the agent pings DocuVault to show it's online</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ── Save + start/stop ─────────────────────────────────── -->
-  <div class="btn-row" style="margin-bottom:2rem">
-    <button class="btn-primary" onclick="saveConfig()" id="btn-save">
-      💾 Save configuration
-    </button>
-    <button class="btn-success" onclick="saveAndStart()" id="btn-save-start">
-      💾▶ Save &amp; Start Desktop Agent Synchronizer
-    </button>
-    <span id="save-msg" style="font-size:.82rem;color:#16a34a;display:none">✓ Saved</span>
-  </div>
 
 </div><!-- /left -->
 
@@ -622,9 +507,7 @@ function buildExe(){
     if(!d.ok){ lbl.textContent='Error: '+d.error; btn.disabled=false; return; }
     _buildPoll=setInterval(pollBuildLog, 2000);
   }).catch(function(){ btn.disabled=false; lbl.textContent='Network error'; });
-}
-
-function pollBuildLog(){
+} function pollBuildLog(){
   fetch('{% url "agent_build_log" %}',{credentials:'same-origin'})
     .then(function(r){return r.json();})
     .then(function(d){
@@ -652,3 +535,4 @@ function pollBuildLog(){
 }
 </script>
 {% endblock %}
+

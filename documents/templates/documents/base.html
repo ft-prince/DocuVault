@@ -367,6 +367,7 @@
                     {% endif %}
 
                     <div class="nav-user">
+                        <span style="font-weight:600;">{{ user.username }}</span>
                         <a href="{% url 'logout' %}">Logout</a>
                     </div>
                 {% else %}

@@ -345,10 +345,6 @@
       </div>
     </div>
     <div class="cs-ft">
-      <div class="cs-ft-grid">
-        <div class="scard"><div class="sv">{{ total_documents }}</div><div class="sl">Docs</div></div>
-        <div class="scard"><div class="sv">{{ indexed_documents }}</div><div class="sl">Indexed</div></div>
-      </div>
       <nav class="snav">
         <a href="{% url 'document_list' %}"><span>📚</span>Documents</a>
         {% if user.is_staff %}<a href="{% url 'bulk_index_documents' %}"><span>🔄</span>Re-index All</a>{% endif %}
@@ -365,7 +361,7 @@
       </button>
       <div>
         <div class="ctop-ttl">AI Document Assistant</div>
-        <div class="ctop-sub"><span class="tdot"></span>{{ indexed_documents }} doc{{ indexed_documents|pluralize }} ready · RAG enabled</div>
+        <div class="ctop-sub"><span class="tdot"></span>Online</div>
       </div>
       <div class="ctop-acts">
         <button id="ttsBtn" class="abtn" title="Toggle AI voice replies">🔊 <span class="lbl" id="ttsLbl">Voice Off</span></button>
@@ -399,11 +395,6 @@
           <div class="emp-ico">💬</div>
           <div class="emp-ttl">Ask anything about your documents</div>
           <div class="emp-sub">Summarize, compare, explain and answer questions from your PDFs — or use general knowledge.</div>
-          <div class="sugs">
-            <div class="sug" onclick="useSug('What are the key findings?')"><div class="sug-ic">🔍</div><div class="sug-tx">What are the key findings?</div></div>
-            <div class="sug" onclick="useSug('Summarize the main points')"><div class="sug-ic">📝</div><div class="sug-tx">Summarize the main points</div></div>
-            <div class="sug" onclick="useSug('What are the recommendations?')"><div class="sug-ic">💡</div><div class="sug-tx">What are the recommendations?</div></div>
-          </div>
         </div>
       {% endif %}
       <div class="trow" id="typRow">
@@ -422,7 +413,6 @@
         <button class="vb-send" id="vbSend" onclick="vbManualSend()">↑ Send now</button>
         <button class="vb-stop" onclick="stopSpeak();stopVoice();">■ Stop</button>
       </div>
-      <div class="foot-hint"><kbd>Enter</kbd> send &nbsp;·&nbsp; <kbd>Shift+Enter</kbd> new line &nbsp;·&nbsp; 🎤 click mic to speak</div>
       <div class="ibox">
         <textarea id="qi" rows="1" placeholder="Ask anything about your documents…"></textarea>
         <div class="iacts">
@@ -602,7 +592,25 @@ function mkBub(){
 
 /* busy state */
 let busy=false,streamAbort=null;
-function setBusy(v){busy=v;$qi.disabled=v;$sendBtn.disabled=v;$sendLbl.textContent=v?'Thinking…':'Send';}
+function setBusy(v){
+  busy=v;$qi.disabled=v;
+  if(v){
+    $sendBtn.disabled=false;
+    $sendLbl.textContent='Stop';
+    $sendBtn.style.background='linear-gradient(135deg,#ef4444,#b91c1c)';
+    $sendBtn.style.boxShadow='0 4px 14px rgba(239,68,68,.4)';
+  }else{
+    $sendBtn.disabled=false;
+    $sendLbl.textContent='Send';
+    $sendBtn.style.background='';
+    $sendBtn.style.boxShadow='';
+  }
+}
+function abortStream(){
+  if(streamAbort){streamAbort.abort();streamAbort=null;}
+  setBusy(false);
+  $typRow.classList.remove('show');
+}
 
 /* ══════════════════════════════════════════════
    SEND / SSE STREAM
@@ -732,7 +740,7 @@ async function clearChat(){
       let emp=document.getElementById('emptyS');
       if(!emp){
         emp=document.createElement('div');emp.className='emp';emp.id='emptyS';
-        emp.innerHTML='<div class="emp-ico">💬</div><div class="emp-ttl">Ask anything about your documents</div><div class="emp-sub">Summarize, compare, explain and answer questions from your PDFs — or use general knowledge.</div><div class="sugs"><div class="sug" onclick="useSug(\'What are the key findings?\')"><div class="sug-ic">🔍</div><div class="sug-tx">What are the key findings?</div></div><div class="sug" onclick="useSug(\'Summarize the main points\')"><div class="sug-ic">📝</div><div class="sug-tx">Summarize the main points</div></div><div class="sug" onclick="useSug(\'What are the recommendations?\')"><div class="sug-ic">💡</div><div class="sug-tx">What are the recommendations?</div></div></div>';
+        emp.innerHTML='<div class="emp-ico">💬</div><div class="emp-ttl">Ask anything about your documents</div><div class="emp-sub">Summarize, compare, explain and answer questions from your PDFs — or use general knowledge.</div>';
         $typRow.parentElement.insertBefore(emp,$typRow);
       }else{emp.style.display='';}
       showToast('Chat history cleared successfully','success');
@@ -771,15 +779,10 @@ function closeVoiceModal(){
 }
 
 function vmStopBtn(){
-  stopSpeak();                       /* kill audio first — always */
-  if(isListening){
-    stopVoice();setVmState('idle');startVoice();return;
-  }
-  if(!ttsQ.length&&!ttsBusy){
-    closeVoiceModal();return;
-  }
-  setVmState('idle');
-  if(voiceActive)scheduleNextListen();
+  stopSpeak();
+  if(busy)abortStream();
+  stopVoice();
+  closeVoiceModal();
 }
 
 function vmManualSend(){
@@ -1073,7 +1076,7 @@ function fmtExisting(){document.querySelectorAll('.mr.ai .mtxt').forEach(el=>{if
 /* ══════════════════════════════════════════════
    EVENTS
 ══════════════════════════════════════════════ */
-$sendBtn.addEventListener('click',()=>sendQuery());
+$sendBtn.addEventListener('click',()=>{if(busy)abortStream();else sendQuery();});
 $clearBtn.addEventListener('click',clearChat);
 $ttsBtn.addEventListener('click',toggleTTS);
 $qi.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();if(voiceActive)vbManualSend();else sendQuery();}});
