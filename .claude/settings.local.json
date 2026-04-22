@@ -135,7 +135,21 @@
       "Bash(cmd /c \"dir \\\\\"D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\\\\\"\")",
       "Bash(cmd /c dir \"D:\\\\AI_Model_Renata\\\\Document-management\\\\Group\\\\V2\\\\DocuVault\")",
       "Bash(cmd /c \"dir D:\\\\\\\\\")",
-      "Bash(python3 -c ':*)"
+      "Bash(python3 -c ':*)",
+      "Bash(python manage.py makemigrations documents --name=\"add_organization_model\")",
+      "Bash(python manage.py makemigrations documents --name=\"add_organization_model\" --skip-checks)",
+      "Bash(python manage.py makemigrations documents --name=\"add_chat_session_share\" --skip-checks)",
+      "Bash(envScriptspython.exe manage.py shell -c ' *)",
+      "Bash(env/Scripts/python.exe manage.py shell -c ' *)",
+      "Bash(copy /b documents\\\\rag_views.py +,, documents\\\\rag_views.py)",
+      "Bash(python -c \"import os; path='D:/AI_Model_Renata/Document-management/Group/V2/DocuVault/documents/rag_views.py'; os.utime\\(path, None\\); print\\('touched'\\)\")",
+      "Bash(\"env/Scripts/python.exe\" manage.py makemigrations documents --name=\"add_public_share_token\" --skip-checks)",
+      "Bash(\"env/Scripts/python.exe\" manage.py migrate --skip-checks)",
+      "Bash(python manage.py makemigrations documents --name add_chat_session_to_notification)",
+      "Bash(python manage.py makemigrations documents --name add_chat_session_to_notification --skip-checks)",
+      "Bash(python manage.py shell --skip-checks -c \"from documents.models import User; [print\\(u.username, u.is_staff, u.organization\\) for u in User.objects.all\\(\\)]\")",
+      "Bash(python -c ' *)",
+      "Bash(findstr /V \"CryptographyDeprecation\")"
     ]
   }
 }

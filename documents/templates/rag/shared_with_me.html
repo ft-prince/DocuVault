@@ -1,0 +1,120 @@
+{% extends 'documents/base.html' %}
+{% load static %}
+{% block title %}Shared With Me — DocuVault{% endblock %}
+
+{% block extra_css %}
+<style>
+:root{
+  --ink:#0f172a;--ink2:#475569;--ink3:#94a3b8;
+  --surf:#fff;--bg:#f8fafc;--bdr:#e2e8f0;
+  --p:#7c3aed;--p-light:#ede9fe;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+
+.swm-wrap{max-width:780px;margin:0 auto;padding:2rem 1rem 4rem;}
+
+/* page header */
+.swm-head{display:flex;align-items:center;gap:.75rem;margin-bottom:2rem;}
+.swm-head-ico{font-size:1.75rem;}
+.swm-head-title{font-size:1.5rem;font-weight:700;color:var(--ink);}
+.swm-head-sub{font-size:.85rem;color:var(--ink3);margin-top:2px;}
+
+/* card grid */
+.swm-grid{display:flex;flex-direction:column;gap:.75rem;}
+
+.swm-card{
+  background:var(--surf);
+  border:1px solid var(--bdr);
+  border-radius:14px;
+  padding:1.1rem 1.25rem;
+  display:flex;
+  align-items:center;
+  gap:1rem;
+  text-decoration:none;
+  color:inherit;
+  transition:box-shadow .15s,border-color .15s;
+  box-shadow:0 1px 3px rgba(0,0,0,.05);
+}
+.swm-card:hover{
+  border-color:#c4b5fd;
+  box-shadow:0 4px 16px rgba(124,58,237,.1);
+}
+
+.swm-card-ico{
+  width:44px;height:44px;
+  border-radius:50%;
+  background:var(--p-light);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.3rem;flex-shrink:0;
+}
+.swm-card-body{flex:1;min-width:0;}
+.swm-card-title{
+  font-weight:600;font-size:.95rem;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+}
+.swm-card-meta{font-size:.78rem;color:var(--ink3);margin-top:.3rem;}
+.swm-card-badge{
+  background:var(--p-light);color:var(--p);
+  font-size:.7rem;font-weight:700;
+  padding:.2rem .55rem;border-radius:20px;
+  white-space:nowrap;flex-shrink:0;
+}
+
+/* empty state */
+.swm-empty{
+  text-align:center;padding:4rem 1rem;color:var(--ink3);
+}
+.swm-empty-ico{font-size:3rem;margin-bottom:.75rem;}
+.swm-empty-txt{font-size:1rem;font-weight:600;color:var(--ink2);margin-bottom:.35rem;}
+.swm-empty-sub{font-size:.85rem;}
+
+/* back link */
+.swm-back{
+  display:inline-flex;align-items:center;gap:.4rem;
+  font-size:.82rem;color:var(--p);text-decoration:none;font-weight:600;
+  margin-bottom:1.5rem;
+}
+.swm-back:hover{text-decoration:underline;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="swm-wrap">
+
+  <a href="{% url 'chatbot' %}" class="swm-back">← Back to Chatbot</a>
+
+  <div class="swm-head">
+    <div class="swm-head-ico">📨</div>
+    <div>
+      <div class="swm-head-title">Shared With Me</div>
+      <div class="swm-head-sub">Conversations your teammates shared with you</div>
+    </div>
+  </div>
+
+  {% if shares %}
+    <div class="swm-grid">
+      {% for share in shares %}
+      <a href="{% url 'view_shared_chat' share.session.id %}" class="swm-card">
+        <div class="swm-card-ico">💬</div>
+        <div class="swm-card-body">
+          <div class="swm-card-title">{{ share.session.title }}</div>
+          <div class="swm-card-meta">
+            Shared by <strong>{{ share.shared_by.get_full_name|default:share.shared_by.username }}</strong>
+            &nbsp;·&nbsp;
+            {{ share.created_at|timesince }} ago
+          </div>
+        </div>
+        <div class="swm-card-badge">Read-only</div>
+      </a>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="swm-empty">
+      <div class="swm-empty-ico">🙈</div>
+      <div class="swm-empty-txt">Nothing here yet</div>
+      <div class="swm-empty-sub">When a teammate shares a conversation with you, it will appear here.</div>
+    </div>
+  {% endif %}
+
+</div>
+{% endblock %}

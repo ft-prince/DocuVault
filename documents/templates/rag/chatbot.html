@@ -346,6 +346,7 @@
     </div>
     <div class="cs-ft">
       <nav class="snav">
+        <a href="{% url 'shared_with_me' %}"><span>📨</span>Shared With Me</a>
         <a href="{% url 'document_list' %}"><span>📚</span>Documents</a>
         {% if user.is_staff %}<a href="{% url 'bulk_index_documents' %}"><span>🔄</span>Re-index All</a>{% endif %}
       </nav>
@@ -365,6 +366,7 @@
       </div>
       <div class="ctop-acts">
         <button id="ttsBtn" class="abtn" title="Toggle AI voice replies">🔊 <span class="lbl" id="ttsLbl">Voice Off</span></button>
+        <button id="shareBtn" class="abtn" title="Share this conversation" onclick="openShareModal()">🔗 <span class="lbl">Share</span></button>
         <button id="clearBtn" class="abtn" title="Clear chat">🗑️ <span class="lbl">Clear</span></button>
       </div>
     </div>
@@ -474,6 +476,75 @@
     </div>
     <div class="vm-hint">Speak naturally · auto-sends after 2 s of silence</div>
     <button class="vm-close" onclick="closeVoiceModal()">✕ Close</button>
+  </div>
+</div>
+
+<!-- ═══ SHARE MODAL ═══ -->
+<div id="shareModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
+  <div style="background:#fff;border-radius:12px;width:min(460px,92vw);max-height:82vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25);overflow:hidden;">
+
+    <!-- header -->
+    <div style="padding:1.1rem 1.25rem .6rem;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">
+      <div style="font-weight:700;font-size:1rem;color:#111;">Share conversation</div>
+      <button onclick="closeShareModal()" style="border:none;background:none;cursor:pointer;font-size:1.2rem;color:#888;">✕</button>
+    </div>
+
+    <!-- tabs -->
+    <div style="display:flex;border-bottom:1px solid #eee;">
+      <button id="shareTabInternal" onclick="switchShareTab('internal')"
+        style="flex:1;padding:.65rem;font-size:.85rem;font-weight:600;border:none;background:#f5f3ff;color:#7c3aed;border-bottom:2px solid #7c3aed;cursor:pointer;">
+        👥 Internal
+      </button>
+      <button id="shareTabPublic" onclick="switchShareTab('public')"
+        style="flex:1;padding:.65rem;font-size:.85rem;font-weight:600;border:none;background:#fff;color:#888;border-bottom:2px solid transparent;cursor:pointer;">
+        🔗 Public Link
+      </button>
+    </div>
+
+    <!-- ── INTERNAL TAB ── -->
+    <div id="shareTabContentInternal" style="display:flex;flex-direction:column;flex:1;overflow:hidden;">
+      <div style="padding:.75rem 1.25rem .5rem;">
+        <input id="shareMemberSearch" type="text" placeholder="Search by name or username…"
+               oninput="filterShareMembers(this.value)"
+               style="width:100%;padding:.45rem .75rem;border:1px solid #ddd;border-radius:8px;font-size:.875rem;outline:none;">
+      </div>
+      <div id="shareMemberList" style="flex:1;overflow-y:auto;padding:.25rem 1.25rem .75rem;">
+        <div id="shareMembersLoading" style="text-align:center;color:#888;padding:1.5rem;font-size:.875rem;">Loading…</div>
+      </div>
+      <div style="padding:.6rem 1.25rem;border-top:1px solid #eee;display:flex;justify-content:space-between;align-items:center;">
+        <div id="shareStatusMsg" style="font-size:.8rem;color:#888;"></div>
+        <a href="/chatbot/shared-with-me/" style="font-size:.8rem;color:#0d6efd;text-decoration:none;">Shared with me →</a>
+      </div>
+    </div>
+
+    <!-- ── PUBLIC LINK TAB ── -->
+    <div id="shareTabContentPublic" style="display:none;flex-direction:column;padding:1.25rem;gap:1rem;">
+      <div style="font-size:.875rem;color:#555;line-height:1.5;">
+        Anyone with the link can view this conversation.
+      </div>
+      <!-- link box -->
+      <div id="publicLinkBox" style="display:none;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:.6rem .9rem;display:flex;align-items:center;gap:.5rem;">
+        <input id="publicLinkInput" type="text" readonly
+               style="flex:1;border:none;background:none;font-size:.8rem;color:#333;outline:none;min-width:0;">
+        <button onclick="copyPublicLink()" style="border:none;background:#0d6efd;color:#fff;font-size:.75rem;font-weight:600;padding:.3rem .7rem;border-radius:6px;cursor:pointer;">Copy</button>
+      </div>
+      <div id="publicLinkPlaceholder" style="color:#aaa;font-size:.85rem;text-align:center;padding:.5rem 0;">
+        No public link yet — click Enable to create one.
+      </div>
+      <!-- toggle -->
+      <div style="display:flex;gap:.75rem;justify-content:center;">
+        <button id="publicEnableBtn" onclick="togglePublicLink(true)"
+                style="padding:.5rem 1.25rem;background:#7c3aed;color:#fff;border:none;border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer;">
+          Enable Public Link
+        </button>
+        <button id="publicDisableBtn" onclick="togglePublicLink(false)"
+                style="display:none;padding:.5rem 1.25rem;background:#fff;color:#dc3545;border:1px solid #dc3545;border-radius:8px;font-weight:600;font-size:.85rem;cursor:pointer;">
+          Revoke Link
+        </button>
+      </div>
+      <div id="publicStatusMsg" style="font-size:.8rem;text-align:center;color:#888;min-height:1rem;"></div>
+    </div>
+
   </div>
 </div>
 {% endblock %}
@@ -1133,5 +1204,131 @@ function openMobSidebar(){document.querySelector('.cs').classList.add('mob-open'
 function closeMobSidebar(){document.querySelector('.cs').classList.remove('mob-open');document.getElementById('mobBackdrop').classList.remove('show');document.body.style.overflow='';}
 document.addEventListener('keydown',e=>{if(e.key==='Escape'&&document.querySelector('.cs.mob-open'))closeMobSidebar();});
 document.querySelectorAll('.hist-item').forEach(el=>{el.addEventListener('click',()=>{if(window.innerWidth<=720)closeMobSidebar();});});
+
+/* ══════════════════════════════════════════════
+   SHARE CHAT MODAL  (Internal + Public Link)
+══════════════════════════════════════════════ */
+let _shareMembers = [];
+const SESSION_ID  = {{ chat_session.id }};
+const CSRF_TOKEN  = () => document.cookie.split('; ').find(r=>r.startsWith('csrftoken='))?.split('=')[1]||'';
+
+/* ── tab switching ── */
+function switchShareTab(tab) {
+  const isInternal = tab === 'internal';
+  document.getElementById('shareTabContentInternal').style.display = isInternal ? 'flex' : 'none';
+  document.getElementById('shareTabContentPublic').style.display   = isInternal ? 'none' : 'flex';
+  document.getElementById('shareTabInternal').style.background  = isInternal ? '#f5f3ff' : '#fff';
+  document.getElementById('shareTabInternal').style.color        = isInternal ? '#7c3aed' : '#888';
+  document.getElementById('shareTabInternal').style.borderBottom = isInternal ? '2px solid #7c3aed' : '2px solid transparent';
+  document.getElementById('shareTabPublic').style.background     = isInternal ? '#fff' : '#f5f3ff';
+  document.getElementById('shareTabPublic').style.color          = isInternal ? '#888' : '#7c3aed';
+  document.getElementById('shareTabPublic').style.borderBottom   = isInternal ? '2px solid transparent' : '2px solid #7c3aed';
+  if (!isInternal) loadPublicLinkState();
+}
+
+/* ── open / close ── */
+function openShareModal() {
+  document.getElementById('shareModal').style.display = 'flex';
+  switchShareTab('internal');
+  document.getElementById('shareMemberSearch').value = '';
+  document.getElementById('shareMemberList').innerHTML =
+    '<div style="text-align:center;color:#888;padding:1.5rem;font-size:.875rem;">Loading…</div>';
+  document.getElementById('shareStatusMsg').textContent = '';
+  fetch(`/chatbot/session/${SESSION_ID}/share/`, {headers:{'X-Requested-With':'XMLHttpRequest'}})
+    .then(r=>r.json()).then(d=>{ _shareMembers=d.members||[]; renderShareMembers(_shareMembers); })
+    .catch(()=>{ document.getElementById('shareMemberList').innerHTML='<div style="color:#c00;padding:1rem;font-size:.875rem;">Failed to load teammates.</div>'; });
+}
+function closeShareModal() { document.getElementById('shareModal').style.display='none'; }
+
+/* ── internal tab ── */
+function filterShareMembers(q) {
+  const lq=q.toLowerCase();
+  renderShareMembers(_shareMembers.filter(m=>m.name.toLowerCase().includes(lq)||m.username.toLowerCase().includes(lq)));
+}
+function renderShareMembers(members) {
+  const list=document.getElementById('shareMemberList');
+  if(!members.length){list.innerHTML='<div style="color:#888;padding:1rem;font-size:.875rem;text-align:center;">No teammates found.</div>';return;}
+  list.innerHTML=members.map(m=>`
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:.55rem 0;border-bottom:1px solid #f3f3f3;">
+      <div>
+        <div style="font-size:.875rem;font-weight:600;color:#222;">${m.name}</div>
+        <div style="font-size:.75rem;color:#888;">@${m.username}</div>
+      </div>
+      <button id="share-btn-${m.id}" onclick="toggleShare(${m.id},${m.shared})"
+        style="font-size:.75rem;padding:.3rem .75rem;border-radius:6px;cursor:pointer;font-weight:600;white-space:nowrap;
+               border:1px solid ${m.shared?'#dc3545':'#0d6efd'};background:${m.shared?'#fff5f5':'#e8f0ff'};color:${m.shared?'#dc3545':'#0d6efd'};">
+        ${m.shared?'✕ Remove':'+ Share'}
+      </button>
+    </div>`).join('');
+}
+function toggleShare(userId,currentlyShared) {
+  const btn=document.getElementById(`share-btn-${userId}`);
+  btn.disabled=true; btn.textContent='…';
+  fetch(`/chatbot/session/${SESSION_ID}/share/`,{
+    method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF_TOKEN()},
+    body:JSON.stringify({user_id:userId,action:currentlyShared?'remove':'add'})
+  }).then(r=>r.json()).then(d=>{
+    if(!d.ok)return;
+    const m=_shareMembers.find(x=>x.id===userId); if(m) m.shared=!currentlyShared;
+    const now=!currentlyShared;
+    btn.disabled=false; btn.textContent=now?'✕ Remove':'+ Share';
+    btn.style.border=`1px solid ${now?'#dc3545':'#0d6efd'}`;
+    btn.style.background=now?'#fff5f5':'#e8f0ff'; btn.style.color=now?'#dc3545':'#0d6efd';
+    btn.onclick=()=>toggleShare(userId,now);
+    const msg=document.getElementById('shareStatusMsg');
+    const name=_shareMembers.find(x=>x.id===userId)?.name||'User';
+    msg.textContent=now?`✓ Shared with ${name}`:`Removed ${name}`; msg.style.color=now?'#198754':'#888';
+    setTimeout(()=>{ msg.textContent=''; },3000);
+  }).catch(()=>{ btn.disabled=false; btn.textContent='Error'; });
+}
+
+/* ── public link tab ── */
+function loadPublicLinkState() {
+  // Check via a lightweight GET to the same session share endpoint isn't ideal;
+  // we read the hidden data-attribute we stamped on the button instead.
+  const existing = document.getElementById('shareBtn').dataset.publicToken || '';
+  applyPublicLinkState(existing);
+}
+function applyPublicLinkState(token) {
+  const box      = document.getElementById('publicLinkBox');
+  const ph       = document.getElementById('publicLinkPlaceholder');
+  const input    = document.getElementById('publicLinkInput');
+  const enableBtn= document.getElementById('publicEnableBtn');
+  const disableBtn=document.getElementById('publicDisableBtn');
+  if (token) {
+    input.value         = `${location.origin}/chatbot/public/${token}/`;
+    box.style.display   = 'flex';
+    ph.style.display    = 'none';
+    enableBtn.style.display  = 'none';
+    disableBtn.style.display = 'inline-block';
+    document.getElementById('shareBtn').dataset.publicToken = token;
+  } else {
+    box.style.display        = 'none';
+    ph.style.display         = 'block';
+    enableBtn.style.display  = 'inline-block';
+    disableBtn.style.display = 'none';
+    document.getElementById('shareBtn').dataset.publicToken = '';
+  }
+}
+function togglePublicLink(enable) {
+  const msg = document.getElementById('publicStatusMsg');
+  msg.textContent = enable ? 'Generating link…' : 'Revoking…';
+  fetch(`/chatbot/session/${SESSION_ID}/public-share/`,{
+    method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':CSRF_TOKEN()},
+    body:JSON.stringify({enable})
+  }).then(r=>r.json()).then(d=>{
+    if(!d.ok){ msg.textContent='Error. Try again.'; return; }
+    applyPublicLinkState(d.token||'');
+    msg.textContent = enable ? '✓ Public link created' : '✓ Link revoked';
+    setTimeout(()=>{ msg.textContent=''; }, 3000);
+  }).catch(()=>{ msg.textContent='Error. Try again.'; });
+}
+function copyPublicLink() {
+  const val = document.getElementById('publicLinkInput').value;
+  navigator.clipboard.writeText(val).then(()=>showToast('Link copied to clipboard!','success'));
+}
+
+document.getElementById('shareModal').addEventListener('click',function(e){if(e.target===this)closeShareModal();});
+document.addEventListener('keydown',e=>{ if(e.key==='Escape') closeShareModal(); });
 </script>
 {% endblock %}

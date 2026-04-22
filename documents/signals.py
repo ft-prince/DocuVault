@@ -228,12 +228,20 @@ def _index_in_background(document_id: int):
         # get_rag_chatbot() blocks until initialization completes (lock-protected)
         chatbot = get_rag_chatbot()
 
+        # Use org id if available, otherwise fall back to a user-scoped key
+        org_id = (
+            str(document.owner.organization_id)
+            if document.owner.organization_id
+            else f'user_{document.owner.id}'
+        )
+
         # ── Route by file type ────────────────────────────────────────────────
         if ext == '.pdf':
             chatbot.index_documents(
                 pdf_path=file_path,
                 extract_tables=chatbot.config.ENABLE_TABLE_EXTRACTION,
                 describe_images=chatbot.config.ENABLE_IMAGE_DESCRIPTION,
+                org_id=org_id,
             )
             stats = chatbot.document_processor.get_processing_stats()
             chunk_count = stats.get('total_pages', 0)
@@ -243,7 +251,7 @@ def _index_in_background(document_id: int):
             if not lc_docs:
                 embedding.mark_failed("File appears to be empty")
                 return
-            chatbot.index_documents(documents=lc_docs)
+            chatbot.index_documents(documents=lc_docs, org_id=org_id)
             chunk_count = len(lc_docs)
 
         elif ext in {'.docx', '.doc'}:
@@ -251,7 +259,7 @@ def _index_in_background(document_id: int):
             if not lc_docs:
                 embedding.mark_failed("Could not extract text from .docx")
                 return
-            chatbot.index_documents(documents=lc_docs)
+            chatbot.index_documents(documents=lc_docs, org_id=org_id)
             chunk_count = len(lc_docs)
 
         else:

@@ -115,7 +115,8 @@ class RAGChatbot:
     
     def index_documents(self, pdf_path: str = None, documents: List = None,
                        extract_tables: bool = None,
-                       describe_images: bool = None):
+                       describe_images: bool = None,
+                       org_id: str = None):
         """
         Index documents with enhanced processing.
         Thread-safe: serialized with _index_lock so concurrent background
@@ -158,6 +159,11 @@ class RAGChatbot:
         metadatas = [chunk.metadata for chunk in chunks]
         chunk_types = [meta.get('chunk_type', 'text') for meta in metadatas]
 
+        # Stamp every chunk with the organization so queries can be filtered per-tenant
+        if org_id:
+            for meta in metadatas:
+                meta['org_id'] = org_id
+
         # Generate embeddings (slow, CPU-bound — fine to run concurrently)
         embeddings = self.embedding_manager.generate_embeddings_enhanced(
             texts=texts,
@@ -197,13 +203,14 @@ class RAGChatbot:
         
         _safe_print("="*70 + "\n")
     
-    def query(self, question: str, 
+    def query(self, question: str,
              thread_id: str = "default",
              n_results: int = None,
              use_rewrite: bool = True,
              use_hybrid: bool = None,
              allow_general_knowledge: bool = None,
-             force_mode: str = None) -> Tuple[str, List[Dict]]:
+             force_mode: str = None,
+             org_id: str = None) -> Tuple[str, List[Dict]]:
         """
         Query the RAG system with a question
         
@@ -266,9 +273,11 @@ class RAGChatbot:
         n_results = n_results or self.config.N_RESULTS
         use_hybrid = use_hybrid if use_hybrid is not None else self.config.USE_HYBRID_SEARCH
         
+        metadata_filter = {"org_id": org_id} if org_id else None
         documents, metadatas, similarities = self.retriever.retrieve(
             query=question,
             n_results=n_results,
+            metadata_filter=metadata_filter,
             use_hybrid=use_hybrid
         )
         

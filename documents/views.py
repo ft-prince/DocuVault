@@ -19,7 +19,8 @@ import mimetypes
 
 from .models import (
     User, Role, Document, Category, Tag, DocumentVersion,
-    DocumentComment, SharedLink, Favorite, ActivityLog, Notification, Folder
+    DocumentComment, SharedLink, Favorite, ActivityLog, Notification, Folder,
+    Organization,
 )
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
@@ -42,17 +43,20 @@ def register_view(request):
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
             user = form.save(commit=False)
-            user.user_type = 'user'  # Default to regular user
+            user.user_type = 'user'
+
+            # Link to the admin-created organization selected by the user
+            user.organization = form.cleaned_data['organization']
             user.save()
-            
+
             # Assign default role if exists
             default_role = Role.objects.filter(is_default=True).first()
             if default_role:
                 user.role = default_role
                 user.save()
-            
+
             login(request, user)
-            messages.success(request, 'Account created successfully!')
+            messages.success(request, f'Account created! Welcome to {user.organization.name}.')
             return redirect('workspace')
     else:
         form = UserRegistrationForm()
@@ -83,6 +87,19 @@ def login_view(request):
         form = UserLoginForm()
     
     return render(request, 'documents/auth/login.html', {'form': form})
+
+
+def organization_search_view(request):
+    """
+    Public JSON API — returns active orgs matching a search query.
+    Used by the registration page live-search so users cannot type a free-text name.
+    """
+    q = request.GET.get('q', '').strip()
+    qs = Organization.objects.filter(is_active=True)
+    if q:
+        qs = qs.filter(name__icontains=q)
+    data = [{'id': o.id, 'name': o.name} for o in qs.order_by('name')[:20]]
+    return JsonResponse({'results': data})
 
 
 @login_required
@@ -1089,6 +1106,8 @@ def notification_mark_read_view(request, pk):
     if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         return JsonResponse({'ok': True})
 
+    if notification.chat_session_id:
+        return redirect('view_shared_chat', pk=notification.chat_session_id)
     if notification.document:
         return redirect('document_detail', pk=notification.document.pk)
     return redirect('notifications_list')

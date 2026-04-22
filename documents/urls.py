@@ -8,6 +8,7 @@ urlpatterns = [
     # AUTHENTICATION URLS
     # ============================================================
     path('register/', views.register_view, name='register'),
+    path('api/organizations/search/', views.organization_search_view, name='organization_search'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
     
@@ -124,6 +125,11 @@ urlpatterns = [
     path('chatbot/session/<int:pk>/rename/', rag_views.rename_session_view, name='rename_session'),
     path('chatbot/new/', rag_views.new_chat_view, name='new_chat'),
     path('chatbot/clear/', rag_views.clear_chat_view, name='clear_chat'),
+    path('chatbot/session/<int:pk>/share/', rag_views.share_chat_view, name='share_chat'),
+    path('chatbot/session/<int:pk>/public-share/', rag_views.toggle_public_share_view, name='toggle_public_share'),
+    path('chatbot/shared-with-me/', rag_views.shared_with_me_view, name='shared_with_me'),
+    path('chatbot/shared/<int:pk>/', rag_views.view_shared_chat_view, name='view_shared_chat'),
+    path('chatbot/public/<uuid:token>/', rag_views.public_chat_view, name='public_chat'),
 
     # Voice Assistant (server-side Whisper STT + edge-tts TTS)
     path('voice/', rag_views.voice_assistant_view, name='voice_assistant'),

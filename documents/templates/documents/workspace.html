@@ -512,8 +512,7 @@
       <h3>{% if search_q %}No documents match "{{ search_q }}"{% elif folder_id == 'unfiled' %}No unfiled documents{% elif current_folder %}{{ current_folder.name }} is empty{% else %}No documents yet{% endif %}</h3>
       <p>{% if search_q %}Try a different search term.{% else %}Create your first document to get started.{% endif %}</p>
       {% if not search_q %}
-      <a href="{% url 'document_create' %}" class="btn-primary" style="text-decoration:none;display:inline-block;margin-top:1rem">＋ New Document</a>
-      {% endif %}
+       {% endif %}
     </div>
     {% endif %}
 

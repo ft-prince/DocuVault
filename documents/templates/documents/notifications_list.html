@@ -23,7 +23,11 @@
             <div style="display: flex; justify-content: space-between; align-items: start;">
                 <div style="flex: 1;">
                     <h3 style="font-size: 1rem; font-weight: 500; margin-bottom: 0.5rem; color: #2c2c2c;">
-                        {% if notification.document %}
+                        {% if notification.chat_session %}
+                            <a href="{% url 'notification_mark_read' notification.pk %}" style="color: #7c3aed; text-decoration: none;">
+                                💬 {{ notification.title }}
+                            </a>
+                        {% elif notification.document %}
                             <a href="{% url 'notification_mark_read' notification.pk %}" style="color: #2c2c2c; text-decoration: none;">
                                 {{ notification.title }}
                             </a>

@@ -1,0 +1,135 @@
+{% extends 'documents/base.html' %}
+{% load static %}
+{% block title %}{{ session.title }} — Shared Chat{% endblock %}
+
+{% block extra_css %}
+<style>
+:root{
+  --ink:#0f172a;--ink2:#475569;--ink3:#94a3b8;
+  --surf:#fff;--bg:#f8fafc;--bdr:#e2e8f0;
+  --p:#7c3aed;--ok:#10b981;--err:#ef4444;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;color:var(--ink);}
+
+.sc-wrap{max-width:780px;margin:0 auto;padding:1.5rem 1rem 3rem;}
+
+/* banner */
+.sc-banner{background:#fff;border:1px solid var(--bdr);border-radius:12px;padding:1rem 1.25rem;
+           display:flex;align-items:center;gap:.75rem;margin-bottom:1.5rem;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.sc-banner-ico{font-size:1.4rem;}
+.sc-banner-title{font-weight:700;font-size:1rem;color:var(--ink);}
+.sc-banner-sub{font-size:.78rem;color:var(--ink3);margin-top:2px;}
+.sc-banner-badge{margin-left:auto;background:#ede9fe;color:#7c3aed;
+                 font-size:.72rem;font-weight:700;padding:.25rem .6rem;border-radius:20px;white-space:nowrap;}
+
+/* open in chatbot link */
+.sc-open-btn{display:inline-flex;align-items:center;gap:.4rem;
+             background:var(--p);color:#fff;text-decoration:none;
+             font-size:.82rem;font-weight:600;padding:.45rem 1rem;
+             border-radius:8px;margin-bottom:1.25rem;}
+.sc-open-btn:hover{opacity:.88;}
+
+/* messages */
+.cmsgs{display:flex;flex-direction:column;gap:1rem;}
+.mr{display:flex;gap:.75rem;align-items:flex-start;}
+.mr.human{flex-direction:row-reverse;}
+.mav{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;
+     justify-content:center;font-size:1rem;flex-shrink:0;
+     background:#ede9fe;}
+.mr.human .mav{background:#e0f2fe;}
+.mbub{background:#fff;border:1px solid var(--bdr);border-radius:12px;
+      padding:.75rem 1rem;max-width:680px;box-shadow:0 1px 3px rgba(0,0,0,.05);}
+.mr.human .mbub{background:#ede9fe;border-color:#ddd6fe;}
+.mtxt{font-size:.9rem;line-height:1.6;white-space:pre-wrap;word-break:break-word;}
+.mtime{font-size:.7rem;color:var(--ink3);margin-top:.35rem;}
+
+/* sources */
+.srcs{margin-top:.6rem;border-top:1px solid var(--bdr);padding-top:.5rem;}
+.stog{background:none;border:none;cursor:pointer;font-size:.75rem;
+      color:var(--ink2);display:flex;align-items:center;gap:.3rem;padding:0;}
+.stog:hover{color:var(--ink);}
+.sarr{display:inline-block;transition:transform .2s;}
+.sarr.open{transform:rotate(90deg);}
+.schips{display:none;flex-wrap:wrap;gap:.4rem;margin-top:.5rem;}
+.schip{font-size:.72rem;background:var(--bg);border:1px solid var(--bdr);
+       border-radius:20px;padding:.2rem .6rem;color:var(--ink2);}
+.gkbadge{font-size:.72rem;background:#fef3c7;border:1px solid #fde68a;
+         border-radius:20px;padding:.2rem .6rem;color:#92400e;}
+
+/* empty */
+.sc-empty{text-align:center;color:var(--ink3);padding:3rem 1rem;font-size:.9rem;}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="sc-wrap">
+
+  <!-- banner -->
+  <div class="sc-banner">
+    <div class="sc-banner-ico">🔗</div>
+    <div>
+      <div class="sc-banner-title">{{ session.title }}</div>
+      <div class="sc-banner-sub">Shared by {{ owner.get_full_name|default:owner.username }} · {{ session.created_at|date:"M d, Y" }}</div>
+    </div>
+    <div class="sc-banner-badge">Read-only</div>
+  </div>
+
+  {% if is_owner %}
+  <a href="{% url 'chatbot' %}?session={{ session.id }}" class="sc-open-btn">↗ Open in Chatbot</a>
+  {% endif %}
+
+  <!-- messages -->
+  <div class="cmsgs">
+    {% if chat_messages %}
+      {% for msg in chat_messages %}
+      {% if msg.message_type != 'system' %}
+      <div class="mr {{ msg.message_type }}">
+        <div class="mav">{% if msg.message_type == 'human' %}👤{% else %}🤖{% endif %}</div>
+        <div class="mbub">
+          <div class="mtxt">{{ msg.content }}</div>
+
+          {% if msg.message_type == 'ai' %}
+          <div class="srcs">
+            {% if msg.sources %}
+              <button class="stog" onclick="togSrc('s{{ msg.id }}',this)">
+                <span class="sarr">▶</span> {{ msg.sources|length }} source{{ msg.sources|length|pluralize }} used
+              </button>
+              <div class="schips" id="s{{ msg.id }}">
+                {% for s in msg.sources %}
+                  <span class="schip">
+                    {% if s.content_type == 'table' %}📊{% elif s.content_type == 'image' %}🖼️{% else %}📄{% endif %}
+                    {{ s.document_title|default:s.source|truncatechars:30 }}{% if s.page %} · p.{{ s.page }}{% endif %}
+                  </span>
+                {% endfor %}
+              </div>
+            {% else %}
+              <span class="gkbadge">🌐 General knowledge</span>
+            {% endif %}
+          </div>
+          {% endif %}
+
+          <div class="mtime">{{ msg.created_at|date:"M d, Y · H:i" }}</div>
+        </div>
+      </div>
+      {% endif %}
+      {% endfor %}
+    {% else %}
+      <div class="sc-empty">This conversation has no messages yet.</div>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togSrc(id, btn) {
+  const el = document.getElementById(id);
+  const arr = btn.querySelector('.sarr');
+  const open = el.style.display === 'flex';
+  el.style.display = open ? 'none' : 'flex';
+  arr.classList.toggle('open', !open);
+}
+</script>
+{% endblock %}

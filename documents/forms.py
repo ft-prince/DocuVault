@@ -1,12 +1,25 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
-from .models import User, Document, Category, Role, DocumentComment, SharedLink, Tag
+from .models import User, Organization, Document, Category, Role, DocumentComment, SharedLink, Tag
 import datetime
 
 
 class UserRegistrationForm(UserCreationForm):
-    """User registration form"""
+    """
+    User registration form.
+    Organization must be selected from the admin-managed list — no free-text entry.
+    """
+    organization = forms.ModelChoiceField(
+        queryset=Organization.objects.filter(is_active=True).order_by('name'),
+        required=True,
+        empty_label='— Search and select your company —',
+        widget=forms.Select(attrs={
+            'class': 'form-control',
+            'id': 'id_organization',
+        }),
+        error_messages={'required': 'Please select your organization to continue.'},
+    )
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
         'class': 'form-control',
         'placeholder': 'Email address'
@@ -22,7 +35,7 @@ class UserRegistrationForm(UserCreationForm):
 
     class Meta:
         model = User
-        fields = ('username', 'email', 'first_name', 'last_name', 'password1', 'password2')
+        fields = ('organization', 'username', 'email', 'first_name', 'last_name', 'password1', 'password2')
         widgets = {
             'username': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -175,9 +188,14 @@ class DocumentForm(forms.ModelForm):
             self.fields['file'].required = False
             self.fields['file'].help_text = 'Leave blank to keep the current file'
         
-        # Filter shared_with to exclude current user
+        # Filter shared_with to only users in the same organization
         if self.user:
-            self.fields['shared_with'].queryset = User.objects.exclude(id=self.user.id)
+            org = getattr(self.user, 'organization', None)
+            if org:
+                qs = User.objects.filter(organization=org).exclude(id=self.user.id)
+            else:
+                qs = User.objects.exclude(id=self.user.id)
+            self.fields['shared_with'].queryset = qs
         
         # Pre-populate tags if editing
         if self.instance and self.instance.pk:

@@ -7,6 +7,22 @@ import uuid
 import os
 
 
+class Organization(models.Model):
+    """Tenant organization — all data is isolated per org."""
+    name = models.CharField(max_length=255)
+    created_at = models.DateTimeField(auto_now_add=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+    def chroma_collection_name(self):
+        return f"org_{self.id}_documents"
+
+
 class Role(models.Model):
     """Custom roles for role-based access control"""
     name = models.CharField(max_length=100, unique=True)
@@ -36,6 +52,9 @@ class User(AbstractUser):
     ]
     
     user_type = models.CharField(max_length=10, choices=USER_TYPE_CHOICES, default='user')
+    organization = models.ForeignKey(
+        Organization, on_delete=models.SET_NULL, null=True, blank=True, related_name='members'
+    )
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, null=True, blank=True, related_name='users')
     bio = models.TextField(blank=True)
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
@@ -385,16 +404,18 @@ class Notification(models.Model):
         ('comment_reply', 'Comment Reply'),
         ('permission_changed', 'Permission Changed'),
         ('mention', 'Mentioned'),
+        ('chat_shared', 'Chat Shared'),
     ]
 
     recipient = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notifications')
     sender = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='sent_notifications')
-    
+
     notification_type = models.CharField(max_length=30, choices=NOTIFICATION_TYPES)
     title = models.CharField(max_length=255)
     message = models.TextField()
-    
+
     document = models.ForeignKey(Document, on_delete=models.CASCADE, null=True, blank=True, related_name='notifications')
+    chat_session = models.ForeignKey('ChatSession', on_delete=models.CASCADE, null=True, blank=True, related_name='notifications')
     
     is_read = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -420,6 +441,9 @@ class ChatSession(models.Model):
     
     # Optional: Associate with specific documents
     documents = models.ManyToManyField(Document, blank=True, related_name='chat_sessions')
+
+    # Public sharing — set to a UUID when the owner enables the public link
+    public_share_token = models.UUIDField(null=True, blank=True, unique=True, db_index=True)
     
     class Meta:
         ordering = ['-updated_at']
@@ -457,6 +481,21 @@ class ChatMessage(models.Model):
     def __str__(self):
         preview = self.content[:50] + '...' if len(self.content) > 50 else self.content
         return f"{self.message_type}: {preview}"
+
+
+class ChatSessionShare(models.Model):
+    """Tracks which users a chat session has been shared with."""
+    session = models.ForeignKey(ChatSession, on_delete=models.CASCADE, related_name='shares')
+    shared_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_chats_sent')
+    shared_with = models.ForeignKey(User, on_delete=models.CASCADE, related_name='shared_chats_received')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = [['session', 'shared_with']]
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.session.title} → {self.shared_with.username}"
 
 
 class DocumentEmbedding(models.Model):

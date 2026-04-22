@@ -2,110 +2,207 @@
 
 {% block title %}Register - DMS{% endblock %}
 
+{% block extra_css %}
+<style>
+/* Live-search org picker */
+.org-search-wrap { position: relative; }
+.org-search-input {
+  width: 100%; padding: .5rem .75rem;
+  border: 1px solid #ddd; border-radius: 8px;
+  font-size: .9rem; outline: none;
+  transition: border-color .15s;
+}
+.org-search-input:focus { border-color: #7c3aed; }
+.org-dropdown {
+  display: none; position: absolute; top: 100%; left: 0; right: 0;
+  background: #fff; border: 1px solid #ddd; border-top: none;
+  border-radius: 0 0 8px 8px; max-height: 220px; overflow-y: auto;
+  z-index: 200; box-shadow: 0 4px 12px rgba(0,0,0,.1);
+}
+.org-dropdown.show { display: block; }
+.org-option {
+  padding: .55rem .75rem; cursor: pointer; font-size: .875rem;
+  border-bottom: 1px solid #f3f3f3;
+}
+.org-option:last-child { border-bottom: none; }
+.org-option:hover, .org-option.focused { background: #f5f3ff; color: #7c3aed; }
+.org-none { padding: .75rem; font-size: .85rem; color: #aaa; text-align: center; }
+.org-selected-badge {
+  display: none; margin-top: .4rem;
+  background: #ede9fe; color: #7c3aed;
+  font-size: .78rem; font-weight: 600;
+  padding: .25rem .6rem; border-radius: 20px;
+  display: inline-flex; align-items: center; gap: .35rem;
+}
+.org-clear { cursor: pointer; font-weight: 700; }
+</style>
+{% endblock %}
+
 {% block content %}
-<div style="max-width: 450px; margin: 4rem auto;">
-    <div class="card">
-        <h1 style="font-size: 1.75rem; font-weight: 600; margin-bottom: 0.5rem; color: #2c2c2c;">
-            Create Account
-        </h1>
-        <p style="font-size: 0.95rem; color: #7c7c7c; margin-bottom: 2rem;">
-            Join Document Management System
-        </p>
+<div style="max-width:460px;margin:4rem auto;">
+  <div class="card">
+    <h1 style="font-size:1.75rem;font-weight:600;margin-bottom:.5rem;color:#2c2c2c;">Create Account</h1>
+    <p style="font-size:.95rem;color:#7c7c7c;margin-bottom:2rem;">Join Document Management System</p>
 
-        <form method="post">
-            {% csrf_token %}
-            
-            {% if form.non_field_errors %}
-                <div style="padding: 1rem; background: #fafafa; border: 1px solid #e5e5e5; margin-bottom: 1.5rem;">
-                    {{ form.non_field_errors }}
-                </div>
-            {% endif %}
-            
-            <div class="form-group">
-                <label class="form-label" for="{{ form.username.id_for_label }}">
-                    Username
-                </label>
-                {{ form.username }}
-                {% if form.username.errors %}
-                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
-                        {{ form.username.errors }}
-                    </div>
-                {% endif %}
-            </div>
+    <form method="post" id="registerForm">
+      {% csrf_token %}
 
-            <div class="form-group">
-                <label class="form-label" for="{{ form.email.id_for_label }}">
-                    Email
-                </label>
-                {{ form.email }}
-                {% if form.email.errors %}
-                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
-                        {{ form.email.errors }}
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="{{ form.first_name.id_for_label }}">
-                    First Name
-                </label>
-                {{ form.first_name }}
-                {% if form.first_name.errors %}
-                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
-                        {{ form.first_name.errors }}
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="{{ form.last_name.id_for_label }}">
-                    Last Name
-                </label>
-                {{ form.last_name }}
-                {% if form.last_name.errors %}
-                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
-                        {{ form.last_name.errors }}
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="{{ form.password1.id_for_label }}">
-                    Password
-                </label>
-                {{ form.password1 }}
-                {% if form.password1.errors %}
-                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
-                        {{ form.password1.errors }}
-                    </div>
-                {% endif %}
-            </div>
-
-            <div class="form-group">
-                <label class="form-label" for="{{ form.password2.id_for_label }}">
-                    Confirm Password
-                </label>
-                {{ form.password2 }}
-                {% if form.password2.errors %}
-                    <div style="color: #7c7c7c; font-size: 0.875rem; margin-top: 0.25rem;">
-                        {{ form.password2.errors }}
-                    </div>
-                {% endif %}
-            </div>
-
-            <button type="submit" class="btn" style="width: 100%;">
-                Create Account
-            </button>
-        </form>
-
-        <div style="margin-top: 1.5rem; text-align: center; font-size: 0.95rem;">
-            <p style="color: #7c7c7c;">
-                Already have an account? 
-                <a href="{% url 'login' %}" style="color: #2c2c2c; text-decoration: none; font-weight: 500;">
-                    Sign in here
-                </a>
-            </p>
+      {% if form.non_field_errors %}
+        <div style="padding:1rem;background:#fafafa;border:1px solid #e5e5e5;margin-bottom:1.5rem;">
+          {{ form.non_field_errors }}
         </div>
+      {% endif %}
+
+      <!-- ── Organization live-search ── -->
+      <div class="form-group">
+        <label class="form-label">Company / Organization</label>
+
+        <!-- Hidden real select (submitted with form) -->
+        <div style="display:none;">{{ form.organization }}</div>
+
+        <!-- Visible search input -->
+        <div class="org-search-wrap">
+          <input type="text" id="orgSearchInput" class="org-search-input"
+                 placeholder="Type to search your company…"
+                 autocomplete="off" />
+          <div class="org-dropdown" id="orgDropdown"></div>
+        </div>
+
+        <!-- Selected badge -->
+        <div id="orgSelectedBadge" class="org-selected-badge" style="display:none;">
+          🏢 <span id="orgSelectedName"></span>
+          <span class="org-clear" onclick="clearOrg()" title="Change">✕</span>
+        </div>
+
+        {% if form.organization.errors %}
+          <div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.organization.errors }}</div>
+        {% endif %}
+        <div style="font-size:.75rem;color:#aaa;margin-top:.3rem;">
+          Organizations are managed by the admin. Contact your admin if yours is missing.
+        </div>
+      </div>
+
+      <!-- ── Standard fields ── -->
+      <div class="form-group">
+        <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
+        {{ form.username }}
+        {% if form.username.errors %}<div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.username.errors }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+        {{ form.email }}
+        {% if form.email.errors %}<div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.email.errors }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.first_name.id_for_label }}">First Name</label>
+        {{ form.first_name }}
+        {% if form.first_name.errors %}<div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.first_name.errors }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.last_name.id_for_label }}">Last Name</label>
+        {{ form.last_name }}
+        {% if form.last_name.errors %}<div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.last_name.errors }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.password1.id_for_label }}">Password</label>
+        {{ form.password1 }}
+        {% if form.password1.errors %}<div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.password1.errors }}</div>{% endif %}
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.password2.id_for_label }}">Confirm Password</label>
+        {{ form.password2 }}
+        {% if form.password2.errors %}<div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.password2.errors }}</div>{% endif %}
+      </div>
+
+      <button type="submit" class="btn" style="width:100%;">Create Account</button>
+    </form>
+
+    <div style="margin-top:1.5rem;text-align:center;font-size:.95rem;">
+      <p style="color:#7c7c7c;">
+        Already have an account?
+        <a href="{% url 'login' %}" style="color:#2c2c2c;text-decoration:none;font-weight:500;">Sign in here</a>
+      </p>
     </div>
+  </div>
 </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const orgSelect   = document.getElementById('id_organization');
+const orgInput    = document.getElementById('orgSearchInput');
+const orgDropdown = document.getElementById('orgDropdown');
+const orgBadge    = document.getElementById('orgSelectedBadge');
+const orgName     = document.getElementById('orgSelectedName');
+
+let searchTimer;
+
+// If form was re-rendered with a pre-selected value (validation error), restore UI
+(function restoreSelection() {
+  const sel = orgSelect.options[orgSelect.selectedIndex];
+  if (sel && sel.value) {
+    orgName.textContent  = sel.text;
+    orgBadge.style.display = 'inline-flex';
+    orgInput.style.display = 'none';
+  }
+})();
+
+orgInput.addEventListener('input', function () {
+  clearTimeout(searchTimer);
+  const q = this.value.trim();
+  if (!q) { orgDropdown.classList.remove('show'); return; }
+  searchTimer = setTimeout(() => fetchOrgs(q), 200);
+});
+
+orgInput.addEventListener('focus', function () {
+  if (this.value.trim()) fetchOrgs(this.value.trim());
+});
+
+document.addEventListener('click', function (e) {
+  if (!e.target.closest('.org-search-wrap')) orgDropdown.classList.remove('show');
+});
+
+function fetchOrgs(q) {
+  fetch(`/api/organizations/search/?q=${encodeURIComponent(q)}`)
+    .then(r => r.json())
+    .then(data => {
+      renderDropdown(data.results || []);
+    });
+}
+
+function renderDropdown(results) {
+  if (!results.length) {
+    orgDropdown.innerHTML = '<div class="org-none">No organization found. Contact your admin.</div>';
+  } else {
+    orgDropdown.innerHTML = results.map(o =>
+      `<div class="org-option" data-id="${o.id}" data-name="${o.name}">${o.name}</div>`
+    ).join('');
+    orgDropdown.querySelectorAll('.org-option').forEach(el => {
+      el.addEventListener('click', () => selectOrg(el.dataset.id, el.dataset.name));
+    });
+  }
+  orgDropdown.classList.add('show');
+}
+
+function selectOrg(id, name) {
+  orgSelect.value      = id;
+  orgName.textContent  = name;
+  orgBadge.style.display = 'inline-flex';
+  orgInput.style.display = 'none';
+  orgDropdown.classList.remove('show');
+}
+
+function clearOrg() {
+  orgSelect.value        = '';
+  orgBadge.style.display = 'none';
+  orgInput.style.display = 'block';
+  orgInput.value         = '';
+  orgInput.focus();
+}
+</script>
 {% endblock %}

@@ -20,9 +20,13 @@ import camelot  # For complex table extraction
 from PIL import Image
 import pytesseract
 
-# Image Understanding
-import torch
-from transformers import Blip2Processor, Blip2ForConditionalGeneration
+# Image Understanding (optional — only used when ENABLE_IMAGE_DESCRIPTION=True)
+try:
+    import torch
+    from transformers import Blip2Processor, Blip2ForConditionalGeneration
+    _TRANSFORMERS_AVAILABLE = True
+except ImportError:
+    _TRANSFORMERS_AVAILABLE = False
 
 # LangChain
 from langchain_core.documents import Document
