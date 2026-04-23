@@ -228,6 +228,7 @@
 .profile-badge.admin{background:#fef3c7;color:#92400e}
 .profile-badge.role{background:#ede9fe;color:#5b21b6}
 .profile-badge.joined{background:#f0f9ff;color:#0369a1}
+.profile-badge.org{background:#f0fdf4;color:#166534;display:inline-flex;align-items:center;gap:.25rem}
 
 .profile-stats-card{background:#fff;border:1px solid #e5e7eb;border-radius:12px;padding:1.25rem}
 .profile-section-title{font-size:.875rem;font-weight:700;color:#374151;margin:0 0 1rem;display:flex;align-items:center;gap:.4rem}
@@ -650,6 +651,9 @@
               {% if user.is_admin %}<span class="profile-badge admin">Admin</span>{% endif %}
               {% if user.role %}<span class="profile-badge role">{{ user.role.name }}</span>{% endif %}
               <span class="profile-badge joined">Joined {{ user.date_joined|date:"M Y" }}</span>
+              {% if user.organization %}
+                <span class="profile-badge org">🏢 {{ user.organization.name }}</span>
+              {% endif %}
             </div>
           </div>
           <a href="{% url 'profile' %}" class="btn-primary" style="text-decoration:none;margin-top:1rem;font-size:.875rem;padding:.5rem 1.1rem;border-radius:8px;display:inline-flex;align-items:center;gap:.4rem">✏️ Edit Profile</a>

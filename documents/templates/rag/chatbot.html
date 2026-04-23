@@ -17,7 +17,7 @@
 *{box-sizing:border-box;margin:0;padding:0;}
 
 /* layout */
-.cw{display:flex;height:calc(100vh - 60px);overflow:hidden;border-radius:var(--rXl);box-shadow:var(--shL);}
+.cw{display:flex;height:calc(100vh - 60px);height:calc(100dvh - 60px);overflow:hidden;border-radius:var(--rXl);box-shadow:var(--shL);}
 
 /* sidebar */
 .cs{width:256px;flex-shrink:0;background:var(--side);display:flex;flex-direction:column;overflow:hidden;}
@@ -83,6 +83,7 @@
 .emp-ttl{font-size:1.25rem;font-weight:700;color:var(--ink);margin-bottom:.5rem;}
 .emp-sub{font-size:.875rem;color:var(--ink2);max-width:400px;line-height:1.72;margin-bottom:1.75rem;}
 .sugs{display:grid;grid-template-columns:repeat(3,1fr);gap:.625rem;max-width:580px;width:100%;}
+@media(max-width:600px){.sugs{grid-template-columns:repeat(2,1fr);max-width:100%;gap:.5rem;}}
 .sug{padding:.875rem 1rem;background:var(--surf);border:1.5px solid var(--bdr);border-radius:var(--rLg);cursor:pointer;text-align:left;transition:all .18s;}
 .sug:hover{border-color:var(--p);background:var(--pxl);transform:translateY(-2px);box-shadow:0 6px 20px rgba(109,40,217,.12);}
 .sug-ic{font-size:1.25rem;margin-bottom:.375rem;}
@@ -275,32 +276,135 @@
 .mic-pm-cancel:hover{border-color:#7c3aed;color:#c4b5fd;}
 .mic-pm-st{font-size:.76rem;color:#64748b;margin-top:.7rem;min-height:1.1em;}
 
-/* responsive */
-@media(max-width:1024px){.cs{width:230px;}}
-@media(max-width:900px){.cs{width:200px;}.cmsgs{padding:1.25rem 1.25rem .75rem;}}
+/* ── Mobile menu button (always defined, hidden on desktop) ── */
+.mob-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;backdrop-filter:blur(2px);}
+.mob-backdrop.show{display:block;}
+.mob-menu-btn{display:none;align-items:center;justify-content:center;width:36px;height:36px;background:none;border:1.5px solid var(--bdr);border-radius:var(--rMd);color:var(--ink2);cursor:pointer;transition:all .15s;flex-shrink:0;}
+.mob-menu-btn:hover{border-color:var(--p);color:var(--p);background:var(--pxl);}
+
+/* ── Tablet: 901px – 1024px ── */
+@media(max-width:1024px){
+  .cs{width:230px;}
+  .cmsgs{padding:1.5rem 1.5rem 1rem;}
+  .sugs{grid-template-columns:repeat(2,1fr);}
+}
+
+/* ── Small tablet: 721px – 900px ── */
+@media(max-width:900px){
+  .cs{width:210px;}
+  .cmsgs{padding:1.25rem 1.25rem .75rem;}
+  .ctop{padding:0 1.25rem;}
+  .cfoot{padding:.625rem 1.25rem .875rem;}
+  .mbody{max-width:82%;}
+  .sugs{grid-template-columns:repeat(2,1fr);}
+}
+
+/* ── Mobile: ≤720px — sidebar becomes a slide-out drawer ── */
 @media(max-width:720px){
-  .cw{flex-direction:column;border-radius:0;height:calc(100vh - 60px);margin:-1rem -1rem 0;overflow:hidden;}
-  .cs{position:fixed;top:0;left:0;height:100vh;width:280px;z-index:1000;transform:translateX(-100%);transition:transform .28s cubic-bezier(.4,0,.2,1);box-shadow:4px 0 24px rgba(0,0,0,.35);}
+  .cw{
+    flex-direction:column;
+    border-radius:0;
+    height:calc(100dvh - 60px);   /* dvh handles iOS URL-bar */
+    margin:-1rem -1rem 0;
+    overflow:hidden;
+  }
+  /* Sidebar becomes a fixed drawer */
+  .cs{
+    position:fixed;top:0;left:0;
+    height:100dvh;width:min(300px,85vw);
+    z-index:1000;
+    transform:translateX(-100%);
+    transition:transform .28s cubic-bezier(.4,0,.2,1);
+    box-shadow:4px 0 32px rgba(0,0,0,.45);
+  }
   .cs.mob-open{transform:translateX(0);}
   .cs-body{display:flex !important;}
   .cs-ft{display:block !important;}
-  .mob-backdrop{display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:999;backdrop-filter:blur(2px);}
-  .mob-backdrop.show{display:block;}
-  .mob-menu-btn{display:flex;align-items:center;justify-content:center;width:36px;height:36px;background:none;border:1.5px solid var(--bdr);border-radius:var(--rMd);color:var(--ink2);cursor:pointer;transition:all .15s;flex-shrink:0;}
-  .mob-menu-btn:hover{border-color:var(--p);color:var(--p);background:var(--pxl);}
-  .cm{height:calc(100vh - 60px);}
-  .sugs{grid-template-columns:1fr 1fr;}
-  .ctop{padding:0 1rem;}
-  .cmsgs{padding:1rem 1rem .75rem;}
-  .cfoot{padding:.625rem 1rem .75rem;}
+
+  /* Show hamburger button */
+  .mob-menu-btn{display:flex;}
+
+  /* Main chat area fills viewport */
+  .cm{height:calc(100dvh - 60px);min-height:0;}
+
+  /* Topbar: tighten padding, shrink button labels */
+  .ctop{padding:0 .875rem;height:52px;}
+  .ctop-ttl{font-size:.875rem;}
+  .ctop-sub{font-size:.68rem;}
+  .abtn{height:32px;padding:0 .625rem;font-size:.75rem;}
+  .abtn .lbl{display:none;}             /* hide text labels on mobile */
+  .ctop-acts{gap:.375rem;}
+
+  /* Messages */
+  .cmsgs{padding:.875rem .875rem .625rem;}
+  .mbody{max-width:88%;}
+  .mbub{padding:.7rem .9rem;font-size:.875rem;}
+
+  /* Suggestion chips: 2-col on tablet-mobile */
+  .sugs{grid-template-columns:repeat(2,1fr);gap:.5rem;max-width:100%;}
+  .emp-ttl{font-size:1.1rem;}
+  .emp-sub{font-size:.82rem;}
+  .emp-ico{width:64px;height:64px;font-size:1.75rem;}
+
+  /* Footer input */
+  .cfoot{padding:.5rem .875rem .75rem;}
+  .foot-hint{display:none;}             /* hide keyboard hint on mobile */
+  .ibox{padding:.425rem .425rem .425rem .875rem;border-radius:14px;}
+  #qi{font-size:.875rem;}
+  .sbtn{height:38px;padding:0 .875rem;font-size:.82rem;border-radius:12px;}
+  .mic-btn{width:38px;height:38px;border-radius:12px;}
+
+  /* Voice modal full-width on mobile */
+  .vbox{padding:2.25rem 1.5rem 1.75rem;}
+  .vorb-w{width:130px;height:130px;}
+  .vr1{width:130px;height:130px;}
+  .vr2{width:104px;height:104px;}
+  .vr3{width:80px;height:80px;}
+  .vorb{width:66px;height:66px;}
 }
-@media(min-width:721px){.mob-menu-btn{display:none;}.mob-backdrop{display:none !important;}}
+
+/* ── Small mobile: ≤500px ── */
 @media(max-width:500px){
-  .sugs{grid-template-columns:1fr;}
-  .mbody{max-width:92%;}
-  .abtn .lbl{display:none;}
-  .sbtn{padding:0 1rem;}
   .cw{margin:-0.75rem -0.75rem 0;}
+  .sugs{grid-template-columns:1fr;}
+  .sug{padding:.75rem .875rem;}
+  .mbody{max-width:93%;}
+  .mbub{padding:.625rem .8rem;font-size:.845rem;}
+  .mav{width:30px;height:30px;font-size:.8rem;}
+  .ctop-ttl{font-size:.825rem;}
+  .abtn{height:30px;padding:0 .5rem;font-size:.72rem;}
+  .sbtn{height:36px;padding:0 .75rem;}
+  .sbtn #sendLbl{display:none;}   /* just the arrow icon on tiny screens */
+  .sbtn{padding:0 .875rem;}
+  .ibox{border-radius:12px;}
+  .schip{max-width:160px;}
+  .emp{padding:1.25rem .75rem;}
+  .emp-ico{width:56px;height:56px;font-size:1.5rem;margin-bottom:.875rem;}
+
+  /* Share modal: full-screen on tiny phones */
+  #shareModal .modal-inner{
+    width:100vw !important;
+    max-width:100vw !important;
+    min-height:60vh;
+    border-radius:20px 20px 0 0 !important;
+    position:fixed;
+    bottom:0;
+    top:auto;
+    left:0;
+    transform:none !important;
+    margin:0 !important;
+  }
+  #shareModal{align-items:flex-end;}
+}
+
+/* ── Very small: ≤380px ── */
+@media(max-width:380px){
+  .ctop{padding:0 .625rem;}
+  .cmsgs{padding:.625rem .625rem .5rem;}
+  .cfoot{padding:.375rem .625rem .625rem;}
+  .mbub{font-size:.82rem;}
+  .mic-btn{width:34px;height:34px;}
+  .sbtn{height:34px;}
 }
 </style>
 {% endblock %}
@@ -481,7 +585,7 @@
 
 <!-- ═══ SHARE MODAL ═══ -->
 <div id="shareModal" style="display:none;position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.45);align-items:center;justify-content:center;">
-  <div style="background:#fff;border-radius:12px;width:min(460px,92vw);max-height:82vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25);overflow:hidden;">
+  <div class="modal-inner" style="background:#fff;border-radius:12px;width:min(460px,92vw);max-height:82vh;display:flex;flex-direction:column;box-shadow:0 8px 40px rgba(0,0,0,.25);overflow:hidden;">
 
     <!-- header -->
     <div style="padding:1.1rem 1.25rem .6rem;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;">

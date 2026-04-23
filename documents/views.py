@@ -91,13 +91,13 @@ def login_view(request):
 
 def organization_search_view(request):
     """
-    Public JSON API — returns active orgs matching a search query.
-    Used by the registration page live-search so users cannot type a free-text name.
+    Public JSON API — returns an active org only on exact name match (case-insensitive).
+    Used by the registration page; user must type the full name and click Search.
     """
     q = request.GET.get('q', '').strip()
     qs = Organization.objects.filter(is_active=True)
     if q:
-        qs = qs.filter(name__icontains=q)
+        qs = qs.filter(name__iexact=q)   # exact match only
     data = [{'id': o.id, 'name': o.name} for o in qs.order_by('name')[:20]]
     return JsonResponse({'results': data})
 

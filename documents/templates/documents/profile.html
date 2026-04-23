@@ -54,7 +54,7 @@
                 {{ profile_user.get_user_type_display }}
             </p>
         </div>
-        
+
         <div class="card">
             <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
                 Role
@@ -67,7 +67,7 @@
                 {% endif %}
             </p>
         </div>
-        
+
         <div class="card">
             <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.5rem;">
                 Member Since
@@ -75,6 +75,27 @@
             <p style="font-size: 1rem; color: #2c2c2c;">
                 {{ profile_user.created_at|date:"M d, Y" }}
             </p>
+        </div>
+    </div>
+
+    <!-- Organization -->
+    <div class="card" style="margin-bottom: 2rem; border-left: 3px solid #7c3aed;">
+        <div style="display:flex; align-items:center; gap:.75rem;">
+            <span style="font-size:1.5rem;">🏢</span>
+            <div>
+                <h3 style="font-size: 0.875rem; color: #7c7c7c; margin-bottom: 0.25rem;">
+                    Organization
+                </h3>
+                {% if profile_user.organization %}
+                    <p style="font-size: 1rem; font-weight: 600; color: #7c3aed;">
+                        {{ profile_user.organization.name }}
+                    </p>
+                {% else %}
+                    <p style="font-size: 1rem; color: #aaa; font-style: italic;">
+                        No organization assigned — contact your admin.
+                    </p>
+                {% endif %}
+            </div>
         </div>
     </div>
 
