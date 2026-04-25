@@ -17,7 +17,7 @@ class Organization(models.Model):
         ordering = ['name']
 
     def __str__(self):
-        return self.name
+        return self.name or f'Organization #{self.pk}'
 
     def chroma_collection_name(self):
         return f"org_{self.id}_documents"
@@ -60,6 +60,8 @@ class User(AbstractUser):
     avatar = models.ImageField(upload_to='avatars/', null=True, blank=True)
     phone = models.CharField(max_length=20, blank=True)
     department = models.CharField(max_length=100, blank=True)
+    employee_code = models.CharField(max_length=100, blank=True)
+    is_approved = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_activity = models.DateTimeField(auto_now=True)
@@ -69,7 +71,7 @@ class User(AbstractUser):
         ordering = ['-created_at']
 
     def __str__(self):
-        return self.username
+        return self.username or f'User #{self.pk}'
 
     def is_admin(self):
         return self.user_type == 'admin'

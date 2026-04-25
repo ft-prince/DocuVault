@@ -1,6 +1,13 @@
+from django import forms
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.contrib.auth.forms import UserCreationForm
 from django.utils.html import format_html
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import JsonResponse
+from django.urls import path, reverse
+from django.contrib import messages as django_messages
+from django.contrib.admin.helpers import ACTION_CHECKBOX_NAME
 from .models import (
     Organization, User, Role, Document, Category, Tag, DocumentVersion,
     DocumentComment, SharedLink, Favorite, ActivityLog, Notification,
@@ -9,29 +16,170 @@ from .models import (
 
 
 # ============================================================
-# ORGANIZATION ADMIN
+# ORGANIZATION ADMIN — with inline org-admin creation
 # ============================================================
+
+class OrgAdminUserForm(UserCreationForm):
+    """Form used inside the inline to create a new org admin with hashed password."""
+    first_name = forms.CharField(max_length=150, required=True)
+    last_name  = forms.CharField(max_length=150, required=True)
+    email      = forms.EmailField(required=True)
+
+    class Meta:
+        model  = User
+        fields = ('username', 'first_name', 'last_name', 'email', 'password1', 'password2')
+
+
+class OrgAdminChangeForm(forms.ModelForm):
+    """Read-only display form for existing org admins — no password fields."""
+    class Meta:
+        model  = User
+        fields = ('username', 'first_name', 'last_name', 'email', 'employee_code', 'is_approved', 'role')
+
+
+class OrgAdminInline(admin.StackedInline):
+    """
+    Inline on the Organization page.
+    Shows existing org admins (info only) and lets you create a brand-new admin account.
+    """
+    model       = User
+    fk_name     = 'organization'
+    extra       = 0
+    verbose_name        = 'Organization Admin'
+    verbose_name_plural = 'Organization Admins'
+    can_delete  = False
+
+    def get_queryset(self, request):
+        return super().get_queryset(request).filter(user_type='admin')
+
+    def get_form(self, request, obj=None, **kwargs):
+        # Existing admin row → show info only, no passwords
+        if obj is not None:
+            kwargs['form'] = OrgAdminChangeForm
+            kwargs['fields'] = ('username', 'first_name', 'last_name', 'email',
+                                'employee_code', 'is_approved', 'role')
+            return super().get_form(request, obj, **kwargs)
+        # New admin row → full creation form with passwords
+        kwargs['form'] = OrgAdminUserForm
+        kwargs['fields'] = ('username', 'first_name', 'last_name', 'email',
+                            'password1', 'password2', 'employee_code', 'is_approved', 'role')
+        return super().get_form(request, obj, **kwargs)
+
+    def save_new(self, form, commit=True):
+        user = form.save(commit=False)
+        if 'password1' in form.cleaned_data:
+            user.set_password(form.cleaned_data['password1'])
+        user.user_type   = 'admin'
+        user.is_approved = True
+        if commit:
+            user.save()
+        return user
+
+    def get_extra(self, request, obj=None, **kwargs):
+        # Show 1 blank creation form only when the org has no admin yet
+        if obj and obj.members.filter(user_type='admin').exists():
+            return 0
+        return 1
+
 
 @admin.register(Organization)
 class OrganizationAdmin(admin.ModelAdmin):
-    """
-    Admin-only: create and manage tenant organizations.
-    Users pick from this list during sign-up — no free-text entry allowed.
-    """
-    list_display  = ('name', 'member_count', 'is_active', 'created_at')
-    list_filter   = ('is_active', 'created_at')
-    search_fields = ('name',)
-    ordering      = ('name',)
-    readonly_fields = ('created_at',)
+    """Manage tenant organizations and their admins."""
+    list_display    = ('name', 'org_admin_info', 'member_count', 'pending_count', 'is_active', 'created_at')
+    list_filter     = ('is_active', 'created_at')
+    search_fields   = ('name',)
+    ordering        = ('name',)
+    readonly_fields = ('created_at', 'org_admin_info', 'assign_existing_user_panel')
+    inlines         = [OrgAdminInline]
 
     fieldsets = (
-        (None, {'fields': ('name', 'is_active')}),
-        ('Info',  {'fields': ('created_at',)}),
+        (None,   {'fields': ('name', 'is_active')}),
+        ('Info', {'fields': ('created_at', 'org_admin_info')}),
+        ('Assign Existing User', {
+            'fields': ('assign_existing_user_panel',),
+            'description': 'Add an already-registered user to this organisation.',
+        }),
     )
 
+    # ── Custom URL for the assign POST ──────────────────────────
+    def get_urls(self):
+        return [
+            path('<int:org_id>/assign-user/',
+                 self.admin_site.admin_view(self.assign_user_view),
+                 name='org_assign_user'),
+        ] + super().get_urls()
+
+    def assign_user_view(self, request, org_id):
+        org = get_object_or_404(Organization, pk=org_id)
+        available = User.objects.exclude(organization=org).order_by('username')
+        error = None
+
+        if request.method == 'POST':
+            user_id = request.POST.get('user_id')
+            if user_id:
+                try:
+                    user = User.objects.get(pk=user_id)
+                    user.organization = org
+                    user.is_approved = True
+                    user.save()
+                    django_messages.success(
+                        request,
+                        f'{user.username} assigned to {org.name}.'
+                    )
+                    return redirect(reverse('admin:documents_organization_change', args=[org_id]))
+                except User.DoesNotExist:
+                    error = 'User not found.'
+            else:
+                error = 'Please select a user.'
+
+        return render(request, 'admin/assign_user_to_org.html', {
+            'org': org,
+            'available': available,
+            'error': error,
+            **self.admin_site.each_context(request),
+        })
+
+    # ── Readonly panel rendered inside the change form ───────────
+    def assign_existing_user_panel(self, obj):
+        if not obj or not obj.pk:
+            return format_html('<em style="color:#9ca3af;">Save the organisation first.</em>')
+        url = reverse('admin:org_assign_user', args=[obj.pk])
+        return format_html(
+            '<a href="{}" style="padding:.4rem 1rem;background:#7c3aed;color:#fff;'
+            'border-radius:6px;font-size:.875rem;font-weight:600;text-decoration:none;">'
+            'Assign Existing User</a>'
+            '&nbsp;<span style="font-size:.8rem;color:#6b7280;">Opens a separate page</span>',
+            url,
+        )
+    assign_existing_user_panel.short_description = 'Assign user'
+
+    def org_admin_info(self, obj):
+        admins = obj.members.filter(user_type='admin')
+        if not admins.exists():
+            return format_html('<span style="color:#9ca3af;">No admin assigned</span>')
+        rows = ''.join(
+            f'<div style="margin-bottom:.3rem;">'
+            f'<strong>{a.get_full_name() or a.username}</strong> '
+            f'&lt;{a.email}&gt;'
+            f'</div>'
+            for a in admins
+        )
+        return format_html(rows)
+    org_admin_info.short_description = 'Admin(s)'
+
     def member_count(self, obj):
-        return obj.members.count()
+        return obj.members.filter(is_approved=True).count()
     member_count.short_description = 'Members'
+
+    def pending_count(self, obj):
+        count = obj.members.filter(is_approved=False, is_active=True).count()
+        if count:
+            return format_html(
+                '<span style="background:#fef9c3;color:#92400e;padding:2px 8px;'
+                'border-radius:12px;font-weight:600;">{}</span>', count
+            )
+        return '—'
+    pending_count.short_description = 'Pending'
 
 
 # ============================================================
@@ -41,15 +189,17 @@ class OrganizationAdmin(admin.ModelAdmin):
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     """Custom user admin"""
-    list_display  = ('username', 'email', 'organization', 'user_type', 'role', 'is_active', 'created_at')
-    list_filter   = ('user_type', 'is_active', 'role', 'organization', 'created_at')
-    search_fields = ('username', 'email', 'first_name', 'last_name')
+    list_display  = ('username', 'email', 'organization', 'user_type', 'role',
+                     'is_approved', 'is_active', 'created_at')
+    list_filter   = ('user_type', 'is_approved', 'is_active', 'role', 'organization', 'created_at')
+    search_fields = ('username', 'email', 'first_name', 'last_name', 'employee_code')
     ordering      = ('-created_at',)
+    actions       = ['approve_users', 'revoke_approval', 'assign_to_organization']
 
     # last_activity has auto_now=True → non-editable → must NOT appear in fieldsets
     fieldsets = BaseUserAdmin.fieldsets + (
         ('Organisation & Role', {
-            'fields': ('organization', 'user_type', 'role')
+            'fields': ('organization', 'user_type', 'role', 'is_approved', 'employee_code')
         }),
         ('Profile', {
             'fields': ('bio', 'avatar', 'phone', 'department')
@@ -58,9 +208,36 @@ class UserAdmin(BaseUserAdmin):
 
     add_fieldsets = BaseUserAdmin.add_fieldsets + (
         ('Organisation & Role', {
-            'fields': ('organization', 'user_type', 'role', 'email', 'first_name', 'last_name')
+            'fields': ('organization', 'user_type', 'role', 'email',
+                       'first_name', 'last_name', 'employee_code', 'is_approved')
         }),
     )
+
+    def approve_users(self, request, queryset):
+        updated = queryset.filter(is_approved=False).update(is_approved=True)
+        self.message_user(request, f'{updated} user(s) approved.')
+    approve_users.short_description = 'Approve selected users'
+
+    def revoke_approval(self, request, queryset):
+        updated = queryset.exclude(user_type='admin').filter(is_approved=True).update(is_approved=False)
+        self.message_user(request, f'{updated} user(s) approval revoked.')
+    revoke_approval.short_description = 'Revoke approval (non-admins only)'
+
+    def assign_to_organization(self, request, queryset):
+        if 'apply' in request.POST:
+            org_id = request.POST.get('organization')
+            if org_id:
+                org = Organization.objects.get(pk=org_id)
+                updated = queryset.update(organization=org)
+                self.message_user(request, f'{updated} user(s) assigned to {org.name}.')
+                return
+        return render(request, 'admin/assign_organization.html', {
+            'users': queryset,
+            'organizations': Organization.objects.filter(is_active=True).order_by('name'),
+            'action': 'assign_to_organization',
+            ACTION_CHECKBOX_NAME: request.POST.getlist(ACTION_CHECKBOX_NAME),
+        })
+    assign_to_organization.short_description = 'Assign selected users to an organization'
 
 
 # ============================================================

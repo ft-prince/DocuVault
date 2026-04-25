@@ -1,0 +1,128 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Approval Dashboard - {{ request.user.organization.name }}{% endblock %}
+
+{% block content %}
+<div style="max-width:860px;margin:1.5rem auto;">
+
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:1.5rem;">
+    <div>
+      <h1 style="font-size:1.5rem;font-weight:600;color:#2c2c2c;margin:0;">Member Approval</h1>
+      <p style="color:#6b7280;font-size:.9rem;margin:.25rem 0 0;">
+        {{ request.user.organization.name }} &mdash;
+        <span id="pendingCount">{{ pending_users|length }}</span> pending
+      </p>
+    </div>
+  </div>
+
+  <div class="card" style="padding:0;overflow:hidden;">
+    <table style="width:100%;border-collapse:collapse;" id="pendingTable">
+      <thead>
+        <tr style="background:#f9fafb;border-bottom:1px solid #e5e7eb;">
+          <th style="padding:.75rem 1rem;text-align:left;font-size:.8rem;color:#6b7280;font-weight:600;text-transform:uppercase;">User</th>
+          <th style="padding:.75rem 1rem;text-align:left;font-size:.8rem;color:#6b7280;font-weight:600;text-transform:uppercase;">Email</th>
+          <th style="padding:.75rem 1rem;text-align:left;font-size:.8rem;color:#6b7280;font-weight:600;text-transform:uppercase;">Employee Code</th>
+          <th style="padding:.75rem 1rem;text-align:left;font-size:.8rem;color:#6b7280;font-weight:600;text-transform:uppercase;">Requested</th>
+          <th style="padding:.75rem 1rem;text-align:center;font-size:.8rem;color:#6b7280;font-weight:600;text-transform:uppercase;">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="pendingBody">
+        {% for u in pending_users %}
+        <tr id="row-{{ u.id }}" style="border-bottom:1px solid #f3f4f6;">
+          <td style="padding:.875rem 1rem;">
+            <div style="font-weight:500;color:#111827;">{{ u.get_full_name|default:u.username }}</div>
+            <div style="font-size:.8rem;color:#9ca3af;">@{{ u.username }}</div>
+          </td>
+          <td style="padding:.875rem 1rem;font-size:.875rem;color:#374151;">{{ u.email }}</td>
+          <td style="padding:.875rem 1rem;font-size:.875rem;color:#374151;">
+            {{ u.employee_code|default:"—" }}
+          </td>
+          <td style="padding:.875rem 1rem;font-size:.875rem;color:#6b7280;">
+            {{ u.created_at|date:"M d, Y" }}
+          </td>
+          <td style="padding:.875rem 1rem;text-align:center;">
+            <button onclick="approveUser({{ u.id }})"
+              style="background:#16a34a;color:#fff;border:none;border-radius:6px;padding:.4rem .9rem;font-size:.8rem;font-weight:600;cursor:pointer;margin-right:.4rem;">
+              Approve
+            </button>
+            <button onclick="rejectUser({{ u.id }})"
+              style="background:#dc2626;color:#fff;border:none;border-radius:6px;padding:.4rem .9rem;font-size:.8rem;font-weight:600;cursor:pointer;">
+              Reject
+            </button>
+          </td>
+        </tr>
+        {% empty %}
+        <tr id="emptyRow">
+          <td colspan="5" style="padding:2.5rem;text-align:center;color:#9ca3af;font-size:.95rem;">
+            No pending approval requests.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const CSRF = '{{ csrf_token }}';
+
+function approveUser(id) {
+  action(id, "{% url 'approve_user' 0 %}".replace('/0/', `/${id}/`), 'approve');
+}
+function rejectUser(id) {
+  if (!confirm('Reject and remove this user?')) return;
+  action(id, "{% url 'reject_user' 0 %}".replace('/0/', `/${id}/`), 'reject');
+}
+
+function action(id, url, type) {
+  const btn = document.querySelector(`#row-${id} button`);
+  if (btn) btn.disabled = true;
+
+  fetch(url, {
+    method: 'POST',
+    headers: { 'X-CSRFToken': CSRF, 'Content-Type': 'application/json' },
+    credentials: 'same-origin',
+  })
+  .then(r => r.json())
+  .then(data => {
+    const row = document.getElementById(`row-${id}`);
+    if (row) {
+      row.style.transition = 'opacity .3s';
+      row.style.opacity = '0';
+      setTimeout(() => {
+        row.remove();
+        updateCount();
+      }, 300);
+    }
+  })
+  .catch(() => { if (btn) btn.disabled = false; });
+}
+
+function updateCount() {
+  const rows = document.querySelectorAll('#pendingBody tr[id^="row-"]');
+  document.getElementById('pendingCount').textContent = rows.length;
+  if (rows.length === 0) {
+    const tbody = document.getElementById('pendingBody');
+    tbody.innerHTML = `<tr id="emptyRow"><td colspan="5" style="padding:2.5rem;text-align:center;color:#9ca3af;font-size:.95rem;">No pending approval requests.</td></tr>`;
+  }
+}
+
+// Poll for new requests every 10 seconds
+(function pollNew() {
+  fetch("{% url 'pending_users_count' %}", { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(data => {
+      const currentRows = document.querySelectorAll('#pendingBody tr[id^="row-"]').length;
+      if (data.count > currentRows) {
+        // New request arrived — reload the table section
+        window.location.reload();
+      }
+      setTimeout(pollNew, 10000);
+    })
+    .catch(() => setTimeout(pollNew, 15000));
+})();
+</script>
+{% endblock %}

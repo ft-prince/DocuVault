@@ -25,8 +25,8 @@ from .models import (
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 from .forms import (
-    UserRegistrationForm, UserLoginForm, DocumentForm, CategoryForm,
-    RoleForm, UserProfileForm, CommentForm, SharedLinkForm
+    UserRegistrationForm, UserLoginForm,
+    DocumentForm, CategoryForm, RoleForm, UserProfileForm, CommentForm, SharedLinkForm
 )
 
 
@@ -35,34 +35,72 @@ from .forms import (
 # ============================================================
 
 def register_view(request):
-    """User registration"""
+    """Register a new user. First user of an org becomes its admin (auto-approved)."""
     if request.user.is_authenticated:
+        if not request.user.is_approved:
+            return redirect('pending_approval')
         return redirect('workspace')
 
     if request.method == 'POST':
         form = UserRegistrationForm(request.POST)
         if form.is_valid():
-            user = form.save(commit=False)
-            user.user_type = 'user'
+            email = form.cleaned_data['email']
+            domain = email.split('@')[1]
+            parts = domain.split('.')
+            raw_name = parts[-2] if len(parts) >= 2 else parts[0]
+            org_name = raw_name.capitalize()
 
-            # Link to the admin-created organization selected by the user
-            user.organization = form.cleaned_data['organization']
+            org = Organization.objects.filter(name__iexact=org_name).first()
+            if not org:
+                org = Organization.objects.create(name=org_name, is_active=True)
+
+            is_first_user = not User.objects.filter(organization=org).exists()
+
+            user = User(
+                username=form.cleaned_data['username'],
+                email=email,
+                first_name=form.cleaned_data['first_name'],
+                last_name=form.cleaned_data['last_name'],
+                employee_code=form.cleaned_data.get('employee_code', ''),
+                user_type='admin' if is_first_user else 'user',
+                organization=org,
+                is_approved=is_first_user,
+            )
+            user.set_password(form.cleaned_data['password1'])
             user.save()
 
-            # Assign default role if exists
-            default_role = Role.objects.filter(is_default=True).first()
-            if default_role:
-                user.role = default_role
-                user.save()
-
-            login(request, user)
-            messages.success(request, f'Account created! Welcome to {user.organization.name}.')
-            return redirect('workspace')
+            if is_first_user:
+                default_role = Role.objects.filter(is_default=True).first()
+                if default_role:
+                    user.role = default_role
+                    user.save()
+                login(request, user)
+                messages.success(request, f'Welcome! You are the admin of {org.name}.')
+                return redirect('workspace')
+            else:
+                login(request, user)
+                return redirect('pending_approval')
     else:
         form = UserRegistrationForm()
-    
-    
+
     return render(request, 'documents/auth/register.html', {'form': form})
+
+
+def pending_approval_view(request):
+    """Shown to authenticated users who are not yet approved."""
+    if not request.user.is_authenticated:
+        return redirect('login')
+    if request.user.is_approved:
+        return redirect('workspace')
+    return render(request, 'documents/auth/pending_approval.html')
+
+
+def approval_status_api(request):
+    """Polled by the pending page to check if the current user has been approved."""
+    if not request.user.is_authenticated:
+        return JsonResponse({'approved': False})
+    user = User.objects.get(pk=request.user.pk)
+    return JsonResponse({'approved': user.is_approved})
 
 
 def login_view(request):
@@ -79,6 +117,10 @@ def login_view(request):
 
             if user is not None:
                 login(request, user)
+                if not user.is_approved:
+                    return redirect('pending_approval')
+                if user.is_admin():
+                    request.session['show_admin_popup'] = True
                 messages.success(request, f'Welcome back, {user.username}!')
                 return redirect(request.GET.get('next', 'chatbot'))
             else:
@@ -89,18 +131,6 @@ def login_view(request):
     return render(request, 'documents/auth/login.html', {'form': form})
 
 
-def organization_search_view(request):
-    """
-    Public JSON API — returns an active org only on exact name match (case-insensitive).
-    Used by the registration page; user must type the full name and click Search.
-    """
-    q = request.GET.get('q', '').strip()
-    qs = Organization.objects.filter(is_active=True)
-    if q:
-        qs = qs.filter(name__iexact=q)   # exact match only
-    data = [{'id': o.id, 'name': o.name} for o in qs.order_by('name')[:20]]
-    return JsonResponse({'results': data})
-
 
 @login_required
 def logout_view(request):
@@ -108,6 +138,75 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'Logged out successfully.')
     return redirect('home')
+
+
+# ============================================================
+# APPROVAL MANAGEMENT (org admin only)
+# ============================================================
+
+@login_required
+def approval_dashboard_view(request):
+    """Org admin sees all pending users in their org and can approve/reject."""
+    if not request.user.is_admin():
+        raise PermissionDenied
+    pending_users = User.objects.filter(
+        organization=request.user.organization,
+        is_approved=False,
+        is_active=True,
+    ).order_by('created_at')
+    return render(request, 'documents/admin/approval_dashboard.html', {
+        'pending_users': pending_users,
+    })
+
+
+@login_required
+@require_POST
+def approve_user_view(request, user_id):
+    """Approve a pending user. Superstaff can approve anyone; org admin only their own org."""
+    if not request.user.is_admin():
+        return JsonResponse({'error': 'Permission denied.'}, status=403)
+    is_superstaff = request.user.organization is None
+    filters = {'pk': user_id, 'is_approved': False}
+    if not is_superstaff:
+        filters['organization'] = request.user.organization
+    target = get_object_or_404(User, **filters)
+    target.is_approved = True
+    target.save(update_fields=['is_approved'])
+    return JsonResponse({'status': 'approved', 'user_id': user_id, 'username': target.username})
+
+
+@login_required
+@require_POST
+def reject_user_view(request, user_id):
+    """Reject (delete) a pending user. Superstaff can reject anyone; org admin only their own org."""
+    if not request.user.is_admin():
+        return JsonResponse({'error': 'Permission denied.'}, status=403)
+    is_superstaff = request.user.organization is None
+    filters = {'pk': user_id, 'is_approved': False}
+    if not is_superstaff:
+        filters['organization'] = request.user.organization
+    target = get_object_or_404(User, **filters)
+    username = target.username
+    target.delete()
+    return JsonResponse({'status': 'rejected', 'user_id': user_id, 'username': username})
+
+
+def dismiss_admin_popup(request):
+    """Called via AJAX to clear the one-time admin popup session flag."""
+    request.session.pop('show_admin_popup', None)
+    return JsonResponse({'ok': True})
+
+
+@login_required
+def pending_users_api(request):
+    """Returns current pending user count for real-time badge update."""
+    if not request.user.is_admin():
+        return JsonResponse({'count': 0})
+    filters = {'is_approved': False, 'is_active': True}
+    if request.user.organization is not None:
+        filters['organization'] = request.user.organization
+    count = User.objects.filter(**filters).count()
+    return JsonResponse({'count': count})
 
 
 # ============================================================
@@ -903,28 +1002,57 @@ def profile_edit_view(request):
 
 @login_required
 def admin_users_list_view(request):
-    """List all users (admin only)"""
+    """Combined org-member list + pending approval management (org admin only)."""
     if not request.user.is_admin():
         raise PermissionDenied()
-    
-    users = User.objects.all().select_related('role').order_by('-created_at')
-    
+
+    org = request.user.organization
+    is_superstaff = org is None  # system-level admin with no specific org
+
+    if is_superstaff:
+        base_qs = User.objects.all().select_related('role', 'organization').order_by('-created_at')
+    else:
+        base_qs = User.objects.filter(organization=org).select_related('role').order_by('-created_at')
+
     search_query = request.GET.get('q', '')
+    tab = request.GET.get('tab', 'all')  # all | approved | pending
+
     if search_query:
-        users = users.filter(
+        base_qs = base_qs.filter(
             Q(username__icontains=search_query) |
             Q(email__icontains=search_query) |
             Q(first_name__icontains=search_query) |
-            Q(last_name__icontains=search_query)
+            Q(last_name__icontains=search_query) |
+            Q(employee_code__icontains=search_query)
         )
-    
-    paginator = Paginator(users, 20)
-    page_number = request.GET.get('page')
-    page_obj = paginator.get_page(page_number)
-    
+
+    if tab == 'approved':
+        filtered_qs = base_qs.filter(is_approved=True)
+    elif tab == 'pending':
+        filtered_qs = base_qs.filter(is_approved=False, is_active=True)
+    else:
+        filtered_qs = base_qs
+
+    paginator = Paginator(filtered_qs, 20)
+    page_obj = paginator.get_page(request.GET.get('page'))
+
+    if is_superstaff:
+        pending_count = User.objects.filter(is_approved=False, is_active=True).count()
+        approved_count = User.objects.filter(is_approved=True).count()
+    else:
+        pending_count = org.members.filter(is_approved=False, is_active=True).count()
+        approved_count = org.members.filter(is_approved=True).count()
+    roles = Role.objects.all().order_by('-level')
+
     return render(request, 'documents/admin/users_list.html', {
         'page_obj': page_obj,
-        'search_query': search_query
+        'search_query': search_query,
+        'tab': tab,
+        'pending_count': pending_count,
+        'approved_count': approved_count,
+        'roles': roles,
+        'org': org,
+        'is_superstaff': is_superstaff,
     })
 
 

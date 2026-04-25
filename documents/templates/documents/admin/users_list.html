@@ -1,114 +1,398 @@
 {% extends 'documents/base.html' %}
+{% block title %}Team Members — {{ org.name }}{% endblock %}
 
-{% block title %}User Management - DMS Admin{% endblock %}
+{% block extra_css %}
+<style>
+/* ── Tabs ── */
+.tab-bar { display:flex; gap:.5rem; margin-bottom:1.25rem; flex-wrap:wrap; }
+.tab-btn {
+  padding:.45rem 1.1rem; border-radius:20px; font-size:.85rem; font-weight:600;
+  border:1px solid #e5e7eb; background:#fff; color:#6b7280; cursor:pointer;
+  text-decoration:none; transition:all .15s; white-space:nowrap;
+}
+.tab-btn:hover { border-color:#7c3aed; color:#7c3aed; }
+.tab-btn.active { background:#7c3aed; color:#fff; border-color:#7c3aed; }
+
+/* ── Badges ── */
+.badge-count {
+  display:inline-flex; align-items:center; justify-content:center;
+  min-width:18px; height:18px; border-radius:9px; font-size:.7rem; font-weight:700;
+  padding:0 5px; margin-left:.35rem;
+}
+.badge-pending  { background:#fef9c3; color:#92400e; }
+.badge-approved { background:#dcfce7; color:#166534; }
+.badge-tab-pending { background:#fef08a; color:#854d0e; }
+
+/* ── Status pills ── */
+.status-pill {
+  display:inline-block; padding:.2rem .6rem; border-radius:12px;
+  font-size:.75rem; font-weight:600;
+}
+.pill-approved { background:#dcfce7; color:#166534; }
+.pill-pending  { background:#fef9c3; color:#92400e; }
+.pill-admin    { background:#ede9fe; color:#6d28d9; }
+
+/* ── Action buttons ── */
+.action-btn {
+  border:none; border-radius:6px; padding:.3rem .75rem;
+  font-size:.78rem; font-weight:600; cursor:pointer; transition:opacity .15s;
+  display:inline-block; text-decoration:none;
+}
+.action-btn:hover { opacity:.85; }
+.btn-approve { background:#16a34a; color:#fff; }
+.btn-reject  { background:#dc2626; color:#fff; }
+.btn-revoke  { background:#f3f4f6; color:#374151; border:1px solid #d1d5db; }
+.fade-row { transition:opacity .3s; }
+
+/* ── Toast ── */
+.toast {
+  position:fixed; bottom:1.5rem; right:1.5rem; z-index:9999;
+  background:#1f2937; color:#fff; padding:.75rem 1.25rem;
+  border-radius:8px; font-size:.875rem; opacity:0;
+  transition:opacity .3s; pointer-events:none; max-width:calc(100vw - 3rem);
+}
+.toast.show { opacity:1; }
+
+/* ── Desktop table ── */
+.members-table { width:100%; border-collapse:collapse; }
+.members-table th {
+  padding:.7rem 1rem; text-align:left; font-size:.75rem;
+  color:#6b7280; font-weight:700; text-transform:uppercase;
+  background:#f9fafb; border-bottom:2px solid #e5e7eb;
+}
+.members-table td { padding:.8rem 1rem; border-bottom:1px solid #f3f4f6; font-size:.85rem; }
+
+/* ── Mobile cards (hidden on desktop) ── */
+.member-cards { display:none; }
+.member-card {
+  background:#fff; border:1px solid #e5e7eb; border-radius:12px;
+  padding:1rem; margin-bottom:.75rem;
+}
+.member-card-header {
+  display:flex; align-items:flex-start; justify-content:space-between;
+  margin-bottom:.75rem; gap:.5rem;
+}
+.member-card-name { font-weight:600; color:#111827; font-size:.95rem; }
+.member-card-username { font-size:.78rem; color:#9ca3af; margin-top:.1rem; }
+.member-card-meta {
+  display:grid; grid-template-columns:1fr 1fr; gap:.4rem .75rem;
+  margin-bottom:.85rem;
+}
+.member-card-field { font-size:.8rem; }
+.member-card-label { color:#9ca3af; font-size:.7rem; font-weight:600;
+  text-transform:uppercase; margin-bottom:.1rem; }
+.member-card-actions { display:flex; gap:.5rem; flex-wrap:wrap; }
+
+/* ── Responsive breakpoints ── */
+@media (max-width: 768px) {
+  /* Hide table, show cards */
+  .members-table-wrap { display:none !important; }
+  .member-cards { display:block; }
+
+  /* Header stacks */
+  .page-header { flex-direction:column; align-items:stretch !important; gap:.75rem; }
+  .search-form { flex-wrap:wrap; }
+  .search-form input { width:100% !important; flex:1 1 auto; min-width:0; }
+  .search-form .btn { flex:1 1 auto; }
+
+  /* Pagination wraps */
+  .pagination { flex-wrap:wrap; justify-content:center; gap:.35rem; }
+
+  /* Toast full-width on very small screens */
+  .toast { left:1rem; right:1rem; }
+}
+
+@media (max-width: 480px) {
+  .tab-bar { gap:.35rem; }
+  .tab-btn { padding:.4rem .8rem; font-size:.8rem; }
+  .member-card-meta { grid-template-columns:1fr; }
+}
+
+/* Hide less-important columns on medium screens */
+@media (max-width: 900px) and (min-width: 769px) {
+  .col-emp-code, .col-joined { display:none; }
+}
+</style>
+{% endblock %}
 
 {% block content %}
-<h1 style="font-size: 2rem; font-weight: 600; color: #2c2c2c; margin-bottom: 2rem;">
-    User Management
-</h1>
+<div style="max-width:1000px;margin:0 auto;">
 
-<!-- Search -->
-<div class="card" style="margin-bottom: 2rem;">
-    <form method="get" style="display: flex; gap: 1rem;">
-        <input 
-            type="text" 
-            name="q" 
-            class="form-control" 
-            placeholder="Search users..." 
-            value="{{ search_query }}"
-            style="flex: 1;"
-        >
-        <button type="submit" class="btn">
-            Search
-        </button>
-        <a href="{% url 'admin_users_list' %}" class="btn-secondary btn">
-            Clear
-        </a>
+  <!-- Header -->
+  <div class="page-header" style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:1.25rem;flex-wrap:wrap;gap:.75rem;">
+    <div>
+      <h1 style="font-size:1.4rem;font-weight:700;color:#111827;margin:0;">
+        {% if is_superstaff %}All Users{% else %}Team Members{% endif %}
+        {% if org %}<span style="font-size:1rem;font-weight:400;color:#6b7280;margin-left:.4rem;">{{ org.name }}</span>{% endif %}
+      </h1>
+      <p style="margin:.25rem 0 0;font-size:.875rem;color:#9ca3af;">
+        {{ approved_count }} approved &nbsp;·&nbsp;
+        <span id="hdr-pending">{{ pending_count }}</span> pending
+        {% if is_superstaff %}&nbsp;·&nbsp;<span style="color:#7c3aed;">System Admin View</span>{% endif %}
+      </p>
+    </div>
+    <form method="get" class="search-form" style="display:flex;gap:.5rem;">
+      <input type="hidden" name="tab" value="{{ tab }}">
+      <input type="text" name="q" class="form-control" placeholder="Search name, email, code…"
+             value="{{ search_query }}" style="width:220px;">
+      <button type="submit" class="btn" style="padding:.45rem 1rem;">Search</button>
+      {% if search_query %}
+        <a href="?tab={{ tab }}" class="btn" style="background:#f3f4f6;color:#374151;padding:.45rem 1rem;">Clear</a>
+      {% endif %}
     </form>
+  </div>
+
+  <!-- Tabs -->
+  <div class="tab-bar">
+    <a href="?tab=all{% if search_query %}&q={{ search_query }}{% endif %}"
+       class="tab-btn {% if tab == 'all' %}active{% endif %}">All</a>
+    <a href="?tab=approved{% if search_query %}&q={{ search_query }}{% endif %}"
+       class="tab-btn {% if tab == 'approved' %}active{% endif %}">
+      Approved <span class="badge-count badge-approved">{{ approved_count }}</span>
+    </a>
+    <a href="?tab=pending{% if search_query %}&q={{ search_query }}{% endif %}"
+       class="tab-btn {% if tab == 'pending' %}active{% endif %}">
+      Pending
+      {% if pending_count %}<span class="badge-count badge-tab-pending" id="tab-pending-badge">{{ pending_count }}</span>{% endif %}
+    </a>
+  </div>
+
+  <!-- ── Desktop table ── -->
+  <div class="card members-table-wrap" style="padding:0;overflow-x:auto;">
+    <table class="members-table">
+      <thead>
+        <tr>
+          <th>Member</th>
+          <th>Email</th>
+          <th class="col-emp-code">Emp. Code</th>
+          <th>Role</th>
+          <th>Status</th>
+          <th class="col-joined">Joined</th>
+          <th style="text-align:center;">Actions</th>
+        </tr>
+      </thead>
+      <tbody id="memberBody">
+        {% for u in page_obj %}
+        <tr class="fade-row" id="row-{{ u.pk }}">
+          <td>
+            <div style="font-weight:500;color:#111827;">{{ u.get_full_name|default:u.username }}</div>
+            <div style="font-size:.78rem;color:#9ca3af;">@{{ u.username }}</div>
+          </td>
+          <td style="color:#374151;">{{ u.email }}</td>
+          <td class="col-emp-code" style="color:#6b7280;">{{ u.employee_code|default:"—" }}</td>
+          <td>
+            {% if u.user_type == 'admin' %}<span class="status-pill pill-admin">Admin</span>
+            {% elif u.role %}{{ u.role.name }}
+            {% else %}<span style="color:#9ca3af;">—</span>{% endif %}
+          </td>
+          <td>
+            {% if u.is_approved %}<span class="status-pill pill-approved">Approved</span>
+            {% else %}<span class="status-pill pill-pending">Pending</span>{% endif %}
+          </td>
+          <td class="col-joined" style="color:#9ca3af;font-size:.8rem;">{{ u.created_at|date:"M d, Y" }}</td>
+          <td style="text-align:center;white-space:nowrap;">
+            {% if not u.is_approved %}
+              <button class="action-btn btn-approve" onclick="approveUser({{ u.pk }}, this)">Approve</button>
+              <button class="action-btn btn-reject" onclick="rejectUser({{ u.pk }}, this)" style="margin-left:.3rem;">Reject</button>
+            {% elif u.user_type != 'admin' %}
+              <a href="{% url 'admin_user_update_role' u.pk %}" class="action-btn btn-revoke">Manage</a>
+            {% else %}
+              <span style="font-size:.78rem;color:#c4b5fd;">Owner</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% empty %}
+        <tr id="emptyRow">
+          <td colspan="7" style="padding:3rem;text-align:center;color:#9ca3af;font-size:.95rem;">
+            {% if search_query %}No members match "{{ search_query }}".
+            {% elif tab == 'pending' %}No pending requests.
+            {% else %}No members yet.{% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- ── Mobile cards ── -->
+  <div class="member-cards" id="memberCards">
+    {% for u in page_obj %}
+    <div class="member-card fade-row" id="card-{{ u.pk }}">
+      <div class="member-card-header">
+        <div>
+          <div class="member-card-name">{{ u.get_full_name|default:u.username }}</div>
+          <div class="member-card-username">@{{ u.username }}</div>
+        </div>
+        <div>
+          {% if u.is_approved %}<span class="status-pill pill-approved">Approved</span>
+          {% else %}<span class="status-pill pill-pending">Pending</span>{% endif %}
+        </div>
+      </div>
+
+      <div class="member-card-meta">
+        <div class="member-card-field">
+          <div class="member-card-label">Email</div>
+          <div style="color:#374151;word-break:break-all;">{{ u.email }}</div>
+        </div>
+        <div class="member-card-field">
+          <div class="member-card-label">Role</div>
+          <div>
+            {% if u.user_type == 'admin' %}<span class="status-pill pill-admin">Admin</span>
+            {% elif u.role %}{{ u.role.name }}
+            {% else %}<span style="color:#9ca3af;">—</span>{% endif %}
+          </div>
+        </div>
+        <div class="member-card-field">
+          <div class="member-card-label">Employee Code</div>
+          <div style="color:#6b7280;">{{ u.employee_code|default:"—" }}</div>
+        </div>
+        <div class="member-card-field">
+          <div class="member-card-label">Joined</div>
+          <div style="color:#9ca3af;">{{ u.created_at|date:"M d, Y" }}</div>
+        </div>
+      </div>
+
+      <div class="member-card-actions">
+        {% if not u.is_approved %}
+          <button class="action-btn btn-approve" onclick="approveUser({{ u.pk }}, this)" style="flex:1;text-align:center;">Approve</button>
+          <button class="action-btn btn-reject"  onclick="rejectUser({{ u.pk }}, this)"  style="flex:1;text-align:center;">Reject</button>
+        {% elif u.user_type != 'admin' %}
+          <a href="{% url 'admin_user_update_role' u.pk %}" class="action-btn btn-revoke" style="flex:1;text-align:center;">Manage</a>
+        {% else %}
+          <span style="font-size:.78rem;color:#c4b5fd;">Owner</span>
+        {% endif %}
+      </div>
+    </div>
+    {% empty %}
+    <div style="text-align:center;padding:3rem;color:#9ca3af;font-size:.95rem;">
+      {% if search_query %}No members match "{{ search_query }}".
+      {% elif tab == 'pending' %}No pending requests.
+      {% else %}No members yet.{% endif %}
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Pagination -->
+  {% if page_obj.has_other_pages %}
+  <div class="pagination" style="margin-top:1rem;display:flex;gap:.5rem;flex-wrap:wrap;">
+    {% if page_obj.has_previous %}
+      <a href="?tab={{ tab }}&page=1{% if search_query %}&q={{ search_query }}{% endif %}">First</a>
+      <a href="?tab={{ tab }}&page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">Prev</a>
+    {% endif %}
+    <span class="current">{{ page_obj.number }} / {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}
+      <a href="?tab={{ tab }}&page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">Next</a>
+      <a href="?tab={{ tab }}&page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}">Last</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
 </div>
 
-<!-- Users Table -->
-{% if page_obj %}
-    <div class="table-wrapper">
-        <table>
-            <thead>
-                <tr>
-                    <th>Username</th>
-                    <th>Name</th>
-                    <th>Email</th>
-                    <th>User Type</th>
-                    <th>Role</th>
-                    <th>Status</th>
-                    <th>Joined</th>
-                    <th>Actions</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for user_item in page_obj %}
-                    <tr>
-                        <td>
-                            <a href="{% url 'profile_view' user_item.username %}" style="color: #2c2c2c; text-decoration: none; font-weight: 500;">
-                                {{ user_item.username }}
-                            </a>
-                        </td>
-                        <td>{{ user_item.get_full_name|default:"—" }}</td>
-                        <td>{{ user_item.email }}</td>
-                        <td>
-                            <span style="padding: 0.25rem 0.75rem; background: #fafafa; border: 1px solid #e5e5e5; font-size: 0.875rem;">
-                                {{ user_item.get_user_type_display }}
-                            </span>
-                        </td>
-                        <td>
-                            {% if user_item.role %}
-                                {{ user_item.role.name }} ({{ user_item.role.level }})
-                            {% else %}
-                                <span style="color: #7c7c7c;">No role</span>
-                            {% endif %}
-                        </td>
-                        <td>
-                            {% if user_item.is_active %}
-                                <span style="color: #2c2c2c;">Active</span>
-                            {% else %}
-                                <span style="color: #7c7c7c;">Inactive</span>
-                            {% endif %}
-                        </td>
-                        <td style="font-size: 0.875rem; color: #7c7c7c;">
-                            {{ user_item.created_at|date:"M d, Y" }}
-                        </td>
-                        <td>
-                            <a href="{% url 'admin_user_update_role' user_item.pk %}" style="color: #2c2c2c; text-decoration: none; font-size: 0.875rem;">
-                                Manage
-                            </a>
-                        </td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
-    </div>
+<div class="toast" id="toast"></div>
+{% endblock %}
 
-    <!-- Pagination -->
-    {% if page_obj.has_other_pages %}
-        <div class="pagination">
-            {% if page_obj.has_previous %}
-                <a href="?page=1{% if search_query %}&q={{ search_query }}{% endif %}">First</a>
-                <a href="?page={{ page_obj.previous_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">Previous</a>
-            {% endif %}
+{% block extra_js %}
+<script>
+const CSRF = '{{ csrf_token }}';
 
-            <span class="current">
-                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
-            </span>
+function showToast(msg, ok) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = ok ? '#166534' : '#991b1b';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
 
-            {% if page_obj.has_next %}
-                <a href="?page={{ page_obj.next_page_number }}{% if search_query %}&q={{ search_query }}{% endif %}">Next</a>
-                <a href="?page={{ page_obj.paginator.num_pages }}{% if search_query %}&q={{ search_query }}{% endif %}">Last</a>
-            {% endif %}
-        </div>
-    {% endif %}
-{% else %}
-    <div class="card">
-        <p style="color: #7c7c7c; text-align: center; padding: 3rem 0;">
-            No users found.
-        </p>
-    </div>
-{% endif %}
+function removeRow(id) {
+  const row  = document.getElementById('row-' + id);
+  const card = document.getElementById('card-' + id);
+  [row, card].forEach(el => {
+    if (!el) return;
+    el.style.opacity = '0';
+    setTimeout(() => {
+      el.remove();
+      const remaining = document.querySelectorAll('#memberBody tr[id^="row-"]').length;
+      if (remaining === 0) {
+        document.getElementById('memberBody').innerHTML =
+          '<tr id="emptyRow"><td colspan="7" style="padding:3rem;text-align:center;color:#9ca3af;">No members match your filter.</td></tr>';
+        document.getElementById('memberCards').innerHTML =
+          '<div style="text-align:center;padding:3rem;color:#9ca3af;">No members match your filter.</div>';
+      }
+    }, 300);
+  });
+}
+
+function updatePendingBadge(delta) {
+  const hdr   = document.getElementById('hdr-pending');
+  const badge = document.getElementById('tab-pending-badge');
+  const val   = Math.max(0, parseInt(hdr ? hdr.textContent : '0') + delta);
+  if (hdr)   hdr.textContent   = val;
+  if (badge) badge.textContent = val;
+}
+
+function approveUser(id, btn) {
+  btn.disabled = true;
+  fetch("{% url 'approve_user' 0 %}".replace('/0/', '/' + id + '/'), {
+    method: 'POST', headers: { 'X-CSRFToken': CSRF }, credentials: 'same-origin',
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'approved') {
+      if ('{{ tab }}' === 'pending') {
+        removeRow(id);
+      } else {
+        // Update table row
+        const row = document.getElementById('row-' + id);
+        if (row) {
+          row.querySelector('.status-pill').className = 'status-pill pill-approved';
+          row.querySelector('.status-pill').textContent = 'Approved';
+          row.querySelector('td:last-child').innerHTML =
+            '<a href="/admin/users/' + id + '/update-role/" class="action-btn btn-revoke">Manage</a>';
+        }
+        // Update mobile card
+        const card = document.getElementById('card-' + id);
+        if (card) {
+          card.querySelector('.status-pill').className = 'status-pill pill-approved';
+          card.querySelector('.status-pill').textContent = 'Approved';
+          card.querySelector('.member-card-actions').innerHTML =
+            '<a href="/admin/users/' + id + '/update-role/" class="action-btn btn-revoke" style="flex:1;text-align:center;">Manage</a>';
+        }
+      }
+      updatePendingBadge(-1);
+      showToast(data.username + ' approved.', true);
+    }
+  })
+  .catch(() => { btn.disabled = false; showToast('Error. Try again.', false); });
+}
+
+function rejectUser(id, btn) {
+  if (!confirm('Remove this user from your organisation?')) return;
+  btn.disabled = true;
+  fetch("{% url 'reject_user' 0 %}".replace('/0/', '/' + id + '/'), {
+    method: 'POST', headers: { 'X-CSRFToken': CSRF }, credentials: 'same-origin',
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.status === 'rejected') {
+      removeRow(id);
+      updatePendingBadge(-1);
+      showToast(data.username + ' removed.', true);
+    }
+  })
+  .catch(() => { btn.disabled = false; showToast('Error. Try again.', false); });
+}
+
+// Poll for new pending requests every 10 s
+(function pollPending() {
+  fetch("{% url 'pending_users_count' %}", { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(data => {
+      const current = parseInt(document.getElementById('hdr-pending').textContent || '0');
+      if (data.count > current) window.location.reload();
+      setTimeout(pollPending, 10000);
+    })
+    .catch(() => setTimeout(pollPending, 15000));
+})();
+</script>
 {% endblock %}

@@ -1,0 +1,37 @@
+{% extends "admin/base_site.html" %}
+{% block content %}
+<h1>Assign Users to Organization</h1>
+
+<form method="post">
+  {% csrf_token %}
+  <input type="hidden" name="action" value="{{ action }}">
+  {% for uid in action_checkbox_name %}
+    <input type="hidden" name="_selected_action" value="{{ uid }}">
+  {% endfor %}
+
+  <p><strong>Selected users:</strong></p>
+  <ul>
+    {% for u in users %}
+      <li>{{ u.username }} &lt;{{ u.email }}&gt;
+        {% if u.organization %} — currently in <em>{{ u.organization.name }}</em>{% endif %}
+      </li>
+    {% endfor %}
+  </ul>
+
+  <p>
+    <label for="org-select"><strong>Assign to organization:</strong></label><br>
+    <select name="organization" id="org-select" style="min-width:260px;padding:.4rem .6rem;margin-top:.4rem;">
+      <option value="">— Select an organization —</option>
+      {% for org in organizations %}
+        <option value="{{ org.pk }}">{{ org.name }}</option>
+      {% endfor %}
+    </select>
+  </p>
+
+  <button type="submit" name="apply" class="button default" style="margin-top:.5rem;">
+    Assign
+  </button>
+  &nbsp;
+  <a href="../" class="button cancel-link">Cancel</a>
+</form>
+{% endblock %}

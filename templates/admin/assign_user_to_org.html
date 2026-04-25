@@ -1,0 +1,30 @@
+{% extends "admin/base_site.html" %}
+{% block title %}Assign User to {{ org.name }}{% endblock %}
+
+{% block content %}
+<h1>Assign Existing User to <em>{{ org.name }}</em></h1>
+
+{% if error %}
+  <p style="color:#dc2626;font-weight:600;">{{ error }}</p>
+{% endif %}
+
+<form method="post">
+  {% csrf_token %}
+  <div style="margin-bottom:1rem;">
+    <label for="user_id" style="display:block;font-weight:600;margin-bottom:.4rem;">Select user:</label>
+    <select name="user_id" id="user_id" style="min-width:320px;padding:.5rem .75rem;border:1px solid #ccc;border-radius:4px;font-size:.9rem;">
+      <option value="">— Select a user —</option>
+      {% for u in available %}
+        <option value="{{ u.pk }}">
+          {{ u.username }} &lt;{{ u.email }}&gt;{% if u.organization %} — {{ u.organization.name }}{% endif %}
+        </option>
+      {% empty %}
+        <option disabled>No available users</option>
+      {% endfor %}
+    </select>
+  </div>
+  <button type="submit" class="button default">Assign to {{ org.name }}</button>
+  &nbsp;
+  <a href="../change/" class="button cancel-link">Cancel</a>
+</form>
+{% endblock %}

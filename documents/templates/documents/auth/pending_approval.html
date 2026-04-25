@@ -1,0 +1,51 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Approval Pending - DMS{% endblock %}
+
+{% block content %}
+<div style="max-width:520px;margin:3rem auto;text-align:center;">
+  <div class="card" style="padding:2.5rem;">
+
+    <div style="font-size:3rem;margin-bottom:1rem;">⏳</div>
+    <h1 style="font-size:1.5rem;font-weight:600;color:#2c2c2c;margin-bottom:.75rem;">
+      Approval In Progress
+    </h1>
+    <p style="color:#6b7280;font-size:.95rem;line-height:1.6;margin-bottom:1.5rem;">
+      Your registration is pending review.<br>
+      You cannot proceed until your organization admin approves your account.<br>
+      <strong>Please contact your organization admin.</strong>
+    </p>
+
+    <div style="background:#fef9c3;border:1px solid #fde68a;border-radius:8px;padding:1rem;margin-bottom:2rem;font-size:.875rem;color:#92400e;">
+      Signed in as <strong>{{ request.user.username }}</strong>
+      ({{ request.user.email }})
+    </div>
+
+    <div id="statusMsg" style="display:none;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:.75rem;font-size:.875rem;color:#15803d;margin-bottom:1rem;">
+      Your account has been approved! Redirecting…
+    </div>
+
+    <a href="{% url 'logout' %}" class="btn" style="background:#6b7280;width:100%;">
+      Sign Out
+    </a>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function poll() {
+  fetch("{% url 'approval_status_api' %}", { credentials: 'same-origin' })
+    .then(r => r.json())
+    .then(data => {
+      if (data.approved) {
+        document.getElementById('statusMsg').style.display = 'block';
+        setTimeout(() => { window.location.href = "{% url 'workspace' %}"; }, 1500);
+      } else {
+        setTimeout(poll, 5000);
+      }
+    })
+    .catch(() => setTimeout(poll, 8000));
+})();
+</script>
+{% endblock %}

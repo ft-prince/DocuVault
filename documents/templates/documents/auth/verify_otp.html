@@ -1,0 +1,45 @@
+{% extends 'documents/base.html' %}
+
+{% block title %}Verify Email - DMS{% endblock %}
+
+{% block content %}
+<div style="max-width:460px;margin:1rem auto;">
+  <div class="card">
+    <h1 style="font-size:1.75rem;font-weight:600;margin-bottom:.5rem;color:#2c2c2c;">Verify Your Email</h1>
+    <p style="font-size:.95rem;color:#7c7c7c;margin-bottom:.5rem;">
+      We sent a 6-digit code to
+    </p>
+    <p style="font-size:.95rem;font-weight:600;color:#2c2c2c;margin-bottom:2rem;">{{ email }}</p>
+
+    {% if messages %}
+      {% for message in messages %}
+        <div style="padding:.75rem 1rem;margin-bottom:1rem;border-radius:8px;
+          {% if message.tags == 'error' %}background:#fef2f2;border:1px solid #fecaca;color:#b91c1c;
+          {% else %}background:#f0fdf4;border:1px solid #bbf7d0;color:#15803d;{% endif %}
+          font-size:.875rem;">
+          {{ message }}
+        </div>
+      {% endfor %}
+    {% endif %}
+
+    <form method="post">
+      {% csrf_token %}
+
+      <div class="form-group">
+        <label class="form-label" for="{{ form.otp.id_for_label }}">Verification Code</label>
+        {{ form.otp }}
+        {% if form.otp.errors %}
+          <div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.otp.errors }}</div>
+        {% endif %}
+      </div>
+
+      <button type="submit" class="btn" style="width:100%;margin-top:.5rem;">Verify &amp; Create Account</button>
+    </form>
+
+    <div style="margin-top:1.5rem;text-align:center;font-size:.875rem;color:#7c7c7c;">
+      Didn't receive the code?
+      <a href="{% url 'register' %}" style="color:#7c3aed;text-decoration:none;font-weight:500;">Start over</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

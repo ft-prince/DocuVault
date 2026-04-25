@@ -149,7 +149,10 @@
       "Bash(python manage.py makemigrations documents --name add_chat_session_to_notification --skip-checks)",
       "Bash(python manage.py shell --skip-checks -c \"from documents.models import User; [print\\(u.username, u.is_staff, u.organization\\) for u in User.objects.all\\(\\)]\")",
       "Bash(python -c ' *)",
-      "Bash(findstr /V \"CryptographyDeprecation\")"
+      "Bash(findstr /V \"CryptographyDeprecation\")",
+      "Bash(python manage.py makemigrations documents --name=\"add_is_approved_employee_code\")",
+      "Bash(env\\\\Scripts\\\\python.exe manage.py makemigrations documents --name=\"add_is_approved_employee_code\")",
+      "Bash(\"env/Scripts/python.exe\" manage.py makemigrations documents --name=\"add_is_approved_employee_code\")"
     ]
   }
 }

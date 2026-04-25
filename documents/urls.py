@@ -8,9 +8,15 @@ urlpatterns = [
     # AUTHENTICATION URLS
     # ============================================================
     path('register/', views.register_view, name='register'),
-    path('api/organizations/search/', views.organization_search_view, name='organization_search'),
+    path('pending-approval/', views.pending_approval_view, name='pending_approval'),
+    path('api/approval/status/', views.approval_status_api, name='approval_status_api'),
     path('login/', views.login_view, name='login'),
     path('logout/', views.logout_view, name='logout'),
+    path('admin/approvals/', views.approval_dashboard_view, name='approval_dashboard'),
+    path('admin/users/<int:user_id>/approve/', views.approve_user_view, name='approve_user'),
+    path('admin/users/<int:user_id>/reject/', views.reject_user_view, name='reject_user'),
+    path('api/pending-users/count/', views.pending_users_api, name='pending_users_count'),
+    path('api/dismiss-admin-popup/', views.dismiss_admin_popup, name='dismiss_admin_popup'),
     
     # ============================================================
     # HOME AND DASHBOARD

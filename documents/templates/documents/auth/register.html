@@ -2,66 +2,6 @@
 
 {% block title %}Register - DMS{% endblock %}
 
-{% block extra_css %}
-<style>
-/* Org exact-match search */
-.org-search-wrap { position: relative; }
-
-/* flex row: input + button */
-.org-search-row {
-  display: flex; gap: .5rem; align-items: stretch;
-}
-.org-search-input {
-  flex: 1; min-width: 0;          /* take remaining space, don't overflow */
-  padding: .5rem .75rem;
-  border: 1px solid #ddd; border-radius: 8px;
-  font-size: .9rem; outline: none;
-  transition: border-color .15s;
-}
-.org-search-input:focus { border-color: #7c3aed; }
-
-/* Search button matches input height */
-.org-search-btn {
-  flex-shrink: 0;
-  padding: .5rem 1rem;
-  background: #7c3aed; color: #fff;
-  border: none; border-radius: 8px;
-  font-size: .875rem; font-weight: 600;
-  cursor: pointer; white-space: nowrap;
-  transition: background .15s;
-}
-.org-search-btn:hover { background: #6d28d9; }
-.org-search-btn:disabled { opacity: .6; cursor: not-allowed; }
-
-/* Dropdown spans full width of the wrap (input + button) */
-.org-dropdown {
-  display: none; position: absolute; top: 100%; left: 0; right: 0;
-  background: #fff; border: 1px solid #ddd; border-top: none;
-  border-radius: 0 0 8px 8px; max-height: 220px; overflow-y: auto;
-  z-index: 200; box-shadow: 0 4px 12px rgba(0,0,0,.1);
-  margin-top: 1px;
-}
-.org-dropdown.show { display: block; }
-.org-option {
-  padding: .55rem .75rem; cursor: pointer; font-size: .875rem;
-  border-bottom: 1px solid #f3f3f3;
-}
-.org-option:last-child { border-bottom: none; }
-.org-option:hover { background: #f5f3ff; color: #7c3aed; }
-.org-none { padding: .75rem; font-size: .85rem; color: #aaa; text-align: center; }
-
-/* Selected badge */
-.org-selected-badge {
-  margin-top: .4rem;
-  background: #ede9fe; color: #7c3aed;
-  font-size: .78rem; font-weight: 600;
-  padding: .25rem .6rem; border-radius: 20px;
-  display: inline-flex; align-items: center; gap: .35rem;
-}
-.org-clear { cursor: pointer; font-weight: 700; }
-</style>
-{% endblock %}
-
 {% block content %}
 <div style="max-width:460px;margin:1rem auto;">
   <div class="card">
@@ -77,42 +17,6 @@
         </div>
       {% endif %}
 
-      <!-- ── Organization exact-match search ── -->
-      <div class="form-group">
-        <label class="form-label">Company / Organization</label>
-
-        <!-- Hidden real select (submitted with form) -->
-        <div style="display:none;">{{ form.organization }}</div>
-
-        <!-- Search row: input + button -->
-        <div class="org-search-wrap">
-          <div class="org-search-row">
-            <input type="text" id="orgSearchInput" class="org-search-input"
-                   placeholder="Enter exact organization name…"
-                   autocomplete="off"
-                   onkeydown="if(event.key==='Enter'){event.preventDefault();searchOrg();}" />
-            <button type="button" id="orgSearchBtn" class="org-search-btn" onclick="searchOrg()">
-              Search Org
-            </button>
-          </div>
-          <div class="org-dropdown" id="orgDropdown"></div>
-        </div>
-
-        <!-- Selected badge -->
-        <div id="orgSelectedBadge" class="org-selected-badge" style="display:none;">
-          🏢 <span id="orgSelectedName"></span>
-          <span class="org-clear" onclick="clearOrg()" title="Change">✕</span>
-        </div>
-
-        {% if form.organization.errors %}
-          <div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.organization.errors }}</div>
-        {% endif %}
-        <div style="font-size:.75rem;color:#aaa;margin-top:.3rem;">
-          Enter your organization's exact name and click Search. Contact your admin if it's missing.
-        </div>
-      </div>
-
-      <!-- ── Standard fields ── -->
       <div class="form-group">
         <label class="form-label" for="{{ form.username.id_for_label }}">Username</label>
         {{ form.username }}
@@ -120,9 +24,12 @@
       </div>
 
       <div class="form-group">
-        <label class="form-label" for="{{ form.email.id_for_label }}">Email</label>
+        <label class="form-label" for="{{ form.email.id_for_label }}">Work Email</label>
         {{ form.email }}
         {% if form.email.errors %}<div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.email.errors }}</div>{% endif %}
+        <div style="font-size:.75rem;color:#aaa;margin-top:.3rem;">
+          Your organization will be determined from your email domain.
+        </div>
       </div>
 
       <div class="form-group">
@@ -149,6 +56,12 @@
         {% if form.password2.errors %}<div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.password2.errors }}</div>{% endif %}
       </div>
 
+      <div class="form-group">
+        <label class="form-label" for="{{ form.employee_code.id_for_label }}">Employee Code <span style="color:#aaa;font-weight:400;">(optional)</span></label>
+        {{ form.employee_code }}
+        {% if form.employee_code.errors %}<div style="color:#c00;font-size:.875rem;margin-top:.25rem;">{{ form.employee_code.errors }}</div>{% endif %}
+      </div>
+
       <button type="submit" class="btn" style="width:100%;">Create Account</button>
     </form>
 
@@ -160,92 +73,4 @@
     </div>
   </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-const orgSelect   = document.getElementById('id_organization');
-const orgInput    = document.getElementById('orgSearchInput');
-const orgDropdown = document.getElementById('orgDropdown');
-const orgBadge    = document.getElementById('orgSelectedBadge');
-const orgName     = document.getElementById('orgSelectedName');
-const orgSearchBtn = document.getElementById('orgSearchBtn');
-
-// If form was re-rendered with a pre-selected value (validation error), restore UI
-(function restoreSelection() {
-  const sel = orgSelect.options[orgSelect.selectedIndex];
-  if (sel && sel.value) {
-    orgName.textContent    = sel.text;
-    orgBadge.style.display = 'inline-flex';
-    orgInput.closest('div').style.display = 'none';
-  }
-})();
-
-// Close dropdown when clicking outside
-document.addEventListener('click', function (e) {
-  if (!e.target.closest('.org-search-wrap') && !e.target.closest('#orgSearchBtn')) {
-    orgDropdown.classList.remove('show');
-  }
-});
-
-// Search button click — exact match only
-function searchOrg() {
-  const q = orgInput.value.trim();
-  if (!q) {
-    orgDropdown.innerHTML = '<div class="org-none">Please enter an organization name.</div>';
-    orgDropdown.classList.add('show');
-    return;
-  }
-
-  // Loading state
-  orgSearchBtn.textContent = 'Searching…';
-  orgSearchBtn.disabled    = true;
-
-  fetch(`/api/organizations/search/?q=${encodeURIComponent(q)}`)
-    .then(r => r.json())
-    .then(data => {
-      renderDropdown(data.results || []);
-    })
-    .catch(() => {
-      orgDropdown.innerHTML = '<div class="org-none">Search failed. Please try again.</div>';
-      orgDropdown.classList.add('show');
-    })
-    .finally(() => {
-      orgSearchBtn.textContent = 'Search Org';
-      orgSearchBtn.disabled = false;
-    });
-}
-
-function renderDropdown(results) {
-  if (!results.length) {
-    orgDropdown.innerHTML = '<div class="org-none">No exact match found. Check spelling or contact your admin.</div>';
-  } else {
-    orgDropdown.innerHTML = results.map(o =>
-      `<div class="org-option" data-id="${o.id}" data-name="${o.name}">${o.name}</div>`
-    ).join('');
-    orgDropdown.querySelectorAll('.org-option').forEach(el => {
-      el.addEventListener('click', () => selectOrg(el.dataset.id, el.dataset.name));
-    });
-  }
-  orgDropdown.classList.add('show');
-}
-
-function selectOrg(id, name) {
-  orgSelect.value        = id;
-  orgName.textContent    = name;
-  orgBadge.style.display = 'inline-flex';
-  // Hide the entire search row (input + button)
-  orgInput.parentElement.style.display = 'none';
-  orgDropdown.classList.remove('show');
-}
-
-function clearOrg() {
-  orgSelect.value        = '';
-  orgBadge.style.display = 'none';
-  // Show the search row again
-  orgInput.parentElement.style.display = 'flex';
-  orgInput.value         = '';
-  orgInput.focus();
-}
-</script>
 {% endblock %}

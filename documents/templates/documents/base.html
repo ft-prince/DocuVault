@@ -413,6 +413,64 @@
 
     {% block extra_js %}{% endblock %}
 
+    {% if user.is_authenticated and user.is_admin and request.session.show_admin_popup %}
+    {% with pending=user.organization.members.all %}
+    <div id="admin-popup-overlay" style="
+        position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:10000;
+        display:flex;align-items:center;justify-content:center;padding:1rem;">
+      <div style="
+          background:#fff;border-radius:12px;padding:2rem;max-width:440px;width:100%;
+          box-shadow:0 20px 60px rgba(0,0,0,.25);animation:popIn .25s ease;">
+        <div style="display:flex;align-items:center;gap:.75rem;margin-bottom:1rem;">
+          <span style="font-size:1.75rem;">🔔</span>
+          <h2 style="margin:0;font-size:1.15rem;font-weight:700;color:#111827;">
+            Admin Setup Required
+          </h2>
+        </div>
+        <p style="color:#374151;font-size:.9rem;line-height:1.6;margin-bottom:.5rem;">
+          You are the admin of <strong>{{ user.organization.name }}</strong>.
+        </p>
+        {% with pending_count=user.organization.members.filter %}
+        <p style="color:#374151;font-size:.9rem;line-height:1.6;margin-bottom:1.25rem;">
+          Please review your team members — approve or reject pending signup requests, and assign
+          existing users to your organisation if needed.
+        </p>
+        {% endwith %}
+        <div style="display:flex;gap:.75rem;flex-wrap:wrap;">
+          <a href="{% url 'admin_users_list' %}?tab=pending"
+             onclick="dismissPopup()"
+             style="flex:1;text-align:center;padding:.6rem 1rem;background:#7c3aed;color:#fff;
+                    border-radius:8px;font-weight:600;font-size:.875rem;text-decoration:none;">
+            Go to Member Approvals
+          </a>
+          <button onclick="dismissPopup()"
+                  style="flex:1;padding:.6rem 1rem;background:#f3f4f6;color:#374151;
+                         border:1px solid #d1d5db;border-radius:8px;font-weight:600;
+                         font-size:.875rem;cursor:pointer;">
+            Dismiss
+          </button>
+        </div>
+      </div>
+    </div>
+    <style>
+      @keyframes popIn {
+        from { transform:scale(.9); opacity:0; }
+        to   { transform:scale(1);  opacity:1; }
+      }
+    </style>
+    <script>
+    function dismissPopup() {
+      document.getElementById('admin-popup-overlay').remove();
+      fetch("{% url 'dismiss_admin_popup' %}", {
+        method:'POST',
+        headers:{'X-CSRFToken':'{{ csrf_token }}'},
+        credentials:'same-origin'
+      });
+    }
+    </script>
+    {% endwith %}
+    {% endif %}
+
     <script>
     (function(){
         var btn = document.getElementById('nav-toggle');

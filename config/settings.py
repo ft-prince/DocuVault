@@ -44,6 +44,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "documents.middleware.ApprovalRequiredMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -51,7 +52,7 @@ ROOT_URLCONF = "config.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": [BASE_DIR / "templates"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -111,6 +112,19 @@ USE_I18N = True
 
 USE_TZ = True
 
+
+
+# Gmail SMTP Configuration for Development
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+EMAIL_HOST_USER = 'ft.princeeee@gmail.com'
+EMAIL_HOST_PASSWORD = 'gjyfkvicagnxawdp'  
+
+DEFAULT_FROM_EMAIL = 'RenataAI <ft.princeeee@gmail.com>'
+SERVER_EMAIL = 'ft.princeeee@gmail.com'
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/

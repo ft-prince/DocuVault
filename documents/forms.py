@@ -1,28 +1,29 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.core.exceptions import ValidationError
-from .models import User, Organization, Document, Category, Role, DocumentComment, SharedLink, Tag
+from .models import User, Document, Category, Role, DocumentComment, SharedLink, Tag
 import datetime
+
+BLOCKED_EMAIL_DOMAINS = {
+    'gmail.com', 'googlemail.com',
+    'outlook.com', 'hotmail.com', 'hotmail.co.uk', 'live.com', 'live.co.uk', 'msn.com',
+    'yahoo.com', 'yahoo.co.uk', 'yahoo.fr', 'yahoo.de', 'yahoo.es', 'ymail.com',
+    'icloud.com', 'me.com', 'mac.com',
+    'aol.com', 'aim.com',
+    'protonmail.com', 'pm.me', 'proton.me',
+    'mail.com', 'gmx.com', 'gmx.net', 'gmx.de',
+    'inbox.com', 'fastmail.com', 'fastmail.fm',
+    'tutanota.com', 'tuta.io',
+    'yandex.com', 'yandex.ru',
+    'qq.com', '163.com', '126.com',
+}
 
 
 class UserRegistrationForm(UserCreationForm):
-    """
-    User registration form.
-    Organization must be selected from the admin-managed list — no free-text entry.
-    """
-    organization = forms.ModelChoiceField(
-        queryset=Organization.objects.filter(is_active=True).order_by('name'),
-        required=True,
-        empty_label='— Search and select your company —',
-        widget=forms.Select(attrs={
-            'class': 'form-control',
-            'id': 'id_organization',
-        }),
-        error_messages={'required': 'Please select your organization to continue.'},
-    )
+    """User registration form. Organization is derived automatically from the email domain."""
     email = forms.EmailField(required=True, widget=forms.EmailInput(attrs={
         'class': 'form-control',
-        'placeholder': 'Email address'
+        'placeholder': 'Work email address'
     }))
     first_name = forms.CharField(required=True, max_length=150, widget=forms.TextInput(attrs={
         'class': 'form-control',
@@ -32,10 +33,14 @@ class UserRegistrationForm(UserCreationForm):
         'class': 'form-control',
         'placeholder': 'Last name'
     }))
+    employee_code = forms.CharField(required=False, max_length=100, widget=forms.TextInput(attrs={
+        'class': 'form-control',
+        'placeholder': 'Employee code (optional)'
+    }))
 
     class Meta:
         model = User
-        fields = ('organization', 'username', 'email', 'first_name', 'last_name', 'password1', 'password2')
+        fields = ('username', 'email', 'first_name', 'last_name', 'employee_code', 'password1', 'password2')
         widgets = {
             'username': forms.TextInput(attrs={
                 'class': 'form-control',
@@ -55,7 +60,13 @@ class UserRegistrationForm(UserCreationForm):
         })
 
     def clean_email(self):
-        email = self.cleaned_data.get('email')
+        email = self.cleaned_data.get('email', '').lower()
+        domain = email.split('@')[-1] if '@' in email else ''
+        if domain in BLOCKED_EMAIL_DOMAINS:
+            raise ValidationError(
+                "Personal email addresses (Gmail, Outlook, Yahoo, etc.) are not allowed. "
+                "Please use your work email."
+            )
         if User.objects.filter(email=email).exists():
             raise ValidationError("A user with this email already exists.")
         return email
